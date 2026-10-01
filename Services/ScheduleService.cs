@@ -1,3 +1,4 @@
+using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 using DentalClinic.Models.DTO;
 using DentalClinic.Models.ViewModels;
@@ -45,7 +46,7 @@ namespace DentalClinic.Services
             };
             model.SelectedService = serviceId == null ? null : model.Services.FirstOrDefault(s => s.Id == serviceId);
 
-            var doctorsQuery = _db.Staffs.Include(s => s.Services).AsQueryable();
+            var doctorsQuery = _db.Staffs.Active().Include(s => s.Services).AsQueryable();
             if (model.SelectedService != null)
             {
                 var id = model.SelectedService.Id;

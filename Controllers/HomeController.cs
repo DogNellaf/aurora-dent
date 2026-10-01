@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 using DentalClinic.Models.ViewModels;
 using DentalClinic.Services;
@@ -26,7 +27,7 @@ namespace DentalClinic.Controllers
             {
                 Reviews = await ToCardsAsync(await visible.OrderByDescending(r => r.CreatedAt).Take(6).ToListAsync()),
                 Services = await _context.Services.OrderBy(s => s.Id).Take(6).ToListAsync(),
-                Doctors = await _context.Staffs.OrderBy(s => s.Id).ToListAsync(),
+                Doctors = await _context.Staffs.Active().OrderBy(s => s.Id).ToListAsync(),
                 PatientsCount = await _context.Profiles.CountAsync(p => p.RoleId == RoleIds.Client),
                 AverageRating = await visible.AnyAsync() ? Math.Round(await visible.AverageAsync(r => r.Rating), 1) : 5
             };
@@ -37,14 +38,14 @@ namespace DentalClinic.Controllers
         public IActionResult FAQ() => View();
 
         [HttpGet("about")]
-        public async Task<IActionResult> About() => View(await _context.Staffs.OrderBy(s => s.Id).ToListAsync());
+        public async Task<IActionResult> About() => View(await _context.Staffs.Active().OrderBy(s => s.Id).ToListAsync());
 
         [HttpGet("contacts")]
         public IActionResult Contacts() => View();
 
         [HttpGet("doctors")]
         public async Task<IActionResult> Doctors() =>
-            View(await _context.Staffs.Include(s => s.Services).OrderBy(s => s.Id).ToListAsync());
+            View(await _context.Staffs.Active().Include(s => s.Services).OrderBy(s => s.Id).ToListAsync());
 
         [HttpGet("services")]
         public async Task<IActionResult> Services() => View(await _context.Services.OrderBy(s => s.Id).ToListAsync());
@@ -52,7 +53,7 @@ namespace DentalClinic.Controllers
         [HttpGet("services/{serviceId:long}")]
         public async Task<IActionResult> ServiceDetail(long serviceId)
         {
-            var service = await _context.Services.Include(s => s.Staff).FirstOrDefaultAsync(s => s.Id == serviceId);
+            var service = await _context.Services.Include(s => s.Staff.Where(x => !x.Profile.IsBanned)).FirstOrDefaultAsync(s => s.Id == serviceId);
             if (service == null) return NotFound();
 
             return View(new ServiceDetailViewModel

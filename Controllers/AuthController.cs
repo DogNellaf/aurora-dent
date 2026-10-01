@@ -91,7 +91,12 @@ namespace DentalClinic.Controllers
             var profile = await _userManager.FindByNameAsync(data.Email);
             if (profile != null && profile.IsBanned)
             {
-                ModelState.AddModelError("", "Аккаунт заблокирован. Свяжитесь с клиникой по телефону.");
+                // The ban is only revealed to someone who knows the password, so the form cannot be used
+                // to find out which addresses are registered and banned.
+                var knowsPassword = await _userManager.CheckPasswordAsync(profile, data.Password);
+                ModelState.AddModelError("", knowsPassword
+                    ? "Аккаунт заблокирован. Свяжитесь с клиникой по телефону."
+                    : "Неверный email или пароль");
                 return View("Login", data);
             }
 

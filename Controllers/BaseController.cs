@@ -28,7 +28,10 @@ namespace DentalClinic.Controllers
         {
             if (User.Identity?.IsAuthenticated != true) return null;
             var name = User.Identity!.Name;
-            return await _context.Profiles.FirstOrDefaultAsync(p => p.UserName == name);
+            var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserName == name);
+
+            // A banned account with a still valid cookie is treated as signed out on the public pages too.
+            return profile is { IsBanned: true } ? null : profile;
         }
 
         /// <summary>Wraps appointments with the patient's name. The queries must include <c>Client</c>.</summary>

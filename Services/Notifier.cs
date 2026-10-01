@@ -15,17 +15,15 @@ namespace DentalClinic.Services
 
     public sealed class Notifier : INotifier
     {
-        private readonly IEmailSender _sender;
+        private readonly IEmailDispatcher _dispatcher;
         private readonly ClinicOptions _clinic;
         private readonly ICalendarExporter _calendar;
-        private readonly ILogger<Notifier> _logger;
 
-        public Notifier(IEmailSender sender, IOptions<ClinicOptions> clinic, ICalendarExporter calendar, ILogger<Notifier> logger)
+        public Notifier(IEmailDispatcher dispatcher, IOptions<ClinicOptions> clinic, ICalendarExporter calendar)
         {
-            _sender = sender;
+            _dispatcher = dispatcher;
             _clinic = clinic.Value;
             _calendar = calendar;
-            _logger = logger;
         }
 
         public Task BookingConfirmedAsync(Appointment appointment, Profile client)
@@ -78,17 +76,10 @@ namespace DentalClinic.Services
 
         private static string Enc(string text) => WebUtility.HtmlEncode(text);
 
-        /// <summary>A failing mail server must never break booking, cancelling or password reset.</summary>
-        private async Task SafeSend(EmailMessage message)
+        private Task SafeSend(EmailMessage message)
         {
-            try
-            {
-                await _sender.SendAsync(message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Could not send email '{Subject}' to {Recipient}", message.Subject, message.To);
-            }
+            _dispatcher.Enqueue(message);
+            return Task.CompletedTask;
         }
     }
 }

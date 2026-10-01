@@ -12,8 +12,7 @@ WORKDIR /app
 COPY --from=build /app .
 
 # The connection string is supplied at run time (see docker-compose.yml).
-ENV ASPNETCORE_URLS=http://+:8080 \
-    Seed__DemoData=true
+ENV ASPNETCORE_URLS=http://+:8080
 USER $APP_UID
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "DentalClinic.dll"]

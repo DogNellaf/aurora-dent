@@ -38,16 +38,30 @@ namespace DentalClinic.Services
             var review = await _db.Reviews.FirstOrDefaultAsync(r => r.ProfileId == client.Id);
             if (review is null)
             {
-                _db.Reviews.Add(new Review { ProfileId = client.Id, Text = text, Rating = rating, IsVisible = false, CreatedAt = now });
+                var created = new Review { ProfileId = client.Id, Text = text, Rating = rating, IsVisible = false, CreatedAt = now };
+                _db.Reviews.Add(created);
+
+                try
+                {
+                    await _db.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    // A double click or a second tab inserted the patient's review first (unique index on the
+                    // profile). The later submit simply becomes an update of that review.
+                    _db.Entry(created).State = EntityState.Detached;
+                    review = await _db.Reviews.FirstAsync(r => r.ProfileId == client.Id);
+                }
             }
-            else
+
+            if (review is not null)
             {
                 review.Text = text;
                 review.Rating = rating;
                 review.IsVisible = false;
+                await _db.SaveChangesAsync();
             }
 
-            await _db.SaveChangesAsync();
             _logger.LogInformation("Profile {ProfileId} submitted a review for moderation", client.Id);
             return ReviewSubmitStatus.Saved;
         }

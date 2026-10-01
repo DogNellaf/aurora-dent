@@ -73,12 +73,9 @@ namespace DentalClinic
                 options.SlidingExpiration = true;
             });
 
+            // Forwarded headers are trusted only from the configured proxy networks (private ranges by default).
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
-            {
-                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-                options.KnownNetworks.Clear();
-                options.KnownProxies.Clear();
-            });
+                TrustedProxies.Apply(options, builder.Configuration.GetSection("Hosting:TrustedProxies").Get<string[]>() ?? Array.Empty<string>()));
 
             builder.Services.AddHealthChecks().AddDbContextCheck<DatabaseContext>("database");
 
@@ -94,6 +91,10 @@ namespace DentalClinic
             builder.Services.AddSingleton<ICalendarExporter, CalendarExporter>();
             builder.Services.AddScoped<INotifier, Notifier>();
             builder.Services.AddScoped<DemoDataSeeder>();
+            builder.Services.AddScoped<AdminBootstrapper>();
+            builder.Services.AddSingleton<QueuedEmailDispatcher>();
+            builder.Services.AddSingleton<IEmailDispatcher>(sp => sp.GetRequiredService<QueuedEmailDispatcher>());
+            builder.Services.AddHostedService(sp => sp.GetRequiredService<QueuedEmailDispatcher>());
             if (string.IsNullOrWhiteSpace(builder.Configuration[$"{EmailOptions.Section}:Host"]))
                 builder.Services.AddSingleton<IEmailSender, LoggingEmailSender>();
             else
@@ -107,8 +108,11 @@ namespace DentalClinic
                 RefuseDatabaseWithoutMigrationHistory(db);
                 db.Database.Migrate();
 
-                if (app.Configuration.GetValue("Seed:DemoData", true))
+                // Demo accounts share a published password, so they exist only when asked for.
+                if (app.Configuration.GetValue("Seed:DemoData", false))
                     scope.ServiceProvider.GetRequiredService<DemoDataSeeder>().SeedAsync().GetAwaiter().GetResult();
+
+                scope.ServiceProvider.GetRequiredService<AdminBootstrapper>().RunAsync().GetAwaiter().GetResult();
             }
 
             app.UseForwardedHeaders();

@@ -78,3 +78,51 @@ namespace DentalClinic.Services
         }
     }
 }
+
+namespace DentalClinic.Services
+{
+    /// <summary>Hands an email over for delivery without making the request wait for the mail server.</summary>
+    public interface IEmailDispatcher
+    {
+        void Enqueue(EmailMessage message);
+    }
+
+    /// <summary>
+    /// Delivers emails from a background loop. A request that sends mail returns at once, so a slow or broken
+    /// mail server neither delays nor breaks booking, and the response time does not reveal whether an email
+    /// was sent (password reset for known and unknown addresses looks the same).
+    /// </summary>
+    public sealed class QueuedEmailDispatcher : BackgroundService, IEmailDispatcher
+    {
+        private readonly System.Threading.Channels.Channel<EmailMessage> _queue = System.Threading.Channels.Channel.CreateUnbounded<EmailMessage>();
+        private readonly IEmailSender _sender;
+        private readonly ILogger<QueuedEmailDispatcher> _logger;
+
+        public QueuedEmailDispatcher(IEmailSender sender, ILogger<QueuedEmailDispatcher> logger)
+        {
+            _sender = sender;
+            _logger = logger;
+        }
+
+        public void Enqueue(EmailMessage message) => _queue.Writer.TryWrite(message);
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            await foreach (var message in _queue.Reader.ReadAllAsync(stoppingToken))
+            {
+                try
+                {
+                    await _sender.SendAsync(message, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Could not send email '{Subject}' to {Recipient}", message.Subject, message.To);
+                }
+            }
+        }
+    }
+}

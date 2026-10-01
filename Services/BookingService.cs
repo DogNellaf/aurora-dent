@@ -39,6 +39,10 @@ namespace DentalClinic.Services
             if (slot is null) return new BookingResult(BookingStatus.NotFound);
             if (slot.StartAt <= _clock.Now) return new BookingResult(BookingStatus.InThePast);
 
+            // The slots of a banned doctor are not offered, and a stale page cannot book them either.
+            if (await _db.Staffs.AnyAsync(s => s.Id == slot.StaffId && s.Profile.IsBanned))
+                return new BookingResult(BookingStatus.NotFound);
+
             // Atomic claim: of two simultaneous requests only one updates a row, the other gets zero.
             var claimed = await _db.Appointments
                 .Where(a => a.Id == appointmentId && a.ClientId == null)

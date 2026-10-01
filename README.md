@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-151%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-165%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
@@ -152,8 +152,14 @@ booking is reserved for patients.
 - A Content Security Policy forbids inline scripts and third-party code. A test
   scans the pages and fails on any inline script or `onclick`.
 - Passwords are hashed by ASP.NET Core Identity. Demo accounts share a
-  published password, so `Seed__DemoData=false` is required in any real
-  deployment.
+  published password, so demo data is off by default and enabled only by the
+  development settings and the Compose file.
+- The ban message appears only after the right password, a banned account is
+  treated as signed out on public pages, and a banned doctor disappears from
+  the site and cannot be booked.
+- `X-Forwarded-*` headers are believed only from configured proxy networks
+  (private ranges by default). Doctors open records of patients assigned to them,
+  not of everyone.
 
 ### Architecture
 
@@ -230,15 +236,18 @@ Settings come from `appsettings.json` or environment variables such as
 | Key | Purpose | Default |
 |---|---|---|
 | `ConnectionStrings:DefaultConnection` | SQL Server connection string | `localhost,1433`, database `dental_clinic`, the `db` service of `docker-compose.yml` |
-| `Seed:DemoData` | Fill an empty database with demo data | `true` |
+| `Seed:DemoData` | Fill an empty database with demo data, on in Development and in `docker-compose.yml` | `false` |
+| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Creates the first administrator when none exists | empty |
+| `Hosting:TrustedProxies` | CIDR networks whose `X-Forwarded-*` headers are trusted | loopback and private ranges |
 | `Hosting:HttpsRedirection` | Redirect HTTP to HTTPS, off because TLS is usually terminated by a proxy | `false` |
 | `Clinic:TimeZone` | IANA time zone of the clinic, used for every visit time | `Europe/Moscow` |
 | `Clinic:PublicUrl` | Public address of the site, used for links in emails instead of the request Host header | empty, derived from the request |
 | `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Facts shown in emails and calendar files | demo clinic |
 | `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | SMTP server, empty host means emails are only logged | empty |
 
-The first administrator of a real deployment has to be created in the database.
-Role ids are 1 client, 2 administrator, 3 manager and 4 doctor.
+A real deployment leaves demo data off and sets `Bootstrap__AdminEmail` and
+`Bootstrap__AdminPassword` once, which creates the first administrator at
+startup. Role ids are 1 client, 2 administrator, 3 manager and 4 doctor.
 
 ### Migrations
 
@@ -261,7 +270,7 @@ docker compose up -d db
 dotnet test
 ```
 
-There are 151 tests with 97% line coverage. Most are integration tests starting
+There are 165 tests with 97% line coverage. Most are integration tests starting
 the whole application on a fresh database and use real HTTP requests,
 cookies and antiforgery tokens. They cover public pages, access control for
 every role, registration, login and bans, booking including the race for one

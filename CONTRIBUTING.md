@@ -5,7 +5,7 @@
 ```bash
 docker compose up -d db mail   # SQL Server on localhost:1433, mail catcher on http://localhost:8025
 dotnet tool restore            # the local EF tool
-dotnet run                     # application on http://localhost:5000 with demo data
+dotnet run                     # Development profile, http://localhost:5000, demo data on (appsettings.Development.json)
 dotnet test                    # integration and unit tests, each class gets its own database
 ```
 

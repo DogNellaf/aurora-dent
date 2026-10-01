@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-151%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-165%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
@@ -150,8 +150,13 @@ docker run -p 8080:8080 -e ConnectionStrings__DefaultConnection="..." ghcr.io/do
 - Content Security Policy запрещает inline-скрипты и сторонний код. Тест
   просматривает страницы, чтобы inline-скрипт или `onclick` не проскочили.
 - Пароли хэшируются средствами ASP.NET Core Identity. Демо-аккаунты используют
-  общий опубликованный пароль, поэтому в боевом запуске обязателен
-  `Seed__DemoData=false`.
+  общий опубликованный пароль, поэтому демо-данные по умолчанию выключены и
+  включаются только настройками разработки и файлом Compose.
+- Сообщение о блокировке появляется только после верного пароля, заблокированный
+  аккаунт на публичных страницах считается вышедшим, а заблокированный врач
+  исчезает с сайта и недоступен для записи.
+- Заголовки `X-Forwarded-*` принимаются только из настроенных сетей прокси (по
+  умолчанию частные диапазоны). Врач открывает карту своих пациентов, а не любых.
 
 ### Архитектура
 
@@ -228,15 +233,19 @@ erDiagram
 | Ключ | Назначение | По умолчанию |
 |---|---|---|
 | `ConnectionStrings:DefaultConnection` | Строка подключения к SQL Server | `localhost,1433`, база `dental_clinic`, сервис `db` из `docker-compose.yml` |
-| `Seed:DemoData` | Заполнение пустой базы демо-данными | `true` |
+| `Seed:DemoData` | Заполнение пустой базы демо-данными, включено в Development и в `docker-compose.yml` | `false` |
+| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Создаёт первого администратора при отсутствии администраторов | пусто |
+| `Hosting:TrustedProxies` | Сети в формате CIDR, чьим заголовкам `X-Forwarded-*` верят | loopback и частные диапазоны |
 | `Hosting:HttpsRedirection` | Перенаправление HTTP на HTTPS, выключено, так как TLS обычно завершает прокси | `false` |
 | `Clinic:TimeZone` | Часовой пояс клиники по IANA, по нему считается время всех визитов | `Europe/Moscow` |
 | `Clinic:PublicUrl` | Публичный адрес сайта, по нему строятся ссылки в письмах вместо заголовка Host запроса | пусто, берётся из запроса |
 | `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Данные для писем и файлов календаря | демо-клиника |
 | `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | SMTP-сервер, пустой хост означает, что письма только пишутся в лог | пусто |
 
-Первого администратора боевого развёртывания нужно создать в базе.
-Идентификаторы ролей 1 клиент, 2 администратор, 3 менеджер и 4 доктор.
+Боевое развёртывание оставляет демо-данные выключенными и один раз задаёт
+`Bootstrap__AdminEmail` и `Bootstrap__AdminPassword`, после чего первый
+администратор создаётся при запуске. Идентификаторы ролей 1 клиент,
+2 администратор, 3 менеджер и 4 доктор.
 
 ### Миграции
 
@@ -259,7 +268,7 @@ docker compose up -d db
 dotnet test
 ```
 
-Всего 151 тест, покрытие строк 97%. Большинство интеграционные, с запуском
+Всего 165 тестов, покрытие строк 97%. Большинство интеграционные, с запуском
 всего приложения на свежей базе и используют настоящие HTTP-запросы, cookie и
 antiforgery-токены. Покрыты публичные страницы, доступ для каждой роли,
 регистрация, вход и блокировки, запись с гонкой за одно окно, отмена, управление

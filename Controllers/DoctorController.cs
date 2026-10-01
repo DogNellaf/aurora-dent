@@ -119,6 +119,12 @@ namespace DentalClinic.Controllers
                 return RedirectToAction("Index");
             }
 
+            if (appointment.IsPastAt(_clock.Now))
+            {
+                TempData["Error"] = "Завершённый приём продлить нельзя.";
+                return RedirectToAction("Index");
+            }
+
             appointment.Duration = (short)Math.Min(appointment.Duration + additionalMinutes, 480);
             appointment.DurationChangeReason = (reason ?? string.Empty).Trim();
             await _context.SaveChangesAsync();
@@ -133,21 +139,31 @@ namespace DentalClinic.Controllers
             var appointment = await OwnAppointment(appointmentId);
             if (appointment == null) return NotFound();
 
+            // Only a visit in progress can be finished early. Finished visits stay as they were, and the
+            // elapsed time of an active visit always fits into the duration field.
             var now = _clock.Now;
-            if (now > appointment.StartAt)
+            if (!appointment.IsActiveAt(now))
             {
-                appointment.Duration = (short)Math.Max(1, (int)(now - appointment.StartAt).TotalMinutes);
-                appointment.DurationChangeReason = (reason ?? string.Empty).Trim();
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Приём завершён.";
+                TempData["Error"] = "Завершить досрочно можно только идущий приём.";
+                return RedirectToAction("Index");
             }
 
+            appointment.Duration = (short)Math.Max(1, (int)(now - appointment.StartAt).TotalMinutes);
+            appointment.DurationChangeReason = (reason ?? string.Empty).Trim();
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Приём завершён.";
             return RedirectToAction("Index");
         }
 
         [HttpGet("clients/{clientId:long}/record")]
         public async Task<IActionResult> ClientRecord(long clientId)
         {
+            // A doctor sees the record of patients who have an appointment with this doctor, not of every patient.
+            var staff = await GetStaffAsync();
+            if (staff == null) return NotFound();
+            if (!await _context.Appointments.AnyAsync(a => a.StaffId == staff.Id && a.ClientId == clientId))
+                return NotFound();
+
             var client = await _context.Profiles.FirstOrDefaultAsync(p => p.Id == clientId && p.RoleId == RoleIds.Client);
             if (client == null) return NotFound();
 

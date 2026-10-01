@@ -27,6 +27,15 @@ public sealed class TestApp : WebApplicationFactory<Program>
     /// <summary>Collects every email the application would send.</summary>
     public FakeEmailSender Emails { get; } = new();
 
+    private readonly Dictionary<string, string?> _overrides;
+
+    public TestApp() : this(new Dictionary<string, string?>()) { }
+
+    private TestApp(Dictionary<string, string?> overrides) => _overrides = overrides;
+
+    /// <summary>A factory with some of the default test settings replaced, for example Seed:DemoData.</summary>
+    public static TestApp WithSettings(Dictionary<string, string?> overrides) => new(overrides);
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -40,12 +49,16 @@ public sealed class TestApp : WebApplicationFactory<Program>
 
             // Links in emails come from here, not from the Host header.
             ["Clinic:PublicUrl"] = "https://clinic.example"
-        }));
+        }.Concat(_overrides).GroupBy(p => p.Key).ToDictionary(g => g.Key, g => g.Last().Value)));
 
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
+
+            // Emails are delivered inline in tests, so a test can read them right after the request.
+            services.RemoveAll<IEmailDispatcher>();
+            services.AddSingleton<IEmailDispatcher>(new InlineEmailDispatcher(Emails));
         });
     }
 
@@ -151,5 +164,18 @@ public sealed class FakeEmailSender : IEmailSender
         if (ThrowOnSend) throw new InvalidOperationException("SMTP is down");
         _sent.Enqueue(message);
         return Task.CompletedTask;
+    }
+}
+
+public sealed class InlineEmailDispatcher : IEmailDispatcher
+{
+    private readonly IEmailSender _sender;
+
+    public InlineEmailDispatcher(IEmailSender sender) => _sender = sender;
+
+    public void Enqueue(EmailMessage message)
+    {
+        try { _sender.SendAsync(message).GetAwaiter().GetResult(); }
+        catch (Exception) { /* a failing mail server must not break the request, like the real dispatcher */ }
     }
 }
