@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 using DentalClinic.Models.DTO;
@@ -13,6 +14,7 @@ namespace DentalClinic.Controllers
         private readonly UserManager<Profile> _userManager;
         private readonly SignInManager<Profile> _signInManager;
         private readonly INotifier _notifier;
+        private readonly ClinicOptions _clinic;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
@@ -20,11 +22,13 @@ namespace DentalClinic.Controllers
             UserManager<Profile> userManager,
             SignInManager<Profile> signInManager,
             INotifier notifier,
+            IOptions<ClinicOptions> clinic,
             ILogger<AuthController> logger) : base(context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _notifier = notifier;
+            _clinic = clinic.Value;
             _logger = logger;
         }
 
@@ -142,7 +146,7 @@ namespace DentalClinic.Controllers
             if (profile != null && !profile.IsBanned)
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(profile);
-                var link = Url.Action("ResetPage", "Auth", new { email = profile.Email, token }, Request.Scheme)!;
+                var link = AbsoluteUrl(Url.Action("ResetPage", "Auth", new { email = profile.Email, token })!);
                 await _notifier.PasswordResetAsync(profile, link);
                 _logger.LogInformation("Password reset requested for profile {ProfileId}", profile.Id);
             }
@@ -151,6 +155,15 @@ namespace DentalClinic.Controllers
             ViewData["Sent"] = true;
             return View(model);
         }
+
+        /// <summary>
+        /// Links in emails must not depend on the Host header, which a client controls.
+        /// The configured public address wins, the request is only a fallback for local development.
+        /// </summary>
+        private string AbsoluteUrl(string path) =>
+            string.IsNullOrWhiteSpace(_clinic.PublicUrl)
+                ? $"{Request.Scheme}://{Request.Host}{path}"
+                : _clinic.PublicUrl.TrimEnd('/') + path;
 
         [HttpGet("reset")]
         public IActionResult ResetPage(string? email, string? token)

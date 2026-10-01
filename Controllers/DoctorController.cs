@@ -194,6 +194,12 @@ namespace DentalClinic.Controllers
 
             form.StaffId = staff.Id;
             var result = await _schedule.GenerateAsync(form);
+            if (result.Status == GenerateStatus.Conflict)
+            {
+                TempData["Error"] = "Расписание изменили одновременно. Повторите создание, существующие окна будут пропущены.";
+                return RedirectToAction("Schedule");
+            }
+
             TempData["Success"] = $"Создано окон {result.Created}, уже существовало {result.SkippedExisting}.";
             return RedirectToAction("Schedule");
         }

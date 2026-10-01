@@ -29,6 +29,18 @@ namespace DentalClinic.Models
         [NotMapped]
         public DateTime EndAt => StartAt.AddMinutes(Duration);
 
+        /// <summary>
+        /// Returns the slot to the schedule: no patient, no services and nothing the previous visit left behind.
+        /// The services collection must be loaded by the caller.
+        /// </summary>
+        public void Release()
+        {
+            ClientId = null;
+            Services.Clear();
+            Recommendation = string.Empty;
+            DurationChangeReason = string.Empty;
+        }
+
         public bool IsPastAt(DateTime now) => EndAt < now;
 
         public bool IsActiveAt(DateTime now) => StartAt <= now && now <= EndAt;

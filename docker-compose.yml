@@ -33,6 +33,7 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: "Server=db;Database=dental_clinic;User Id=sa;Password=Aurora_Dent_123;TrustServerCertificate=True"
       Seed__DemoData: "true"
+      Clinic__PublicUrl: "http://localhost:8080"
       Email__Host: mail
       Email__Port: "1025"
     depends_on:

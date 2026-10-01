@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-135%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
@@ -114,8 +114,11 @@ booking is reserved for patients.
   builds the schedule relative to the current date, including a visit in
   progress, so the doctor dashboard is never empty.
 - **Consistent deletes.** Deleting a profile frees the future slots of the
-  patient and removes the reviews. Deleting a doctor also removes the staff
-  card and the schedule. Creating a doctor creates the staff card as well, so
+  patient and removes the reviews. A released slot keeps nothing of the old
+  visit, no recommendation and no services. A doctor with patients cannot be
+  deleted, because the foreign keys would remove the visits of other people,
+  so the profile is banned instead. A doctor without patients is removed with
+  the staff card and the schedule. Creating a doctor creates the staff card as well, so
   the cabinet works immediately.
 - **Operations built in.** A `/health` endpoint checks the database, and the
   Docker health check uses the endpoint. Every response carries security
@@ -133,7 +136,10 @@ booking is reserved for patients.
 
 - Every POST carries an antiforgery token (`AutoValidateAntiforgeryToken`).
   Logout and booking are POST-only, so a link or an image cannot trigger either action.
-- Banned accounts cannot sign in and are signed out on the next request.
+- Banned accounts cannot sign in and are signed out on the next request. The
+  ban is a separate column, so editing a profile leaves the ban untouched.
+- Links in emails are built from the configured public address, so a forged
+  Host header cannot redirect a password reset link to another site.
 - Five wrong passwords lock an account for fifteen minutes, and a password
   reset lifts the lock.
 - Password reset links are single use. The reset form answers the same way for
@@ -227,6 +233,7 @@ Settings come from `appsettings.json` or environment variables such as
 | `Seed:DemoData` | Fill an empty database with demo data | `true` |
 | `Hosting:HttpsRedirection` | Redirect HTTP to HTTPS, off because TLS is usually terminated by a proxy | `false` |
 | `Clinic:TimeZone` | IANA time zone of the clinic, used for every visit time | `Europe/Moscow` |
+| `Clinic:PublicUrl` | Public address of the site, used for links in emails instead of the request Host header | empty, derived from the request |
 | `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Facts shown in emails and calendar files | demo clinic |
 | `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | SMTP server, empty host means emails are only logged | empty |
 
@@ -235,8 +242,10 @@ Role ids are 1 client, 2 administrator, 3 manager and 4 doctor.
 
 ### Migrations
 
-Migrations are applied automatically on startup. A new migration is created with
-the local EF tool.
+Migrations are applied automatically on startup. A database with tables but
+without migration history comes from an older version of the application, and
+startup stops with an explanation. Such a database has to be dropped. A new
+migration is created with the local EF tool.
 
 ```bash
 dotnet tool restore
@@ -252,7 +261,7 @@ docker compose up -d db
 dotnet test
 ```
 
-There are 135 tests with 97% line coverage. Most are integration tests starting
+There are 144 tests with 97% line coverage. Most are integration tests starting
 the whole application on a fresh database and use real HTTP requests,
 cookies and antiforgery tokens. They cover public pages, access control for
 every role, registration, login and bans, booking including the race for one

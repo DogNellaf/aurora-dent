@@ -17,8 +17,8 @@ namespace DentalClinic.Models
         public bool IsManager => RoleId == RoleIds.Manager;
         public bool IsDoctor => RoleId == RoleIds.Doctor;
 
-        /// <summary>Banned accounts keep their data but cannot sign in.</summary>
-        public bool IsBanned => !EmailConfirmed;
+        /// <summary>Banned accounts keep their data but cannot sign in. Stored separately from Identity's EmailConfirmed.</summary>
+        public bool IsBanned { get; set; }
 
         public string DisplayName => string.IsNullOrWhiteSpace(FullName) ? (UserName ?? string.Empty) : FullName;
 

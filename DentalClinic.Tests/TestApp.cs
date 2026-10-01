@@ -36,7 +36,10 @@ public sealed class TestApp : WebApplicationFactory<Program>
             ["Seed:DemoData"] = "true",
 
             // The tests compute times with DateTime.UtcNow, so the clinic clock runs in UTC.
-            ["Clinic:TimeZone"] = "UTC"
+            ["Clinic:TimeZone"] = "UTC",
+
+            // Links in emails come from here, not from the Host header.
+            ["Clinic:PublicUrl"] = "https://clinic.example"
         }));
 
         builder.ConfigureTestServices(services =>
@@ -85,6 +88,22 @@ public sealed class TestApp : WebApplicationFactory<Program>
 
         fields["__RequestVerificationToken"] = token;
         return await client.PostAsync(action, new FormUrlEncodedContent(fields));
+    }
+
+    /// <summary>Creates the database with a table but without migration history, like an old EnsureCreated database.</summary>
+    public void CreateLegacyDatabase()
+    {
+        using var master = new Microsoft.Data.SqlClient.SqlConnection(SqlServerConnection);
+        master.Open();
+        using var create = master.CreateCommand();
+        create.CommandText = $"CREATE DATABASE [{_database}]";
+        create.ExecuteNonQuery();
+
+        using var legacy = new Microsoft.Data.SqlClient.SqlConnection($"{SqlServerConnection};Database={_database}");
+        legacy.Open();
+        using var table = legacy.CreateCommand();
+        table.CommandText = "CREATE TABLE AspNetRoles (Id bigint)";
+        table.ExecuteNonQuery();
     }
 
     /// <summary>Registers a new patient through the real form and returns the signed-in client.</summary>

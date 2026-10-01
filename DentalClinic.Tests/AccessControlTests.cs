@@ -78,14 +78,14 @@ public class AccessControlTests : IClassFixture<TestApp>
     public async Task Banned_user_cannot_sign_in_and_unbanned_can()
     {
         const string email = "oleg@clinic.demo";
-        _app.WithDb(db => { db.Profiles.First(p => p.Email == email).EmailConfirmed = false; db.SaveChanges(); return 0; });
+        _app.WithDb(db => { db.Profiles.First(p => p.Email == email).IsBanned = true; db.SaveChanges(); return 0; });
 
         var client = _app.NewClient();
         var response = await TestApp.PostFormAsync(client, "/route/login", "/route/login", new() { ["Email"] = email, ["Password"] = "Demo123!" });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("заблокирован", await response.Content.ReadAsStringAsync());
 
-        _app.WithDb(db => { db.Profiles.First(p => p.Email == email).EmailConfirmed = true; db.SaveChanges(); return 0; });
+        _app.WithDb(db => { db.Profiles.First(p => p.Email == email).IsBanned = false; db.SaveChanges(); return 0; });
         await _app.LoginAsync(email);
     }
 

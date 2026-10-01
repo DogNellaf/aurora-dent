@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DentalClinic.Services
 {
-    public record GenerateResult(int Created, int SkippedExisting);
+    public enum GenerateStatus { Done, UnknownDoctor, Conflict }
+
+    public record GenerateResult(GenerateStatus Status, int Created = 0, int SkippedExisting = 0);
 
     public interface IScheduleService
     {
@@ -84,8 +86,10 @@ namespace DentalClinic.Services
             var now = _clock.Now;
 
             var staffIds = model.StaffId is { } one
-                ? new List<long> { one }
+                ? await _db.Staffs.Where(s => s.Id == one).Select(s => s.Id).ToListAsync()
                 : await _db.Staffs.Select(s => s.Id).ToListAsync();
+            if (model.StaffId != null && staffIds.Count == 0)
+                return new GenerateResult(GenerateStatus.UnknownDoctor);
 
             var created = 0;
             var skipped = 0;
@@ -113,10 +117,20 @@ namespace DentalClinic.Services
                 }
             }
 
-            await _db.SaveChangesAsync();
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // Someone created one of the same slots between the read and the write (unique index on doctor and time).
+                _logger.LogWarning(ex, "Slot generation conflicted with a concurrent change");
+                return new GenerateResult(GenerateStatus.Conflict);
+            }
+
             _logger.LogInformation("Generated {Created} slots ({Skipped} already existed) for {Staff} from {From:d} to {To:d}",
                 created, skipped, model.StaffId?.ToString() ?? "all doctors", from, to);
-            return new GenerateResult(created, skipped);
+            return new GenerateResult(GenerateStatus.Done, created, skipped);
         }
     }
 }

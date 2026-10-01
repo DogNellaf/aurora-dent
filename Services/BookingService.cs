@@ -82,9 +82,8 @@ namespace DentalClinic.Services
                 Services = appointment.Services.ToList()
             };
 
-            // The slot goes back to the schedule for other patients.
-            appointment.ClientId = null;
-            appointment.Services.Clear();
+            // The slot goes back to the schedule for other patients, without the old recommendation.
+            appointment.Release();
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("Profile {ProfileId} cancelled appointment {AppointmentId}", client.Id, appointmentId);

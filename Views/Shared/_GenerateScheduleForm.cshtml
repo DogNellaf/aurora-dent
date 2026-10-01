@@ -18,6 +18,7 @@
                         <option value="@s.Id" selected="@(f.StaffId == s.Id)">@s.DisplayName</option>
                     }
                 </select>
+                @Html.ValidationMessage("StaffId", new { @class = "field-validation-error" })
             </div>
         }
         <div class="row">

@@ -5,14 +5,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DentalClinic.Services
 {
-    public enum UpdateProfileStatus { Updated, NotFound, EmailTaken }
+    public enum UpdateProfileStatus { Updated, NotFound, EmailTaken, Invalid }
 
-    public enum ProfileChangeStatus { Done, NotFound, IsAdmin }
+    public enum ProfileChangeStatus { Done, NotFound, IsAdmin, HasVisits }
+
+    public record UpdateProfileResult(UpdateProfileStatus Status, IReadOnlyList<IdentityError> Errors);
 
     public interface IProfileService
     {
         Task<(IdentityResult Result, Profile? Profile)> CreateAsync(NewProfile model);
-        Task<UpdateProfileStatus> UpdateAsync(long id, ProfileEditModel model);
+        Task<UpdateProfileResult> UpdateAsync(long id, ProfileEditModel model);
         Task<ProfileChangeStatus> SetBannedAsync(long id, bool banned);
         Task<ProfileChangeStatus> DeleteAsync(long id);
     }
@@ -73,29 +75,37 @@ namespace DentalClinic.Services
             return (result, profile);
         }
 
-        public async Task<UpdateProfileStatus> UpdateAsync(long id, ProfileEditModel model)
+        public async Task<UpdateProfileResult> UpdateAsync(long id, ProfileEditModel model)
         {
             var profile = await _db.Profiles.FirstOrDefaultAsync(p => p.Id == id);
-            if (profile is null) return UpdateProfileStatus.NotFound;
+            if (profile is null) return new UpdateProfileResult(UpdateProfileStatus.NotFound, Array.Empty<IdentityError>());
 
             var normalized = _users.NormalizeEmail(model.Email);
             if (await _db.Profiles.AnyAsync(p => p.Id != id && p.NormalizedEmail == normalized))
-                return UpdateProfileStatus.EmailTaken;
+                return new UpdateProfileResult(UpdateProfileStatus.EmailTaken, Array.Empty<IdentityError>());
 
             profile.FullName = model.FullName.Trim();
             profile.PhoneNumber = model.Phone;
-            await _users.SetEmailAsync(profile, model.Email);
-            await _users.SetUserNameAsync(profile, model.Email);
+
+            // The email is also the login. SetEmailAsync marks the address as unconfirmed, which the application
+            // does not use, so the flag is put back. Banning has its own IsBanned column.
+            var emailResult = await _users.SetEmailAsync(profile, model.Email);
+            var nameResult = await _users.SetUserNameAsync(profile, model.Email);
+            profile.EmailConfirmed = true;
+
+            var errors = emailResult.Errors.Concat(nameResult.Errors).ToList();
+            if (errors.Count > 0)
+                return new UpdateProfileResult(UpdateProfileStatus.Invalid, errors);
 
             var staff = await _db.Staffs.FirstOrDefaultAsync(s => s.ProfileId == id);
             if (staff != null)
             {
                 staff.FullName = profile.FullName;
                 staff.ExternalLogin = model.Email;
-                await _db.SaveChangesAsync();
             }
 
-            return UpdateProfileStatus.Updated;
+            await _db.SaveChangesAsync();
+            return new UpdateProfileResult(UpdateProfileStatus.Updated, Array.Empty<IdentityError>());
         }
 
         public async Task<ProfileChangeStatus> SetBannedAsync(long id, bool banned)
@@ -104,7 +114,7 @@ namespace DentalClinic.Services
             if (profile is null) return ProfileChangeStatus.NotFound;
             if (profile.IsAdmin) return ProfileChangeStatus.IsAdmin;
 
-            profile.EmailConfirmed = !banned;
+            profile.IsBanned = banned;
             await _db.SaveChangesAsync();
 
             _logger.LogInformation("Profile {ProfileId} {Action}", id, banned ? "banned" : "unbanned");
@@ -117,11 +127,17 @@ namespace DentalClinic.Services
             if (profile is null) return ProfileChangeStatus.NotFound;
             if (profile.IsAdmin) return ProfileChangeStatus.IsAdmin;
 
+            // Deleting a doctor would silently delete the visits of other patients through the foreign keys.
+            // A doctor who has patients is banned instead, and a doctor without patients can be deleted.
+            var staff = await _db.Staffs.FirstOrDefaultAsync(s => s.ProfileId == id);
+            if (staff != null && await _db.Appointments.AnyAsync(a => a.StaffId == staff.Id && a.ClientId != null))
+                return ProfileChangeStatus.HasVisits;
+
             // Future visits return to the schedule, finished visits stay in the doctors' history without a patient.
             var future = await _db.Appointments.Include(a => a.Services)
                 .Where(a => a.ClientId == id && a.StartAt > _clock.Now).ToListAsync();
             foreach (var appointment in future)
-                appointment.Services.Clear();
+                appointment.Release();
             await _db.SaveChangesAsync();
 
             await _db.Appointments.Where(a => a.ClientId == id)

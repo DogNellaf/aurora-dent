@@ -47,8 +47,9 @@ namespace DentalClinic.Services
             mime.Body = body.ToMessageBody();
 
             using var client = new SmtpClient();
+            // Auto picks implicit TLS on port 465 and STARTTLS on the other ports.
             await client.ConnectAsync(_options.Host, _options.Port,
-                _options.UseSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None, cancellationToken);
+                _options.UseSsl ? SecureSocketOptions.Auto : SecureSocketOptions.None, cancellationToken);
             if (!string.IsNullOrEmpty(_options.User))
                 await client.AuthenticateAsync(_options.User, _options.Password, cancellationToken);
             await client.SendAsync(mime, cancellationToken);

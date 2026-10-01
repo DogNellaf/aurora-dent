@@ -115,7 +115,7 @@ namespace DentalClinic.Controllers
         [HttpPost("appointments/{appointmentId:long}")]
         public async Task<IActionResult> AppointmentUpdate(long appointmentId, Models.Appointment appointment)
         {
-            var existing = await _context.Appointments.FirstOrDefaultAsync(a => a.Id == appointmentId);
+            var existing = await _context.Appointments.Include(a => a.Services).FirstOrDefaultAsync(a => a.Id == appointmentId);
             if (existing == null) return NotFound();
 
             await ValidateAppointment(appointment, appointmentId);
@@ -126,11 +126,20 @@ namespace DentalClinic.Controllers
             }
 
             existing.StaffId = appointment.StaffId;
-            existing.ClientId = appointment.ClientId;
             existing.StartAt = appointment.StartAt;
             existing.Duration = appointment.Duration;
             existing.Recommendation = appointment.Recommendation ?? string.Empty;
             existing.DurationChangeReason = appointment.DurationChangeReason ?? string.Empty;
+
+            // Another patient is booked in, or the slot is released. A released slot keeps nothing of the old visit.
+            if (appointment.ClientId != existing.ClientId)
+            {
+                if (appointment.ClientId == null)
+                    existing.Release();
+                else
+                    existing.ClientId = appointment.ClientId;
+            }
+
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Изменения сохранены.";
@@ -183,6 +192,16 @@ namespace DentalClinic.Controllers
                 return View("Schedule", await ScheduleForm(form));
 
             var result = await _schedule.GenerateAsync(form);
+            switch (result.Status)
+            {
+                case GenerateStatus.UnknownDoctor:
+                    ModelState.AddModelError("StaffId", "Выберите врача из списка");
+                    return View("Schedule", await ScheduleForm(form));
+                case GenerateStatus.Conflict:
+                    TempData["Error"] = "Расписание изменили одновременно. Повторите создание, существующие окна будут пропущены.";
+                    return RedirectToAction("Schedule");
+            }
+
             TempData["Success"] = $"Создано окон {result.Created}, уже существовало {result.SkippedExisting}.";
             return RedirectToAction("Index", new { filter = "free" });
         }
@@ -252,13 +271,18 @@ namespace DentalClinic.Controllers
 
             if (ModelState.IsValid)
             {
-                switch (await _profiles.UpdateAsync(profileId, model))
+                var result = await _profiles.UpdateAsync(profileId, model);
+                switch (result.Status)
                 {
                     case UpdateProfileStatus.Updated:
                         TempData["Success"] = "Профиль обновлён.";
                         return RedirectToAction("Profiles");
                     case UpdateProfileStatus.EmailTaken:
                         ModelState.AddModelError(nameof(model.Email), "Этот email уже занят");
+                        break;
+                    case UpdateProfileStatus.Invalid:
+                        foreach (var error in result.Errors)
+                            ModelState.AddModelError(nameof(model.Email), IdentityErrors.Translate(error));
                         break;
                     default:
                         return NotFound();
@@ -278,6 +302,9 @@ namespace DentalClinic.Controllers
             {
                 case ProfileChangeStatus.NotFound: return NotFound();
                 case ProfileChangeStatus.IsAdmin: TempData["Error"] = "Администратора удалить нельзя."; break;
+                case ProfileChangeStatus.HasVisits:
+                    TempData["Error"] = "У врача есть записи пациентов, удаление затронуло бы их визиты. Заблокируйте профиль, чтобы закрыть вход.";
+                    break;
                 default: TempData["Success"] = "Профиль удалён."; break;
             }
             return RedirectToAction("Profiles");
@@ -316,7 +343,8 @@ namespace DentalClinic.Controllers
 
             ViewBag.Filter = filter is "pending" or "published" ? filter : "all";
             var paged = await query.OrderByDescending(r => r.CreatedAt).ToPagedAsync(page);
-            return View("Reviews/Index", paged.Map(items => ToCardsAsync(items).GetAwaiter().GetResult()));
+            var cards = await ToCardsAsync(paged.Items);
+            return View("Reviews/Index", paged.Map(_ => cards));
         }
 
         [HttpGet("reviews/{reviewId:long}")]

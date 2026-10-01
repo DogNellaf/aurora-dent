@@ -103,7 +103,9 @@ namespace DentalClinic
 
             using (var scope = app.Services.CreateScope())
             {
-                scope.ServiceProvider.GetRequiredService<DatabaseContext>().Database.Migrate();
+                var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+                RefuseDatabaseWithoutMigrationHistory(db);
+                db.Database.Migrate();
 
                 if (app.Configuration.GetValue("Seed:DemoData", true))
                     scope.ServiceProvider.GetRequiredService<DemoDataSeeder>().SeedAsync().GetAwaiter().GetResult();
@@ -144,6 +146,21 @@ namespace DentalClinic
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
+        }
+
+        /// <summary>
+        /// A database created by an older version with EnsureCreated has tables but no migration history, and
+        /// Migrate would fail on it with a confusing "object already exists" error. Fail early and explain.
+        /// </summary>
+        private static void RefuseDatabaseWithoutMigrationHistory(DatabaseContext db)
+        {
+            if (!db.Database.CanConnect() || db.Database.GetAppliedMigrations().Any()) return;
+
+            var hasTables = db.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM sys.tables").AsEnumerable().First() > 0;
+            if (hasTables)
+                throw new InvalidOperationException(
+                    "The database contains tables but no EF Core migration history, so it was created by an older " +
+                    "version of the application. Drop the database and start the application again.");
         }
     }
 }

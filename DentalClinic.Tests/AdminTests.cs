@@ -218,16 +218,54 @@ public class AdminTests : IClassFixture<TestApp>
     }
 
     [Fact]
-    public async Task Deleting_a_doctor_removes_the_staff_card_and_the_schedule()
+    public async Task Deleting_a_doctor_without_patients_removes_the_staff_card_and_the_schedule()
     {
         var admin = await _app.LoginAsync("admin@clinic.demo");
-        var profile = _app.WithDb(db => db.Profiles.Single(p => p.Email == "doctor2@clinic.demo"));
-        var staffId = _app.WithDb(db => db.Staffs.Single(s => s.ExternalLogin == "doctor2@clinic.demo").Id);
+        await TestApp.PostFormAsync(admin, "/admin/profiles/create", "/admin/profiles/create", new()
+        {
+            ["FullName"] = "Удаляемый Врач",
+            ["Email"] = "temp.doctor@clinic.demo",
+            ["Phone"] = "+79000000002",
+            ["Password"] = "secret1",
+            ["ConfirmPassword"] = "secret1",
+            ["RoleTitle"] = "Доктор"
+        });
+        var profile = _app.WithDb(db => db.Profiles.Single(p => p.Email == "temp.doctor@clinic.demo"));
+        var staffId = _app.WithDb(db => db.Staffs.Single(s => s.ProfileId == profile.Id).Id);
+        var day = DateTime.UtcNow.Date.AddDays(150);
+        await TestApp.PostFormAsync(admin, "/admin/schedule", "/admin/schedule", new()
+        {
+            ["StaffId"] = staffId.ToString(),
+            ["From"] = day.ToString("yyyy-MM-dd"),
+            ["To"] = day.ToString("yyyy-MM-dd"),
+            ["StartTime"] = "10:00",
+            ["EndTime"] = "12:00",
+            ["SlotMinutes"] = "60",
+            ["BreakMinutes"] = "0",
+            ["SkipWeekends"] = "false"
+        });
+        Assert.Equal(2, _app.WithDb(db => db.Appointments.Count(a => a.StaffId == staffId)));
 
         await TestApp.PostFormAsync(admin, "/admin/profiles", $"/admin/profiles/{profile.Id}/delete", new());
 
         Assert.False(_app.WithDb(db => db.Staffs.Any(s => s.Id == staffId)));
         Assert.False(_app.WithDb(db => db.Appointments.Any(a => a.StaffId == staffId)));
+    }
+
+    [Fact]
+    public async Task A_doctor_with_patients_cannot_be_deleted_and_the_visits_survive()
+    {
+        var admin = await _app.LoginAsync("admin@clinic.demo");
+        var profile = _app.WithDb(db => db.Profiles.Single(p => p.Email == "doctor2@clinic.demo"));
+        var staffId = _app.WithDb(db => db.Staffs.Single(s => s.ExternalLogin == "doctor2@clinic.demo").Id);
+        var booked = _app.WithDb(db => db.Appointments.Count(a => a.StaffId == staffId && a.ClientId != null));
+        Assert.True(booked > 0);
+
+        var response = await TestApp.PostFormAsync(admin, "/admin/profiles", $"/admin/profiles/{profile.Id}/delete", new());
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.True(_app.WithDb(db => db.Profiles.Any(p => p.Id == profile.Id)));
+        Assert.Equal(booked, _app.WithDb(db => db.Appointments.Count(a => a.StaffId == staffId && a.ClientId != null)));
     }
 
     // ------------------------------------------------------------------ reviews
