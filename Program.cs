@@ -1,5 +1,6 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
@@ -49,6 +50,9 @@ namespace DentalClinic
                 options.UseSqlServer(connection, sql => sql.EnableRetryOnFailure(
                     maxRetryCount: 10, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null));
             });
+
+            // Without stored keys every restart of a container logs everybody out and invalidates the links in emails.
+            builder.Services.AddDataProtection().SetApplicationName("aurora-dent").PersistKeysToDbContext<DatabaseContext>();
 
             builder.Services.AddIdentity<Profile, Role>(options =>
             {

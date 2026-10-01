@@ -51,4 +51,13 @@ public class OperationsTests : IClassFixture<TestApp>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("max-age=604800", response.Headers.CacheControl!.ToString());
     }
+
+    [Fact]
+    public async Task Data_protection_keys_are_stored_in_the_database_so_sessions_survive_a_restart()
+    {
+        // signing in makes the application protect a cookie, which creates the key
+        await _app.LoginAsync("client@clinic.demo");
+
+        Assert.True(_app.WithDb(db => db.DataProtectionKeys.Count()) >= 1);
+    }
 }

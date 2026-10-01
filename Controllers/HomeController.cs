@@ -60,7 +60,7 @@ namespace DentalClinic.Controllers
             {
                 Service = service,
                 Doctors = service.Staff.OrderBy(s => s.Id).ToList(),
-                Related = await _context.Services.Where(s => s.Id != serviceId && s.Category == service.Category).Take(3).ToListAsync()
+                Related = await _context.Services.Where(s => s.Id != serviceId && s.Category == service.Category).OrderBy(s => s.Id).Take(3).ToListAsync()
             });
         }
 

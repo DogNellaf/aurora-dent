@@ -110,9 +110,15 @@ check("new booking is listed in the cabinet", len(cancel_urls) == before + 1)
 
 mail_url = os.environ.get("SMOKE_MAIL_URL")
 if mail_url:
-    with urllib.request.urlopen(mail_url.rstrip("/") + "/api/v1/messages", timeout=20) as response:
-        messages = json.load(response)["messages"]
-    confirmation = [m for m in messages if m["Subject"].startswith("Запись на") and m["To"][0]["Address"] == "client@clinic.demo"]
+    # Emails are delivered by a background queue, so give the mail server a few seconds to receive the message.
+    confirmation = []
+    for _ in range(20):
+        with urllib.request.urlopen(mail_url.rstrip("/") + "/api/v1/messages", timeout=20) as response:
+            messages = json.load(response)["messages"]
+        confirmation = [m for m in messages if m["Subject"].startswith("Запись на") and m["To"][0]["Address"] == "client@clinic.demo"]
+        if confirmation:
+            break
+        time.sleep(0.5)
     check("a confirmation email with a calendar file reaches the mail server", bool(confirmation) and confirmation[0]["Attachments"] >= 1)
 
 other = Session()

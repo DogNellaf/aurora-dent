@@ -29,7 +29,9 @@ services:
     build: .
     image: aurora-dent:local
     ports:
-      - "8080:8080"
+      # Local only on purpose: the demo accounts have a published password. To publish the demo on a server,
+      # change this line and think about Seed__DemoData first.
+      - "127.0.0.1:8080:8080"
     environment:
       ConnectionStrings__DefaultConnection: "Server=db;Database=dental_clinic;User Id=sa;Password=Aurora_Dent_123;TrustServerCertificate=True"
       Seed__DemoData: "true"

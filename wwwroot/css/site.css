@@ -44,6 +44,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; scroll-padding-top: 96px; }
 body {
   margin: 0; font-family: var(--font); color: var(--ink); background: var(--bg);
@@ -440,9 +441,10 @@ a.slot { display: inline-block; }
 .error-page .code { font-family: var(--display); font-size: clamp(6rem, 18vw, 11rem); line-height: 1; color: var(--mint-2); font-weight: 700; margin-bottom: 0; }
 
 /* ---------- reveal ---------- */
-.reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s ease; }
-.reveal.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .float, .live .pulse::before { animation: none; } html { scroll-behavior: auto; } }
+/* Content is hidden for the entrance animation only when scripts run (boot.js adds the js class), so a blocked or failing script never leaves cards invisible. */
+.js .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s ease; }
+.js .reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .js .reveal { opacity: 1; transform: none; transition: none; } .float, .live .pulse::before { animation: none; } html { scroll-behavior: auto; } }
 
 /* ---------- responsive ---------- */
 @media (max-width: 1020px) {

@@ -15,6 +15,7 @@ namespace DentalClinic.Controllers
         private readonly SignInManager<Profile> _signInManager;
         private readonly INotifier _notifier;
         private readonly ClinicOptions _clinic;
+        private readonly bool _demoData;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
@@ -23,12 +24,14 @@ namespace DentalClinic.Controllers
             SignInManager<Profile> signInManager,
             INotifier notifier,
             IOptions<ClinicOptions> clinic,
+            IConfiguration configuration,
             ILogger<AuthController> logger) : base(context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _notifier = notifier;
             _clinic = clinic.Value;
+            _demoData = configuration.GetValue("Seed:DemoData", false);
             _logger = logger;
         }
 
@@ -78,15 +81,22 @@ namespace DentalClinic.Controllers
             return View("Registration", model);
         }
 
+        /// <summary>The demo account buttons are shown only while the demo data exists.</summary>
+        private IActionResult LoginView(LoginViewModel model)
+        {
+            ViewData["ShowDemoAccounts"] = _demoData;
+            return View("Login", model);
+        }
+
         [HttpGet("login")]
         public IActionResult LoginPage(string? returnUrl = null) =>
-            View("Login", new LoginViewModel { ReturnUrl = returnUrl });
+            LoginView(new LoginViewModel { ReturnUrl = returnUrl });
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginViewModel data)
         {
             if (!ModelState.IsValid)
-                return View("Login", data);
+                return LoginView(data);
 
             var profile = await _userManager.FindByNameAsync(data.Email);
             if (profile != null && profile.IsBanned)
@@ -97,7 +107,7 @@ namespace DentalClinic.Controllers
                 ModelState.AddModelError("", knowsPassword
                     ? "Аккаунт заблокирован. Свяжитесь с клиникой по телефону."
                     : "Неверный email или пароль");
-                return View("Login", data);
+                return LoginView(data);
             }
 
             // lockoutOnFailure counts wrong passwords and locks the account after too many of them.
@@ -119,7 +129,7 @@ namespace DentalClinic.Controllers
                 ModelState.AddModelError("", "Неверный email или пароль");
             }
 
-            return View("Login", data);
+            return LoginView(data);
         }
 
         [HttpPost("logout")]

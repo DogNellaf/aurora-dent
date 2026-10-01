@@ -3,7 +3,7 @@
 {
     string Link(int page)
     {
-        var query = Context.Request.Query.ToDictionary(k => k.Key, v => (string?)v.Value.ToString());
+        var query = Context.Request.Query.ToDictionary(k => k.Key, v => (string?)v.Value.ToString(), StringComparer.OrdinalIgnoreCase);
         query["page"] = page.ToString();
         return Context.Request.Path + QueryString.Create(query).ToString();
     }

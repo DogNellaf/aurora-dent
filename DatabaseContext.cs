@@ -1,17 +1,21 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using DentalClinic.Models;
 
 namespace DentalClinic
 {
-    public class DatabaseContext : IdentityDbContext<Profile, Role, long>
+    public class DatabaseContext : IdentityDbContext<Profile, Role, long>, IDataProtectionKeyContext
     {
         public DbSet<Staff> Staffs { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Profile> Profiles { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Service> Services { get; set; } = null!;
+
+        /// <summary>Keys that protect cookies and password reset tokens, kept in the database so they survive restarts.</summary>
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
 

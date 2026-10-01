@@ -31,16 +31,19 @@
                 <button class="btn btn-primary btn-lg btn-block" type="submit">Войти</button>
             </form>
 
-            <div class="demo-box">
-                <b>Демо-доступ — нажмите, чтобы войти</b>
-                <div class="demo-list">
-                    <button type="button" data-demo-email="client@clinic.demo">Пациент <em>client@clinic.demo</em></button>
-                    <button type="button" data-demo-email="doctor@clinic.demo">Врач <em>doctor@clinic.demo</em></button>
-                    <button type="button" data-demo-email="manager@clinic.demo">Менеджер <em>manager@clinic.demo</em></button>
-                    <button type="button" data-demo-email="admin@clinic.demo">Администратор <em>admin@clinic.demo</em></button>
+            @if (ViewData["ShowDemoAccounts"] is true)
+            {
+                <div class="demo-box">
+                    <b>Демо-доступ — нажмите, чтобы войти</b>
+                    <div class="demo-list">
+                        <button type="button" data-demo-email="client@clinic.demo">Пациент <em>client@clinic.demo</em></button>
+                        <button type="button" data-demo-email="doctor@clinic.demo">Врач <em>doctor@clinic.demo</em></button>
+                        <button type="button" data-demo-email="manager@clinic.demo">Менеджер <em>manager@clinic.demo</em></button>
+                        <button type="button" data-demo-email="admin@clinic.demo">Администратор <em>admin@clinic.demo</em></button>
+                    </div>
+                    <div class="muted" style="margin-top:8px">Пароль для всех: Demo123!</div>
                 </div>
-                <div class="muted" style="margin-top:8px">Пароль для всех: Demo123!</div>
-            </div>
+            }
         </div>
     </div>
 </div>
