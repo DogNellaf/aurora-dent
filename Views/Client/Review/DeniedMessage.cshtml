@@ -1,20 +1,13 @@
-﻿@{
-    ViewData["Title"] = "Личный кабинет пациента: отзыв";
+@{
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Мой отзыв";
+    ViewData["Cabinet"] = "client";
+    ViewData["Tab"] = "review";
 }
-
-<div class="card text-center">
-    <div class="card-header">
-        Личный кабинет пациента
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Client" asp-action="Index">Больничная карта</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Client" asp-action="Review">Отзыв</a>
-            </li>
-        </ul>
-    </div>
-    <div class="card-body">
-        Отзыв могут оставить только посетившие хотя бы один прием клиенты.
-    </div>
+<div class="cab-head"><div><h1>Мой отзыв</h1></div></div>
+<div class="card empty">
+    <svg class="ic"><use href="#i-message"/></svg>
+    <h3>Отзыв можно оставить после первого визита</h3>
+    <p>Как только вы посетите клинику, здесь появится форма отзыва.</p>
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Schedule">Записаться на приём</a>
 </div>

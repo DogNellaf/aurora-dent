@@ -1,15 +1,53 @@
-﻿@model DentalClinic.Models.Service
-
+@model ServiceDetailViewModel
 @{
-    ViewData["Title"] = "Информация об услуге";
+    ViewData["Title"] = Model.Service.Title;
+    ViewData["Description"] = Model.Service.Description;
 }
-
-<div>
-    <h4>@Model.Title</h4>
-    <hr />
-    <center>@Model.Price руб.</center>
-    <p>@Model.Description</p>
-</div>
-<div>
-    <a asp-controller="Home" asp-action="Services">Вернуться в список услуг</a>
+<div class="wrap">
+    <div class="page-head">
+        <div class="crumbs"><a asp-controller="Home" asp-action="Index">Главная</a> / <a asp-controller="Home" asp-action="Services">Услуги</a> / <span>@Model.Service.Title</span></div>
+        <span class="badge" style="margin-bottom:14px">@Model.Service.Category</span>
+        <h1>@Model.Service.Title</h1>
+    </div>
+    <div class="detail" style="padding-bottom:60px">
+        <div>
+            <div class="card card-pad">
+                <div style="display:flex;gap:18px;align-items:center;margin-bottom:18px">
+                    <span class="svc-icon" style="width:64px;height:64px"><partial name="_ServiceIcon" model="Model.Service.Icon" /></span>
+                    <p class="lead" style="margin:0">@Model.Service.Description</p>
+                </div>
+            </div>
+            @if (Model.Doctors.Count > 0)
+            {
+                <h3 class="group-title" style="margin-top:36px">Выполняют врачи</h3>
+                <div class="list">
+                    @foreach (var d in Model.Doctors)
+                    {
+                        <div class="card sched-doc">
+                            @if (!string.IsNullOrEmpty(d.PhotoUrl)) { <img src="@d.PhotoUrl" alt="@d.DisplayName" loading="lazy"> } else { <div class="doc-fallback">@Fmt.Initials(d.DisplayName)</div> }
+                            <div><h3>@d.DisplayName</h3><span class="soft">@d.Specialty · стаж @Fmt.Years(d.ExperienceYears)</span></div>
+                            <a class="btn btn-ghost btn-sm" asp-controller="Home" asp-action="Schedule" asp-route-serviceId="@Model.Service.Id" asp-route-staffId="@d.Id">Время приёма</a>
+                        </div>
+                    }
+                </div>
+            }
+            @if (Model.Related.Count > 0)
+            {
+                <h3 class="group-title" style="margin-top:36px">Похожие услуги</h3>
+                <div class="grid grid-3">
+                    @foreach (var s in Model.Related) { <partial name="_ServiceCard" model="s" /> }
+                </div>
+            }
+        </div>
+        <aside class="card card-pad" style="position:sticky;top:100px">
+            <div class="muted" style="font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em">Стоимость</div>
+            <div style="font-family:var(--display);font-size:2.4rem;line-height:1.1;margin:6px 0 20px">@(Model.Service.Price > 0 ? "от " : "")@Fmt.Money(Model.Service.Price)</div>
+            <ul class="facts-list" style="margin-bottom:24px">
+                <li><span>Длительность</span><b>@Fmt.Minutes(Model.Service.DurationMinutes)</b></li>
+                <li><span>Категория</span><b>@Model.Service.Category</b></li>
+                <li><span>Гарантия</span><b>по договору</b></li>
+            </ul>
+            <a class="btn btn-accent btn-block btn-lg" asp-controller="Home" asp-action="Schedule" asp-route-serviceId="@Model.Service.Id">Записаться</a>
+        </aside>
+    </div>
 </div>

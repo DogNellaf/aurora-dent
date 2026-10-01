@@ -1,40 +1,120 @@
-﻿<!DOCTYPE html>
+@{
+    var controller = (ViewContext.RouteData.Values["controller"] as string ?? "").ToLowerInvariant();
+    var action = (ViewContext.RouteData.Values["action"] as string ?? "").ToLowerInvariant();
+    string Active(bool on) => on ? "active" : "";
+    var title = ViewData["Title"] as string;
+    var authed = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@(string.IsNullOrEmpty(title) ? "Аврора Дент — стоматология без страха" : $"{title} — Аврора Дент")</title>
+    <meta name="description" content="@(ViewData["Description"] ?? "Аврора Дент — современная стоматология в центре Москвы: лечение без боли, имплантация, отбеливание, детская стоматология. Онлайн-запись за минуту.")">
+    <meta name="theme-color" content="#0f7a77">
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml">
+    <link rel="preload" href="~/fonts/manrope-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <h1>Стоматологическая клиника</h1>
-    </header>
-    <nav>
-        <a asp-area="" asp-controller="Home" asp-action="Index">Главная</a>
-        <a asp-area="" asp-controller="Home" asp-action="Schedule">Расписание</a>
-        <a asp-area="" asp-controller="Auth" asp-action="Index">Личный кабинет</a>
-        <a asp-area="" asp-controller="Home" asp-action="FAQ">Частые вопросы</a>
-        <a asp-area="" asp-controller="Home" asp-action="Services">Услуги</a>
-        <a asp-area="" asp-controller="Home" asp-action="About">О нас</a>
-        <a asp-area="" asp-controller="Home" asp-action="Contacts">Контакты</a>
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <a asp-area="" asp-controller="Auth" asp-action="Logout">Выйти</a>
-        }
-    </nav>
-    <div class="container">
-        @RenderBody()
+    <partial name="_Icons" />
+
+    <div class="topbar">
+        <div class="wrap">
+            <div class="group">
+                <span><svg class="ic"><use href="#i-pin"/></svg> Москва, ул. Примерная, 1</span>
+                <span><svg class="ic"><use href="#i-clock"/></svg> Ежедневно 8:00–23:00</span>
+            </div>
+            <div class="group">
+                <a href="tel:+74950000000"><svg class="ic"><use href="#i-phone"/></svg> +7 (495) 000-00-00</a>
+            </div>
+        </div>
     </div>
+
+    <header class="header" id="header">
+        <div class="wrap">
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                <span class="brand-mark"><svg class="ic"><use href="#i-tooth"/></svg></span>
+                <span>Аврора Дент<small>стоматология</small></span>
+            </a>
+            <nav class="nav" id="nav" aria-label="Основное меню">
+                <a class="@Active(controller == "home" && action == "index")" asp-controller="Home" asp-action="Index">Главная</a>
+                <a class="@Active(controller == "home" && action is "services" or "servicedetail")" asp-controller="Home" asp-action="Services">Услуги</a>
+                <a class="@Active(controller == "home" && action == "doctors")" asp-controller="Home" asp-action="Doctors">Врачи</a>
+                <a class="@Active(controller == "home" && action == "about")" asp-controller="Home" asp-action="About">О клинике</a>
+                <a class="@Active(controller == "home" && action == "faq")" asp-controller="Home" asp-action="FAQ">Вопросы</a>
+                <a class="@Active(controller == "home" && action == "contacts")" asp-controller="Home" asp-action="Contacts">Контакты</a>
+            </nav>
+            <div class="header-actions">
+                @if (authed)
+                {
+                    <a class="btn btn-ghost btn-sm" asp-controller="Auth" asp-action="Index"><svg class="ic"><use href="#i-user"/></svg> Кабинет</a>
+                    <form asp-controller="Auth" asp-action="Logout" method="post">
+                        <button class="btn btn-ghost btn-sm" type="submit" title="Выйти" aria-label="Выйти"><svg class="ic"><use href="#i-logout"/></svg></button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-ghost btn-sm" asp-controller="Auth" asp-action="LoginPage">Войти</a>
+                }
+                <a class="btn btn-accent btn-sm hide-sm" asp-controller="Home" asp-action="Schedule">Записаться</a>
+                <button class="burger" id="burger" type="button" aria-label="Меню" aria-expanded="false"><svg class="ic"><use href="#i-menu"/></svg></button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="wrap"><div class="flash success" role="status"><svg class="ic"><use href="#i-check"/></svg> @ok</div></div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="wrap"><div class="flash error" role="alert"><svg class="ic"><use href="#i-ban"/></svg> @err</div></div>
+        }
+        @RenderBody()
+    </main>
+
     <footer class="footer">
-        <p>&copy; @DateTime.Now.Year Стоматологическая клиника. Все права защищены.</p>
+        <div class="wrap">
+            <div class="footer-grid">
+                <div>
+                    <a class="brand" asp-controller="Home" asp-action="Index">
+                        <span class="brand-mark"><svg class="ic"><use href="#i-tooth"/></svg></span>
+                        <span>Аврора Дент<small>стоматология</small></span>
+                    </a>
+                    <p>Современная стоматология без боли и очередей. Лечим так, чтобы вы возвращались ради улыбки, а не из-за проблем.</p>
+                </div>
+                <div>
+                    <h5>Клиника</h5>
+                    <a asp-controller="Home" asp-action="About">О клинике</a>
+                    <a asp-controller="Home" asp-action="Doctors">Наши врачи</a>
+                    <a asp-controller="Home" asp-action="FAQ">Частые вопросы</a>
+                    <a asp-controller="Home" asp-action="Contacts">Контакты</a>
+                </div>
+                <div>
+                    <h5>Пациентам</h5>
+                    <a asp-controller="Home" asp-action="Services">Услуги и цены</a>
+                    <a asp-controller="Home" asp-action="Schedule">Онлайн-запись</a>
+                    <a asp-controller="Auth" asp-action="Index">Личный кабинет</a>
+                    <a asp-controller="Auth" asp-action="Registration">Регистрация</a>
+                </div>
+                <div>
+                    <h5>Контакты</h5>
+                    <a href="tel:+74950000000">+7 (495) 000-00-00</a>
+                    <a href="mailto:info@clinic.example">info@clinic.example</a>
+                    <span>Москва, ул. Примерная, 1<br>Ежедневно 8:00–23:00</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© @DateTime.Now.Year Аврора Дент. Демо-проект: клиника, врачи и отзывы вымышлены.</span>
+                <span>Фотографии — <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a></span>
+            </div>
+        </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-

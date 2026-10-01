@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DentalClinic.Models
 {
@@ -9,6 +9,9 @@ namespace DentalClinic.Models
         public string Title { get; set; } = string.Empty;
         public double Price { get; set; }
         public string Description { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Icon { get; set; } = "tooth";
+        public int DurationMinutes { get; set; } = 60;
         public List<Staff> Staff { get; set; } = new();
         public List<Appointment> Appointments { get; set; } = new();
     }

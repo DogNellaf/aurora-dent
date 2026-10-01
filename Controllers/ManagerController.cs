@@ -1,72 +1,54 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 
 namespace DentalClinic.Controllers
 {
     [Route("manager")]
+    [RoleRequired(RoleIds.Manager)]
     public class ManagerController : BaseController
     {
         public ManagerController(DatabaseContext context) : base(context) { }
 
-        [HttpGet]
-        [Route("reviews/all")]
+        [HttpGet("reviews/all")]
         public IActionResult Index()
         {
-            if (!User.Identity!.IsAuthenticated) return Forbid();
-
-            var profile = GetProfile();
-            if (!profile.IsManager) return Forbid();
-
-            var reviews = _context.Reviews.Where(r => r.IsVisible).ToList();
-            return View(reviews);
+            var reviews = _context.Reviews.Where(r => r.IsVisible).OrderByDescending(r => r.CreatedAt).ToList();
+            ViewBag.PendingCount = _context.Reviews.Count(r => !r.IsVisible);
+            return View(ToCards(reviews));
         }
 
-        [HttpGet]
-        [Route("reviews/hidden")]
+        [HttpGet("reviews/hidden")]
         public IActionResult HiddenReviews()
         {
-            if (!User.Identity!.IsAuthenticated) return Forbid();
-
-            var profile = GetProfile();
-            if (!profile.IsManager) return Forbid();
-
-            var reviews = _context.Reviews.Where(r => !r.IsVisible).ToList();
-            return View(reviews);
+            var reviews = _context.Reviews.Where(r => !r.IsVisible).OrderByDescending(r => r.CreatedAt).ToList();
+            ViewBag.PendingCount = reviews.Count;
+            return View(ToCards(reviews));
         }
 
-        [HttpPost]
-        [Route("reviews/{reviewId}/show")]
+        [HttpPost("reviews/{reviewId:long}/show")]
         public IActionResult Show(long reviewId)
         {
-            if (!User.Identity!.IsAuthenticated) return Forbid();
-
-            var profile = GetProfile();
-            if (!profile.IsManager) return Forbid();
-
             var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
             if (review == null) return NotFound();
 
             review.IsVisible = true;
             _context.SaveChanges();
 
+            TempData["Success"] = "Отзыв опубликован на сайте.";
             return RedirectToAction("HiddenReviews");
         }
 
-        [HttpPost]
-        [Route("reviews/{reviewId}/hide")]
+        [HttpPost("reviews/{reviewId:long}/hide")]
         public IActionResult Hide(long reviewId)
         {
-            if (!User.Identity!.IsAuthenticated) return Forbid();
-
-            var profile = GetProfile();
-            if (!profile.IsManager) return Forbid();
-
             var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
             if (review == null) return NotFound();
 
             review.IsVisible = false;
             _context.SaveChanges();
 
+            TempData["Success"] = "Отзыв скрыт с сайта.";
             return RedirectToAction("Index");
         }
     }

@@ -1,145 +1,170 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using DentalClinic.Models;
+using DentalClinic.Models.ViewModels;
 
 namespace DentalClinic.Controllers
 {
     public class HomeController : BaseController
     {
-        private readonly ILogger<HomeController> _logger;
+        public HomeController(DatabaseContext context) : base(context) { }
 
-        public HomeController(ILogger<HomeController> logger, DatabaseContext context) : base(context)
-        {
-            _logger = logger;
-        }
-
-        [HttpGet]
-        [Route("")]
+        [HttpGet("")]
         public IActionResult Index()
         {
-            var reviews = _context.Reviews
-                .Where(r => r.IsVisible)
-                .OrderByDescending(r => r.Id)
-                .Take(5)
-                .ToList();
-
-            return View(reviews);
+            var visible = _context.Reviews.Where(r => r.IsVisible);
+            var model = new HomeViewModel
+            {
+                Reviews = ToCards(visible.OrderByDescending(r => r.CreatedAt).Take(6).ToList()),
+                Services = _context.Services.OrderBy(s => s.Id).Take(6).ToList(),
+                Doctors = _context.Staffs.OrderBy(s => s.Id).ToList(),
+                PatientsCount = _context.Profiles.Count(p => p.RoleId == RoleIds.Client),
+                AverageRating = visible.Any() ? Math.Round(visible.Average(r => r.Rating), 1) : 5
+            };
+            return View(model);
         }
 
-        [HttpGet]
-        [Route("faq")]
-        public IActionResult FAQ()
+        [HttpGet("faq")]
+        public IActionResult FAQ() => View();
+
+        [HttpGet("about")]
+        public IActionResult About() => View(_context.Staffs.OrderBy(s => s.Id).ToList());
+
+        [HttpGet("contacts")]
+        public IActionResult Contacts() => View();
+
+        [HttpGet("doctors")]
+        public IActionResult Doctors()
         {
-            return View();
+            var doctors = _context.Staffs.Include(s => s.Services).OrderBy(s => s.Id).ToList();
+            return View(doctors);
         }
 
-        [HttpGet]
-        [Route("schedule")]
-        public IActionResult Schedule()
+        [HttpGet("services")]
+        public IActionResult Services()
         {
-            var services = _context.Services.ToList();
+            var services = _context.Services.OrderBy(s => s.Id).ToList();
             return View(services);
         }
 
-        [HttpGet]
-        [Route("schedule/services")]
-        public IActionResult ScheduleWithService([FromQuery(Name = "Service")] string? serviceTitle)
+        [HttpGet("services/{serviceId:long}")]
+        public IActionResult ServiceDetail(long serviceId)
         {
-            if (string.IsNullOrEmpty(serviceTitle))
-                return RedirectToAction("Schedule");
+            var service = _context.Services.Include(s => s.Staff).FirstOrDefault(s => s.Id == serviceId);
+            if (service == null) return NotFound();
 
-            var service = _context.Services
-                .Include(s => s.Staff)
-                .FirstOrDefault(s => s.Title == serviceTitle);
-
-            if (service == null)
-                return RedirectToAction("Schedule");
-
-            return View(service.Staff);
+            return View(new ServiceDetailViewModel
+            {
+                Service = service,
+                Doctors = service.Staff.OrderBy(s => s.Id).ToList(),
+                Related = _context.Services.Where(s => s.Id != serviceId && s.Category == service.Category).Take(3).ToList()
+            });
         }
 
-        [HttpGet]
-        [Route("schedule/staff")]
-        public IActionResult ScheduleWithStaff([FromQuery(Name = "Staff")] string? staffLogin)
+        /// <summary>
+        /// Step-by-step booking: pick a service (optional) → pick a doctor → pick a free time.
+        /// Browsing is public; booking itself requires a patient account.
+        /// </summary>
+        [HttpGet("schedule")]
+        public IActionResult Schedule(long? serviceId, long? staffId)
         {
-            if (string.IsNullOrEmpty(staffLogin))
-                return RedirectToAction("Schedule");
+            var now = DateTime.Now;
+            var profile = TryGetProfile();
 
-            var staff = _context.Staffs.FirstOrDefault(s => s.ExternalLogin == staffLogin);
-            if (staff == null)
-                return RedirectToAction("Schedule");
+            var model = new ScheduleViewModel
+            {
+                Services = _context.Services.OrderBy(s => s.Category).ThenBy(s => s.Title).ToList(),
+                ServiceId = serviceId,
+                IsAuthenticated = profile != null,
+                CanBook = profile?.IsClient == true
+            };
 
-            var appointments = _context.Appointments
-                .Where(a => a.StaffId == staff.Id && a.ClientId == 0 && a.StartAt > DateTime.Now)
+            model.SelectedService = serviceId == null ? null : model.Services.FirstOrDefault(s => s.Id == serviceId);
+
+            var doctorsQuery = _context.Staffs.Include(s => s.Services).AsQueryable();
+            if (model.SelectedService != null)
+                doctorsQuery = doctorsQuery.Where(s => s.Services.Any(x => x.Id == model.SelectedService.Id));
+            var doctors = doctorsQuery.OrderBy(s => s.Id).ToList();
+
+            var ids = doctors.Select(d => d.Id).ToList();
+            var free = _context.Appointments
+                .Where(a => ids.Contains(a.StaffId) && a.ClientId == 0 && a.StartAt > now)
+                .OrderBy(a => a.StartAt)
                 .ToList();
 
-            return View(appointments);
-        }
-
-        [HttpGet]
-        [Route("appointments/add")]
-        public IActionResult AddAppointment([FromQuery(Name = "Appointment")] long? appointmentId)
-        {
-            if (appointmentId == null)
-                return RedirectToAction("Schedule");
-
-            if (!User.Identity!.IsAuthenticated)
-                return RedirectToAction("LoginPage", "Auth");
-
-            var appointment = _context.Appointments.FirstOrDefault(a => a.Id == appointmentId);
-            if (appointment == null)
-                return NotFound();
-
-            if (appointment.IsBooked)
+            model.Doctors = doctors.Select(d =>
             {
-                TempData["Error"] = "Этот приём уже занят. Пожалуйста, выберите другое время.";
-                return RedirectToAction("Schedule");
+                var slots = free.Where(a => a.StaffId == d.Id).ToList();
+                return new DoctorSlots { Doctor = d, NextSlot = slots.FirstOrDefault(), FreeCount = slots.Count };
+            }).ToList();
+
+            if (staffId != null)
+            {
+                model.SelectedDoctor = doctors.FirstOrDefault(d => d.Id == staffId);
+                if (model.SelectedDoctor != null)
+                    model.Days = free.Where(a => a.StaffId == staffId).GroupBy(a => a.StartAt.Date).ToList();
             }
 
-            var profile = GetProfile();
-            appointment.ClientId = profile.Id;
-            _context.SaveChanges();
+            return View(model);
+        }
 
+        [HttpPost("appointments/book")]
+        public IActionResult Book(long appointmentId, long? serviceId)
+        {
+            var profile = TryGetProfile();
+            if (profile == null)
+                return RedirectToAction("LoginPage", "Auth", new { returnUrl = Url.Action("Schedule", "Home", new { serviceId }) });
+
+            if (!profile.IsClient)
+            {
+                TempData["Error"] = "Записаться на приём можно только с аккаунта пациента.";
+                return RedirectToAction("Schedule", new { serviceId });
+            }
+
+            var appointment = _context.Appointments.AsNoTracking().FirstOrDefault(a => a.Id == appointmentId);
+            if (appointment == null) return NotFound();
+
+            if (appointment.StartAt <= DateTime.Now)
+            {
+                TempData["Error"] = "Это время уже прошло. Выберите другое.";
+                return RedirectToAction("Schedule", new { serviceId, staffId = appointment.StaffId });
+            }
+
+            // Atomic claim: only one patient can win a slot even if two click at the same moment.
+            var claimed = _context.Appointments
+                .Where(a => a.Id == appointmentId && a.ClientId == 0)
+                .ExecuteUpdate(s => s.SetProperty(a => a.ClientId, profile.Id));
+
+            if (claimed == 0)
+            {
+                TempData["Error"] = "Это время только что заняли. Пожалуйста, выберите другое.";
+                return RedirectToAction("Schedule", new { serviceId, staffId = appointment.StaffId });
+            }
+
+            if (serviceId != null)
+            {
+                var service = _context.Services.FirstOrDefault(s => s.Id == serviceId);
+                var booked = _context.Appointments.Include(a => a.Services).First(a => a.Id == appointmentId);
+                if (service != null)
+                {
+                    booked.Services.Add(service);
+                    _context.SaveChanges();
+                }
+            }
+
+            TempData["Success"] = "Вы записаны на приём. Ждём вас в клинике!";
             return RedirectToAction("Index", "Client");
         }
 
-        [HttpGet]
-        [Route("services")]
-        public IActionResult Services()
-        {
-            var services = _context.Services.ToList();
-            return View(services);
-        }
-
-        [HttpGet]
-        [Route("services/{serviceId}")]
-        public IActionResult ServiceDetail(long serviceId)
-        {
-            var service = _context.Services.FirstOrDefault(s => s.Id == serviceId);
-            if (service == null)
-                return NotFound();
-
-            return View(service);
-        }
-
-        [HttpGet]
-        [Route("contacts")]
-        public IActionResult Contacts()
-        {
-            return View();
-        }
-
-        [HttpGet]
-        [Route("about")]
-        public IActionResult About()
-        {
-            return View();
-        }
-
+        [Route("Home/Error")]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public IActionResult Error(int? code)
         {
+            var status = code ?? HttpContext.Response.StatusCode;
+            if (status < 400) status = 500;
+            Response.StatusCode = status;
+            ViewData["Status"] = status;
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }

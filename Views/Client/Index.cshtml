@@ -1,55 +1,67 @@
-﻿@model List<Appointment>
+@model List<Appointment>
 @{
-    ViewData["Title"] = "Личный кабинет пациента";
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Мои записи";
+    ViewData["Cabinet"] = "client";
+    ViewData["Tab"] = "records";
+    var profile = (Profile)ViewBag.Profile;
+    var now = DateTime.Now;
+    var upcoming = Model.Where(a => a.EndAt >= now).OrderBy(a => a.StartAt).ToList();
+    var past = Model.Where(a => a.EndAt < now).ToList();
 }
+<div class="cab-head">
+    <div><h1>Здравствуйте, @(profile.FullName.Split(' ')[0])!</h1><p>Ваши записи и история лечения</p></div>
+    <a class="btn btn-accent" asp-controller="Home" asp-action="Schedule"><svg class="ic"><use href="#i-plus"/></svg> Записаться на приём</a>
+</div>
 
-<div class="card text-center">
-    <div class="card-header">
-        Личный кабинет пациента
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Client" asp-action="Index">Больничная карта</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Client" asp-action="Review">Отзыв</a>
-            </li>
-        </ul>
-    </div>
-    <div class="card-body">
-        @if (Model.Count == 0)
+<div class="group-title">Предстоящие</div>
+@if (upcoming.Count == 0)
+{
+    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>Нет предстоящих записей</h3><p>Выберите врача и удобное время — это займёт минуту.</p><a class="btn btn-primary" asp-controller="Home" asp-action="Schedule">Записаться</a></div>
+}
+else
+{
+    <div class="list">
+        @foreach (var a in upcoming)
         {
-            <div class="row">
-                <div class="col">
-                    Приемы не найдены
+            <div class="card appt">
+                <partial name="_DateBox" model="a.StartAt" />
+                <div>
+                    <h4>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</h4>
+                    <div class="meta">
+                        <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Weekday(a.StartAt), @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
+                        <span><svg class="ic"><use href="#i-user"/></svg> @(a.Staff?.DisplayName)</span>
+                    </div>
+                </div>
+                <div class="appt-actions">
+                    <a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">Подробнее</a>
+                    <form asp-action="Cancel" asp-route-appointmentId="@a.Id" method="post" data-confirm="Отменить запись на @Fmt.DateTimeShort(a.StartAt)?">
+                        <button class="btn btn-danger btn-sm" type="submit">Отменить</button>
+                    </form>
                 </div>
             </div>
         }
-        else
+    </div>
+}
+
+@if (past.Count > 0)
+{
+    <div class="group-title">История</div>
+    <div class="list">
+        @foreach (var a in past)
         {
-            foreach (var appointment in Model)
-            {
-                <div class="row mt-3">
-                    <div class="col">
-                        <span class="bid">
-                            Дата
-                            <br>
-                            <strong>@appointment.StartAt</strong>
-                        </span>
-                    </div>
-                    <div class="col">
-                        <span class="ends">
-                            Длительность
-                            <br>
-                            <strong>@appointment.Duration</strong>
-                        </span>
-                    </div>
-                    <div class="col">
-                        <span class="ends">
-                            <a asp-route-appointmentId="@appointment.Id" asp-controller="Client" asp-action="Appointment" class="btn btn-info">Подробнее</a>
-                        </span>
+            <div class="card appt past">
+                <partial name="_DateBox" model="a.StartAt" />
+                <div>
+                    <h4>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</h4>
+                    <div class="meta">
+                        <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Date(a.StartAt), @Fmt.Time(a.StartAt)</span>
+                        <span><svg class="ic"><use href="#i-user"/></svg> @(a.Staff?.DisplayName)</span>
+                        @if (!string.IsNullOrEmpty(a.Recommendation)) { <span class="badge ok"><svg class="ic"><use href="#i-clipboard"/></svg> Есть рекомендации</span> }
                     </div>
                 </div>
-            }
+                <div class="appt-actions"><a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">Подробнее</a></div>
+            </div>
         }
     </div>
-</div>
+}

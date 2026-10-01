@@ -1,67 +1,59 @@
-@model Appointment
+@model AppointmentEditViewModel
 @{
-    ViewData["Title"] = "Панель администратора";
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = Model.IsNew ? "Новое окно" : "Редактирование приёма";
+    ViewData["Cabinet"] = "admin";
+    ViewData["Tab"] = "appointments";
+    var a = Model.Appointment;
 }
-
-<div class="card text-center">
-    <div class="card-header">
-        Панель администратора
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Admin" asp-action="Index">Приёмы</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Admin" asp-action="Profiles">Профили</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Admin" asp-action="Reviews">Отзывы</a>
-            </li>
-        </ul>
-    </div>
-    <div class="card-body">
-        <form asp-controller="Admin" asp-action="AppointmentUpdate" asp-route-appointmentId="@Model.Id" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group mt-4">
-                <label asp-for="StaffId" class="form-label">Номер сотрудника</label>
-                <input asp-for="StaffId" class="form-control" />
-                <span asp-validation-for="StaffId" class="text-danger"></span>
+<div class="cab-head"><div><div class="crumbs"><a asp-action="Index">Приёмы</a> / <span>@ViewData["Title"]</span></div><h1>@ViewData["Title"]</h1></div></div>
+<div class="card card-pad" style="max-width:720px">
+    <form method="post" asp-action="@(Model.IsNew ? "AppointmentStore" : "AppointmentUpdate")" asp-route-appointmentId="@(Model.IsNew ? null : a.Id)" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+        <div class="row">
+            <div class="field">
+                <label for="StaffId">Врач</label>
+                <select name="StaffId" id="StaffId">
+                    @foreach (var s in Model.Staff)
+                    {
+                        <option value="@s.Id" selected="@(s.Id == a.StaffId)">@s.DisplayName</option>
+                    }
+                </select>
+                <span class="text-danger field-validation-valid" data-valmsg-for="StaffId" data-valmsg-replace="true"></span>
             </div>
-            <div class="form-group mt-4">
-                <label asp-for="ClientId" class="form-label">Номер клиента</label>
-                <input asp-for="ClientId" class="form-control" />
-                <span asp-validation-for="ClientId" class="text-danger"></span>
+            <div class="field">
+                <label for="ClientId">Пациент</label>
+                <select name="ClientId" id="ClientId">
+                    <option value="0" selected="@(a.ClientId == 0)">— свободное окно —</option>
+                    @foreach (var c in Model.Clients)
+                    {
+                        <option value="@c.Id" selected="@(c.Id == a.ClientId)">@c.DisplayName</option>
+                    }
+                </select>
             </div>
-            <div class="form-group mt-4">
-                <label asp-for="StartAt" class="form-label">Время начала</label>
-                <input asp-for="StartAt" type="datetime-local" class="form-control" />
-                <span asp-validation-for="StartAt" class="text-danger"></span>
+        </div>
+        <div class="row">
+            <div class="field">
+                <label asp-for="Appointment.StartAt">Время начала</label>
+                <input name="StartAt" id="StartAt" type="datetime-local" value="@a.StartAt.ToString("yyyy-MM-ddTHH:mm")" />
             </div>
-            <div class="form-group mt-4">
-                <label asp-for="Duration" class="form-label">Длительность (мин.)</label>
-                <input asp-for="Duration" class="form-control" />
-                <span asp-validation-for="Duration" class="text-danger"></span>
+            <div class="field">
+                <label for="Duration">Длительность, минут</label>
+                <input name="Duration" id="Duration" type="number" min="1" max="480" value="@a.Duration" />
+                <span class="text-danger field-validation-valid" data-valmsg-for="Duration" data-valmsg-replace="true"></span>
             </div>
-            <div class="form-group mt-4">
-                <label asp-for="Recommendation" class="form-label">Рекомендации</label>
-                <textarea asp-for="Recommendation" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="Recommendation" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <label asp-for="DurationChangeReason" class="form-label">Причина изменения длительности</label>
-                <input asp-for="DurationChangeReason" class="form-control" />
-                <span asp-validation-for="DurationChangeReason" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <input type="submit" value="Сохранить" class="btn btn-primary" />
-                <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary ms-2">Отмена</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="field">
+            <label for="Recommendation">Рекомендации</label>
+            <textarea name="Recommendation" id="Recommendation" rows="3">@a.Recommendation</textarea>
+        </div>
+        <div class="field">
+            <label for="DurationChangeReason">Причина изменения длительности</label>
+            <input name="DurationChangeReason" id="DurationChangeReason" value="@a.DurationChangeReason" />
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+            <a class="btn btn-ghost" asp-action="Index">Отмена</a>
+        </div>
+    </form>
 </div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}

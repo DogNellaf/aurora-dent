@@ -1,18 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace DentalClinic.Models.DTO
 {
-	public class LoginViewModel
-	{
-		[Required]
-		[DataType(DataType.EmailAddress)]
-		public string Email { get; set; } = null!;
+    public class LoginViewModel
+    {
+        [Required(ErrorMessage = "Укажите email")]
+        [EmailAddress(ErrorMessage = "Некорректный email")]
+        public string Email { get; set; } = null!;
 
-		[Required]
-		[DataType(DataType.Password)]
-		public string Password { get; set; } = null!;
+        [Required(ErrorMessage = "Введите пароль")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = null!;
 
-		[Display(Name = "Remember me?")]
-		public bool RememberMe { get; set; }
-	}
+        public bool RememberMe { get; set; } = true;
+
+        public string? ReturnUrl { get; set; }
+    }
 }

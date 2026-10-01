@@ -1,0 +1,42 @@
+@model AdminOverview
+@{
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Панель администратора";
+    ViewData["Cabinet"] = "admin";
+    ViewData["Tab"] = "overview";
+}
+<div class="cab-head">
+    <div><h1>Обзор клиники</h1><p>Что происходит прямо сейчас</p></div>
+    <a class="btn btn-primary" asp-action="AppointmentCreate"><svg class="ic"><use href="#i-plus"/></svg> Добавить окно в расписание</a>
+</div>
+<div class="stat-cards">
+    <div class="card stat-card"><span class="ico"><svg class="ic"><use href="#i-calendar"/></svg></span><div><b>@Model.Upcoming</b><span>записей впереди</span></div></div>
+    <div class="card stat-card"><span class="ico g"><svg class="ic"><use href="#i-clock"/></svg></span><div><b>@Model.FreeSlots</b><span>свободных окон</span></div></div>
+    <div class="card stat-card"><span class="ico c"><svg class="ic"><use href="#i-users"/></svg></span><div><b>@Model.Clients</b><span>пациентов</span></div></div>
+    <div class="card stat-card"><span class="ico"><svg class="ic"><use href="#i-award"/></svg></span><div><b>@Model.Doctors</b><span>врачей</span></div></div>
+    <a class="card stat-card" asp-action="Reviews" style="color:inherit"><span class="ico c"><svg class="ic"><use href="#i-message"/></svg></span><div><b>@Model.PendingReviews</b><span>отзывов ждут проверки</span></div></a>
+</div>
+<div class="group-title">Ближайшие записи</div>
+@if (Model.NextAppointments.Count == 0)
+{
+    <div class="card empty"><h3>Записей пока нет</h3></div>
+}
+else
+{
+    <div class="card table-wrap">
+        <table class="table">
+            <thead><tr><th>Когда</th><th>Пациент</th><th>Врач</th><th>Услуга</th></tr></thead>
+            <tbody>
+            @foreach (var r in Model.NextAppointments)
+            {
+                <tr>
+                    <td><b>@Fmt.DateTimeShort(r.Appointment.StartAt)</b></td>
+                    <td>@r.ClientName</td>
+                    <td>@r.Appointment.Staff?.DisplayName</td>
+                    <td>@(r.Appointment.Services.Count > 0 ? string.Join(", ", r.Appointment.Services.Select(s => s.Title)) : "—")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

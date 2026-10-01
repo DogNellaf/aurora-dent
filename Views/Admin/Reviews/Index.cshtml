@@ -1,66 +1,42 @@
-@model List<Review>
+@model List<ReviewCard>
 @{
-    ViewData["Title"] = "Панель администратора";
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Отзывы";
+    ViewData["Cabinet"] = "admin";
+    ViewData["Tab"] = "reviews";
 }
-
-<div class="card text-center">
-    <div class="card-header">
-        Панель администратора
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Admin" asp-action="Index">Приёмы</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Admin" asp-action="Profiles">Профили</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Admin" asp-action="Reviews">Отзывы</a>
-            </li>
-        </ul>
-    </div>
-    <div class="card-body">
-        @if (Model.Count == 0)
+<div class="cab-head"><div><h1>Отзывы</h1><p>Все отзывы пациентов, включая скрытые</p></div></div>
+@if (Model.Count == 0)
+{
+    <div class="card empty"><svg class="ic"><use href="#i-message"/></svg><h3>Отзывов пока нет</h3></div>
+}
+else
+{
+    <div class="list">
+        @foreach (var r in Model)
         {
-            <div class="row">
-                <div class="col">Отзывы не найдены</div>
+            <div class="card rev-item">
+                <div>
+                    <div class="rev-head">
+                        <span class="avatar">@Fmt.Initials(r.Author)</span><b>@r.Author</b><partial name="_Stars" model="r.Rating" />
+                        <span class="badge @(r.IsVisible ? "ok" : "warn")">@(r.IsVisible ? "Опубликован" : "На модерации")</span>
+                        <span class="muted">@Fmt.Date(r.CreatedAt)</span>
+                    </div>
+                    <p>@r.Text</p>
+                </div>
+                <div class="appt-actions">
+                    @if (r.IsVisible)
+                    {
+                        <form asp-action="HideReview" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-ghost btn-sm" type="submit">Скрыть</button></form>
+                    }
+                    else
+                    {
+                        <form asp-action="ShowReview" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-primary btn-sm" type="submit">Опубликовать</button></form>
+                    }
+                    <a class="btn btn-ghost btn-sm" asp-action="Review" asp-route-reviewId="@r.Id" aria-label="Изменить"><svg class="ic"><use href="#i-edit"/></svg></a>
+                    <form asp-action="ReviewDelete" asp-route-reviewId="@r.Id" method="post" data-confirm="Удалить отзыв?"><button class="btn btn-danger btn-sm" type="submit" aria-label="Удалить"><svg class="ic"><use href="#i-trash"/></svg></button></form>
+                </div>
             </div>
         }
-        else
-        {
-            foreach (var review in Model)
-            {
-                <div class="row mt-3 align-items-center">
-                    <div class="col">
-                        <span class="bid">
-                            Клиент #@review.ProfileId
-                            <br>
-                            <strong>@review.Text</strong>
-                        </span>
-                    </div>
-                    <div class="col-auto">
-                        @if (review.IsVisible)
-                        {
-                            <form method="post" asp-controller="Admin" asp-action="HideReview" asp-route-reviewId="@review.Id" class="d-inline">
-                                <button type="submit" class="btn btn-secondary btn-sm">Скрыть</button>
-                            </form>
-                        }
-                        else
-                        {
-                            <form method="post" asp-controller="Admin" asp-action="ShowReview" asp-route-reviewId="@review.Id" class="d-inline">
-                                <button type="submit" class="btn btn-success btn-sm">Опубликовать</button>
-                            </form>
-                        }
-                    </div>
-                    <div class="col-auto">
-                        <a asp-route-reviewId="@review.Id" asp-controller="Admin" asp-action="Review" class="btn btn-info btn-sm">Изменить</a>
-                    </div>
-                    <div class="col-auto">
-                        <form method="post" asp-controller="Admin" asp-action="ReviewDelete" asp-route-reviewId="@review.Id" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Удалить отзыв?')">Удалить</button>
-                        </form>
-                    </div>
-                </div>
-            }
-        }
     </div>
-</div>
+}

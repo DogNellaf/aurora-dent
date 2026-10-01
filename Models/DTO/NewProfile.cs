@@ -1,14 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace DentalClinic.Models.DTO
 {
     public class NewProfile
     {
-        [Required]
-        [DataType(DataType.EmailAddress)]
+        [Required(ErrorMessage = "Укажите имя")]
+        public string FullName { get; set; } = null!;
+
+        [Required(ErrorMessage = "Укажите email")]
+        [EmailAddress(ErrorMessage = "Некорректный email")]
         public string Email { get; set; } = null!;
 
-        [Required]
+        [Required(ErrorMessage = "Укажите пароль")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = null!;
 
@@ -16,8 +19,8 @@ namespace DentalClinic.Models.DTO
         [Compare("Password", ErrorMessage = "Пароли не совпадают")]
         public string? ConfirmPassword { get; set; }
 
-        [Required]
-        [DataType(DataType.PhoneNumber)]
+        [Required(ErrorMessage = "Укажите телефон")]
+        [Phone(ErrorMessage = "Некорректный номер телефона")]
         public string Phone { get; set; } = null!;
 
         [Required]

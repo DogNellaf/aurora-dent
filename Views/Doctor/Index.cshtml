@@ -1,135 +1,98 @@
-@model Appointment
+@model DoctorDashboard
 @{
-    ViewData["Title"] = "Личный кабинет врача";
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Кабинет врача";
+    ViewData["Cabinet"] = "doctor";
+    ViewData["Tab"] = "today";
+    var cur = Model.Current?.Appointment;
+    var pct = cur == null ? 0 : Math.Clamp((int)((DateTime.Now - cur.StartAt).TotalMinutes * 100 / Math.Max(1, (int)cur.Duration)), 0, 100);
 }
-
-<div class="card text-center">
-    <div class="card-header">
-        Личный кабинет врача
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Doctor" asp-action="Index">Текущий приём</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Doctor" asp-action="Appointments">Все приёмы</a>
-            </li>
-        </ul>
-    </div>
-    <div class="card-body">
-        @if (Model == null)
-        {
-            <p class="text-muted mt-3">Сейчас нет активного приёма.</p>
-        }
-        else
-        {
-            <div class="row mt-3 g-3">
-                <div class="col-md-3">
-                    <div class="border rounded p-2">
-                        <small class="text-muted">Приём №</small><br>
-                        <strong>@Model.Id</strong>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-2">
-                        <small class="text-muted">Начало</small><br>
-                        <strong>@Model.StartAt.ToString("HH:mm")</strong>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-2">
-                        <small class="text-muted">Длительность (мин.)</small><br>
-                        <strong>@Model.Duration</strong>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-2">
-                        <small class="text-muted">Пациент</small><br>
-                        <strong>@Model.ClientId</strong>
-                    </div>
-                </div>
-            </div>
-
-            <hr />
-
-            <div class="row mt-3 g-2 justify-content-center">
-                <div class="col-auto">
-                    <a asp-controller="Doctor" asp-action="ClientRecord" asp-route-clientId="@Model.ClientId"
-                       class="btn btn-info">Больничная карта пациента</a>
-                </div>
-            </div>
-
-            <hr />
-
-            <div class="row mt-3 g-3">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header text-start">Продлить приём</div>
-                        <div class="card-body text-start">
-                            <form method="post"
-                                  asp-controller="Doctor"
-                                  asp-action="ExtendAppointment"
-                                  asp-route-appointmentId="@Model.Id">
-                                <div class="mb-2">
-                                    <label class="form-label">Дополнительных минут</label>
-                                    <input type="number" name="additionalMinutes" class="form-control" min="1" max="120" value="15" />
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label">Причина</label>
-                                    <input type="text" name="reason" class="form-control" placeholder="Причина продления" />
-                                </div>
-                                <button type="submit" class="btn btn-warning">Продлить</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header text-start">Завершить досрочно</div>
-                        <div class="card-body text-start">
-                            <form method="post"
-                                  asp-controller="Doctor"
-                                  asp-action="EndAppointmentEarly"
-                                  asp-route-appointmentId="@Model.Id">
-                                <div class="mb-2">
-                                    <label class="form-label">Причина</label>
-                                    <input type="text" name="reason" class="form-control" placeholder="Причина досрочного завершения" />
-                                </div>
-                                <button type="submit" class="btn btn-danger">Завершить</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mt-3">
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header text-start">Рекомендации пациенту</div>
-                        <div class="card-body text-start">
-                            @if (!string.IsNullOrEmpty(Model.Recommendation))
-                            {
-                                <p class="mb-2"><em>Текущие рекомендации:</em> @Model.Recommendation</p>
-                            }
-                            <form method="post"
-                                  asp-controller="Doctor"
-                                  asp-action="AddRecommendation"
-                                  asp-route-appointmentId="@Model.Id">
-                                <div class="mb-2">
-                                    <textarea name="recommendation" class="form-control" rows="3"
-                                              placeholder="Введите рекомендации...">@Model.Recommendation</textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Сохранить рекомендации</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
+<div class="cab-head">
+    <div><h1>@Model.Staff.DisplayName</h1><p>@Model.Staff.Specialty · сегодня @Fmt.DayMonth(DateTime.Now)</p></div>
 </div>
 
-@if (TempData["Error"] != null)
+<div class="stat-cards">
+    <div class="card stat-card"><span class="ico"><svg class="ic"><use href="#i-calendar"/></svg></span><div><b>@Model.Today.Count</b><span>приёмов сегодня</span></div></div>
+    <div class="card stat-card"><span class="ico c"><svg class="ic"><use href="#i-clock"/></svg></span><div><b>@Model.UpcomingCount</b><span>предстоящих всего</span></div></div>
+    <div class="card stat-card"><span class="ico g"><svg class="ic"><use href="#i-users"/></svg></span><div><b>@Model.PatientsCount</b><span>пациентов</span></div></div>
+</div>
+
+@if (Model.Current != null && cur != null)
 {
-    <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+    <div class="live">
+        <span class="pulse">Идёт приём</span>
+        <h2>@Model.Current.ClientName</h2>
+        <div class="facts">
+            <div><b>@Fmt.Time(cur.StartAt) – @Fmt.Time(cur.EndAt)</b>время приёма</div>
+            <div><b>@Fmt.Minutes(cur.Duration)</b>длительность</div>
+            <div><b>@(cur.Services.Count > 0 ? string.Join(", ", cur.Services.Select(s => s.Title)) : "Приём врача")</b>услуга</div>
+        </div>
+        <div class="progress"><i style="width:@(pct)%"></i></div>
+        <div style="margin-top:20px"><a class="btn btn-light btn-sm" asp-action="ClientRecord" asp-route-clientId="@cur.ClientId"><svg class="ic"><use href="#i-clipboard"/></svg> Карта пациента</a></div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:22px">
+        <div class="card panel">
+            <h3><svg class="ic"><use href="#i-plus"/></svg> Продлить приём</h3>
+            <form asp-action="ExtendAppointment" asp-route-appointmentId="@cur.Id" method="post">
+                <div class="field"><label>Дополнительно, минут</label><input type="number" name="additionalMinutes" min="1" max="120" value="15" /></div>
+                <div class="field"><label>Причина</label><input type="text" name="reason" placeholder="Например, потребовалась дополнительная анестезия" /></div>
+                <button class="btn btn-primary btn-sm" type="submit">Продлить</button>
+            </form>
+        </div>
+        <div class="card panel">
+            <h3><svg class="ic"><use href="#i-check"/></svg> Завершить досрочно</h3>
+            <form asp-action="EndAppointmentEarly" asp-route-appointmentId="@cur.Id" method="post">
+                <div class="field"><label>Причина</label><input type="text" name="reason" placeholder="Например, лечение выполнено быстрее" /></div>
+                <button class="btn btn-danger btn-sm" type="submit">Завершить приём</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card panel" style="margin-bottom:22px">
+        <h3><svg class="ic"><use href="#i-clipboard"/></svg> Рекомендации пациенту</h3>
+        <form asp-action="AddRecommendation" asp-route-appointmentId="@cur.Id" method="post">
+            <div class="field"><textarea name="recommendation" rows="4" placeholder="Что делать после лечения, когда прийти на контроль...">@cur.Recommendation</textarea></div>
+            <button class="btn btn-primary btn-sm" type="submit">Сохранить рекомендации</button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="card panel" style="margin-bottom:22px">
+        <h3><svg class="ic"><use href="#i-chair"/></svg> Сейчас нет активного приёма</h3>
+        @if (Model.Next != null)
+        {
+            <p class="soft" style="margin:0">Следующий: <b>@Model.Next.ClientName</b> — @Fmt.DayMonth(Model.Next.Appointment.StartAt), @Fmt.Time(Model.Next.Appointment.StartAt).
+                <a asp-action="Appointment" asp-route-appointmentId="@Model.Next.Appointment.Id">Открыть</a></p>
+        }
+        else { <p class="muted" style="margin:0">Предстоящих записей нет.</p> }
+    </div>
+}
+
+<div class="group-title">Расписание на сегодня</div>
+@if (Model.Today.Count == 0)
+{
+    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>На сегодня записей нет</h3></div>
+}
+else
+{
+    <div class="list">
+        @foreach (var r in Model.Today)
+        {
+            var a = r.Appointment;
+            <div class="card appt @(a.IsPast ? "past" : "")">
+                <partial name="_DateBox" model="a.StartAt" />
+                <div>
+                    <h4>@r.ClientName</h4>
+                    <div class="meta">
+                        <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
+                        <span>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</span>
+                        @if (a.IsActive) { <span class="badge ok">Сейчас</span> } else if (a.IsPast) { <span class="badge gray">Завершён</span> }
+                    </div>
+                </div>
+                <div class="appt-actions"><a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">Открыть</a></div>
+            </div>
+        }
+    </div>
 }

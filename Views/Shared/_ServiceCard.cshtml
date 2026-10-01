@@ -1,0 +1,10 @@
+@model Service
+<a class="card svc reveal" asp-controller="Home" asp-action="ServiceDetail" asp-route-serviceId="@Model.Id" data-category="@Model.Category">
+    <span class="svc-icon"><partial name="_ServiceIcon" model="Model.Icon" /></span>
+    <h3>@Model.Title</h3>
+    <p>@Model.Description</p>
+    <div class="svc-foot">
+        <span class="price">@(Model.Price > 0 ? "от " : "")@Fmt.Money(Model.Price)</span>
+        <span class="arrow">Подробнее <svg class="ic"><use href="#i-arrow"/></svg></span>
+    </div>
+</a>

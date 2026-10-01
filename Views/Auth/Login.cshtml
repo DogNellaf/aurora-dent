@@ -1,32 +1,44 @@
-﻿@model DentalClinic.Models.DTO.LoginViewModel;
-
-<h2>Авторизация</h2>
-
-<form asp-controller="Auth" asp-action="Login" asp-antiforgery="true">
-    <div asp-validation-summary="ModelOnly"></div>
-    <div class="form-outline mb-4">
-        <input class="form-control"  asp-for="Email" />
-        <label class="form-label" asp-for="Email">Email</label>
-        <span asp-validation-for="Email"></span>
+@model DentalClinic.Models.DTO.LoginViewModel
+@{
+    ViewData["Title"] = "Вход";
+}
+<div class="auth">
+    <div class="auth-aside" style="background-image:url('/img/office.jpg')">
+        <h2>С возвращением!</h2>
+        <p>В личном кабинете — ваши записи, история лечения и рекомендации врача.</p>
     </div>
-    <div class="form-outline mb-4">
-        <input class="form-control" asp-for="Password" />
-        <label class="form-label" asp-for="Password">Пароль</label>
-        <span asp-validation-for="Password"></span>
-    </div>
+    <div class="auth-main">
+        <div class="auth-box">
+            <h1>Вход</h1>
+            <p class="soft">Нет аккаунта? <a asp-action="Registration">Зарегистрируйтесь</a></p>
+            <form asp-controller="Auth" asp-action="Login" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly"></div>
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div class="field">
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" autocomplete="username" placeholder="you@example.com" />
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Password">Пароль</label>
+                    <input asp-for="Password" autocomplete="current-password" />
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <div class="field"><label class="check"><input asp-for="RememberMe" /> Запомнить меня</label></div>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">Войти</button>
+            </form>
 
-    <div class="row mb-4">
-        <div class="col d-flex justify-content-center">
-            <div class="form-check">
-                <input class="form-check-input" asp-for="RememberMe" checked />
-                <label class="form-check-label" asp-for="RememberMe">Запомнить меня</label>
+            <div class="demo-box">
+                <b>Демо-доступ — нажмите, чтобы войти</b>
+                <div class="demo-list">
+                    <button type="button" data-demo-email="client@clinic.demo">Пациент <em>client@clinic.demo</em></button>
+                    <button type="button" data-demo-email="doctor@clinic.demo">Врач <em>doctor@clinic.demo</em></button>
+                    <button type="button" data-demo-email="manager@clinic.demo">Менеджер <em>manager@clinic.demo</em></button>
+                    <button type="button" data-demo-email="admin@clinic.demo">Администратор <em>admin@clinic.demo</em></button>
+                </div>
+                <div class="muted" style="margin-top:8px">Пароль для всех: Demo123!</div>
             </div>
         </div>
     </div>
-
-    <input class="btn btn-primary btn-block mb-4" type="submit" value="Войти" />
-
-    <div class="text-center">
-        <p>Еще не клиент? <a asp-controller="Auth" asp-action="Registration">Регистрация</a></p>
-    </div>
-</form>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

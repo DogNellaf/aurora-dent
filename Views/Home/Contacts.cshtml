@@ -1,25 +1,24 @@
 @{
     ViewData["Title"] = "Контакты";
 }
-
-<h4>Контакты</h4>
-<div class="row mt-4">
-    <div class="col-md-6">
-        <h5>Адрес</h5>
-        <p>г. Москва, ул. Примерная, д. 1</p>
-
-        <h5>Телефон</h5>
-        <p><a href="tel:+70000000000">+7 (000) 000-00-00</a></p>
-
-        <h5>Режим работы</h5>
-        <p>Ежедневно с 8:00 до 23:00</p>
-
-        <h5>Электронная почта</h5>
-        <p><a href="mailto:info@clinic.example">info@clinic.example</a></p>
+<div class="wrap">
+    <div class="page-head">
+        <div class="crumbs"><a asp-controller="Home" asp-action="Index">Главная</a> / <span>Контакты</span></div>
+        <h1>Контакты</h1>
+        <p class="lead">Мы в центре города, в пяти минутах от метро. Работаем каждый день без выходных.</p>
     </div>
-    <div class="col-md-6">
-        <h5>Запись на приём</h5>
-        <p>Вы можете записаться онлайн в разделе <a asp-controller="Home" asp-action="Schedule">Расписание</a> или позвонить нам по телефону.</p>
-        <p>Мы рады принимать пациентов с 4 лет. Оплата наличными и картой. Лечение в кредит. Действуют сезонные скидки и накопительная система бонусов для постоянных пациентов.</p>
+    <div class="split" style="align-items:stretch;padding-bottom:70px">
+        <div class="grid" style="align-content:start">
+            <div class="card contact-card reveal"><span class="ico"><svg class="ic"><use href="#i-pin"/></svg></span><div><h4>Адрес</h4><p>г. Москва, ул. Примерная, д. 1</p></div></div>
+            <div class="card contact-card reveal"><span class="ico"><svg class="ic"><use href="#i-phone"/></svg></span><div><h4>Телефон</h4><p><a href="tel:+74950000000">+7 (495) 000-00-00</a></p></div></div>
+            <div class="card contact-card reveal"><span class="ico"><svg class="ic"><use href="#i-clock"/></svg></span><div><h4>Режим работы</h4><p>Ежедневно с 8:00 до 23:00</p></div></div>
+            <div class="card contact-card reveal"><span class="ico"><svg class="ic"><use href="#i-mail"/></svg></span><div><h4>Электронная почта</h4><p><a href="mailto:info@clinic.example">info@clinic.example</a></p></div></div>
+            <div class="note reveal">Оплата наличными и картой, лечение в рассрочку. Принимаем пациентов с 4 лет.
+                <div style="margin-top:14px"><a class="btn btn-accent" asp-controller="Home" asp-action="Schedule">Записаться онлайн</a></div></div>
+        </div>
+        <div class="map reveal">
+            <iframe title="Карта: центр Москвы" loading="lazy" referrerpolicy="no-referrer"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=37.5900%2C55.7380%2C37.6500%2C55.7650&amp;layer=mapnik&amp;marker=55.7517%2C37.6178"></iframe>
+        </div>
     </div>
 </div>

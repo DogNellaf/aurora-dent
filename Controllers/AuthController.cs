@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using DentalClinic.Models;
 using DentalClinic.Models.DTO;
 
@@ -9,56 +8,39 @@ namespace DentalClinic.Controllers
     [Route("route")]
     public class AuthController : BaseController
     {
-        private readonly ILogger<AuthController> _logger;
         private readonly UserManager<Profile> _userManager;
         private readonly SignInManager<Profile> _signInManager;
 
         public AuthController(
-            ILogger<AuthController> logger,
             DatabaseContext context,
             UserManager<Profile> userManager,
             SignInManager<Profile> signInManager) : base(context)
         {
-            _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;
         }
 
-        [HttpGet]
-        [Route("")]
+        /// <summary>Sends the user to the cabinet that matches their role.</summary>
+        [HttpGet("")]
         public IActionResult Index()
         {
-            if (!User.Identity!.IsAuthenticated)
-                return RedirectToAction("LoginPage");
+            var profile = TryGetProfile();
+            if (profile == null) return RedirectToAction("LoginPage");
 
-            var profile = GetProfile();
-
-            if (profile.IsAdmin)    return RedirectToAction("Index", "Admin");
-            if (profile.IsManager)  return RedirectToAction("Index", "Manager");
-            if (profile.IsDoctor)   return RedirectToAction("Index", "Doctor");
+            if (profile.IsAdmin)   return RedirectToAction("Overview", "Admin");
+            if (profile.IsManager) return RedirectToAction("HiddenReviews", "Manager");
+            if (profile.IsDoctor)  return RedirectToAction("Index", "Doctor");
             return RedirectToAction("Index", "Client");
         }
 
-        [HttpGet]
-        [Route("register")]
-        public IActionResult Registration()
-        {
-            return View();
-        }
+        [HttpGet("register")]
+        public IActionResult Registration() => View();
 
-        [HttpPost]
-        [Route("register")]
+        [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
                 return View("Registration", model);
-
-            var role = _context.Roles.FirstOrDefault(r => r.Name == "Клиент");
-            if (role is null)
-            {
-                ModelState.AddModelError("", "Роль не найдена. Обратитесь к администратору");
-                return View("Registration", model);
-            }
 
             var profile = new Profile
             {
@@ -66,57 +48,73 @@ namespace DentalClinic.Controllers
                 Email = model.Email,
                 EmailConfirmed = true,
                 PhoneNumber = model.Phone,
-                RoleId = role.Id
+                FullName = model.FullName.Trim(),
+                RoleId = RoleIds.Client
             };
 
             var registerResult = await _userManager.CreateAsync(profile, model.Password);
             if (registerResult.Succeeded)
             {
-                var loginResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, true, false);
-                if (loginResult.Succeeded)
-                    return RedirectToAction("Index");
+                await _signInManager.SignInAsync(profile, isPersistent: true);
+                return RedirectToAction("Index");
             }
 
             foreach (var error in registerResult.Errors)
-                ModelState.AddModelError("", error.Description);
+                ModelState.AddModelError("", Translate(error));
 
             return View("Registration", model);
         }
 
-        [HttpGet]
-        [Route("login")]
-        public IActionResult LoginPage()
-        {
-            return View("Login");
-        }
+        [HttpGet("login")]
+        public IActionResult LoginPage(string? returnUrl = null) =>
+            View("Login", new LoginViewModel { ReturnUrl = returnUrl });
 
-        [HttpPost]
-        [Route("login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login(LoginViewModel data)
         {
             if (!ModelState.IsValid)
                 return View("Login", data);
 
+            var profile = await _userManager.FindByNameAsync(data.Email);
+            if (profile != null && profile.IsBanned)
+            {
+                ModelState.AddModelError("", "Аккаунт заблокирован. Свяжитесь с клиникой по телефону.");
+                return View("Login", data);
+            }
+
             var result = await _signInManager.PasswordSignInAsync(data.Email, data.Password, data.RememberMe, false);
             if (result.Succeeded)
+            {
+                if (!string.IsNullOrEmpty(data.ReturnUrl) && Url.IsLocalUrl(data.ReturnUrl))
+                    return LocalRedirect(data.ReturnUrl);
                 return RedirectToAction("Index");
+            }
 
             ModelState.AddModelError("", "Неверный email или пароль");
             return View("Login", data);
         }
 
-        [HttpGet]
-        [Route("logout")]
+        [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpGet("denied")]
+        public IActionResult Denied()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            Response.StatusCode = 403;
+            return View();
         }
+
+        private static string Translate(IdentityError error) => error.Code switch
+        {
+            "DuplicateUserName" or "DuplicateEmail" => "Пользователь с таким email уже зарегистрирован",
+            "PasswordTooShort" => "Пароль слишком короткий (минимум 6 символов)",
+            "PasswordRequiresDigit" => "Пароль должен содержать хотя бы одну цифру",
+            "PasswordRequiresLower" => "Пароль должен содержать строчную букву",
+            _ => error.Description
+        };
     }
 }

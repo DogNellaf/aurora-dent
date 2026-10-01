@@ -1,0 +1,51 @@
+@{
+    Layout = "_Layout";
+    var profile = Context.Items[RoleRequiredAttribute.ProfileItemKey] as Profile;
+    var tab = ViewData["Tab"] as string ?? "";
+    var kind = ViewData["Cabinet"] as string ?? "client";
+    string A(string t) => tab == t ? "active" : "";
+}
+<div class="wrap cabinet">
+    <aside class="side card">
+        <div class="side-user">
+            <span class="avatar">@Fmt.Initials(profile?.DisplayName)</span>
+            <div>
+                <b>@(profile?.DisplayName)</b>
+                <small>@(profile == null ? "" : Fmt.RoleName(profile))</small>
+            </div>
+        </div>
+        <nav class="side-nav" aria-label="Кабинет">
+            @switch (kind)
+            {
+                case "client":
+                    <a class="@A("records")" asp-controller="Client" asp-action="Index"><svg class="ic"><use href="#i-calendar"/></svg> Мои записи</a>
+                    <a class="@A("review")" asp-controller="Client" asp-action="Review"><svg class="ic"><use href="#i-message"/></svg> Мой отзыв</a>
+                    <a asp-controller="Home" asp-action="Schedule"><svg class="ic"><use href="#i-plus"/></svg> Новая запись</a>
+                    break;
+                case "doctor":
+                    <a class="@A("today")" asp-controller="Doctor" asp-action="Index"><svg class="ic"><use href="#i-grid"/></svg> Сегодня</a>
+                    <a class="@A("upcoming")" asp-controller="Doctor" asp-action="Appointments"><svg class="ic"><use href="#i-calendar"/></svg> Предстоящие</a>
+                    <a class="@A("past")" asp-controller="Doctor" asp-action="Appointments" asp-route-filter="past"><svg class="ic"><use href="#i-clipboard"/></svg> История приёмов</a>
+                    break;
+                case "manager":
+                    var pending = ViewBag.PendingCount as int? ?? 0;
+                    <a class="@A("pending")" asp-controller="Manager" asp-action="HiddenReviews"><svg class="ic"><use href="#i-clock"/></svg> На модерации @if (pending > 0) {<span class="count">@pending</span>}</a>
+                    <a class="@A("published")" asp-controller="Manager" asp-action="Index"><svg class="ic"><use href="#i-check"/></svg> Опубликованные</a>
+                    break;
+                case "admin":
+                    <a class="@A("overview")" asp-controller="Admin" asp-action="Overview"><svg class="ic"><use href="#i-grid"/></svg> Обзор</a>
+                    <a class="@A("appointments")" asp-controller="Admin" asp-action="Index"><svg class="ic"><use href="#i-calendar"/></svg> Приёмы</a>
+                    <a class="@A("profiles")" asp-controller="Admin" asp-action="Profiles"><svg class="ic"><use href="#i-users"/></svg> Профили</a>
+                    <a class="@A("reviews")" asp-controller="Admin" asp-action="Reviews"><svg class="ic"><use href="#i-message"/></svg> Отзывы</a>
+                    break;
+            }
+            <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:8px 0 0">
+                <button class="btn btn-ghost btn-sm btn-block" type="submit"><svg class="ic"><use href="#i-logout"/></svg> Выйти</button>
+            </form>
+        </nav>
+    </aside>
+    <section>
+        @RenderBody()
+    </section>
+</div>
+@section Scripts { @await RenderSectionAsync("Scripts", required: false) }

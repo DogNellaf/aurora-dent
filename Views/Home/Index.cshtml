@@ -1,38 +1,148 @@
-﻿@model List<Review>
+@model HomeViewModel
 @{
-    ViewData["Title"] = "Клиника";
+    ViewData["Title"] = "";
 }
 
-<div class="content-center" id="content_col">
-    <div class="cntrblk">
-        <h1>Стоматологическая клиника</h1>
-        <div class="wrapper">
-            <p>Стоматологическая клиника — это сеть клиник в шаговой доступности от метро. Здесь вы можете получить любую стоматологическую помощь экспертного класса без наценок.</p>
-            <p><b>Наша миссия</b> — сделать современную стоматологию доступной для всех.</p>
-
-            <p>Пациент не должен испытывать боли от врачебных манипуляций. Доктор застрахует вас от болевых ощущений на время терапии с помощью современных безопасных анестетиков. Также практикуются бесконтактные методы терапии Icon.</p>
-            <p>Широкая сеть клиник позволяет нам закупать оборудование и материалы европейского качества по выгодным оптовым расценкам. Мы стараемся использовать малоинвазивные технологии и диагностику зубов под микроскопом, сохраняя зубы без лишних процедур.</p>
-            <p>Откладывать лечение из-за финансовых трудностей невыгодно. Вы можете записаться на первичную бесплатную консультацию уже сегодня, а также оформить лечение в кредит.</p>
-
-            @if (Model.Count > 0)
-            {
-                <h2 class="mt-4">Отзывы пациентов</h2>
-                <div class="row mt-3">
-                    @foreach (var review in Model)
+<section class="hero">
+    <div class="wrap hero-grid">
+        <div>
+            <span class="eyebrow">Современная стоматология в центре Москвы</span>
+            <h1>Лечим зубы <em>без страха</em> и без очередей</h1>
+            <p class="lead">Безболезненное лечение под микроскопом, честные цены и врачи, которые объясняют каждый шаг. Запишитесь онлайн за минуту — первая консультация бесплатно.</p>
+            <div class="hero-cta">
+                <a class="btn btn-accent btn-lg" asp-controller="Home" asp-action="Schedule">Записаться на приём <svg class="ic"><use href="#i-arrow"/></svg></a>
+                <a class="btn btn-ghost btn-lg" asp-controller="Home" asp-action="Services">Услуги и цены</a>
+            </div>
+            <div class="hero-proof">
+                <div class="avatars">
+                    @foreach (var d in Model.Doctors.Where(d => !string.IsNullOrEmpty(d.PhotoUrl)).Take(3))
                     {
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <p class="card-text">@review.Text</p>
-                                </div>
-                                <div class="card-footer text-muted small">
-                                    Пациент клиники
-                                </div>
-                            </div>
-                        </div>
+                        <img src="@d.PhotoUrl" alt="" loading="lazy">
+                    }
+                </div>
+                <div>
+                    <span class="stars"><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg></span>
+                    <div><b>@Model.AverageRating.ToString("0.0")</b> — средняя оценка пациентов</div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-media">
+            <div class="hero-photo"><img src="~/img/office.jpg" alt="Светлый стоматологический кабинет клиники" fetchpriority="high"></div>
+            <div class="float f1"><span class="dot"><svg class="ic"><use href="#i-shield"/></svg></span><div><strong>10 лет</strong>гарантия на импланты</div></div>
+            <div class="float f2"><span class="dot"><svg class="ic"><use href="#i-heart"/></svg></span><div><strong>Без боли</strong>современная анестезия</div></div>
+        </div>
+    </div>
+</section>
+
+<div class="wrap">
+    <div class="stats reveal">
+        <div class="stat"><b data-count="@Math.Max(Model.PatientsCount, 1)" data-suffix="">@Model.PatientsCount</b><span>пациентов уже доверились нам</span></div>
+        <div class="stat"><b data-count="@Model.Doctors.Count">@Model.Doctors.Count</b><span>врача-специалиста</span></div>
+        <div class="stat"><b data-count="@Model.AverageRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">@Model.AverageRating.ToString("0.0")</b><span>средняя оценка</span></div>
+        <div class="stat"><b>8–23</b><span>работаем ежедневно, без выходных</span></div>
+    </div>
+</div>
+
+<section class="section">
+    <div class="wrap">
+        <div class="section-head">
+            <span class="eyebrow">Услуги</span>
+            <h2>Всё для здоровой улыбки — в одной клинике</h2>
+            <p class="lead">От профилактики до сложной имплантации. Стоимость фиксируем в смете до начала лечения.</p>
+        </div>
+        <div class="grid grid-3">
+            @foreach (var s in Model.Services)
+            {
+                <partial name="_ServiceCard" model="s" />
+            }
+        </div>
+        <p class="center" style="margin-top:36px"><a class="btn btn-ghost" asp-controller="Home" asp-action="Services">Все услуги <svg class="ic"><use href="#i-arrow"/></svg></a></p>
+    </div>
+</section>
+
+<section class="section" style="background:#fff">
+    <div class="wrap split">
+        <div class="split-photo reveal"><img src="~/img/xray.jpg" alt="Врач изучает снимки КТ" loading="lazy"></div>
+        <div class="reveal">
+            <span class="eyebrow">Почему мы</span>
+            <h2>Точная диагностика — основа лечения без сюрпризов</h2>
+            <ul class="checks">
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>Лечение под микроскопом</strong><span>Увеличение в 20 раз позволяет сохранить зуб там, где раньше предлагали удаление.</span></div></li>
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>3D-томография и цифровые снимки</strong><span>Планируем имплантацию и ортодонтию до начала лечения, а не по ходу.</span></div></li>
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>Прозрачные цены</strong><span>Смета утверждается заранее. Рассрочка 0% на срок до 12 месяцев.</span></div></li>
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>Личный кабинет пациента</strong><span>История визитов и рекомендации врача всегда под рукой.</span></div></li>
+            </ul>
+            <a class="btn btn-primary" asp-controller="Home" asp-action="About">О клинике <svg class="ic"><use href="#i-arrow"/></svg></a>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="wrap">
+        <div class="section-head center">
+            <span class="eyebrow">Команда</span>
+            <h2>Врачи, которым доверяют</h2>
+            <p class="lead">Регулярно проходят обучение в России и Европе и лечат так, как лечили бы своих близких.</p>
+        </div>
+        <div class="grid grid-3">
+            @foreach (var d in Model.Doctors)
+            {
+                <partial name="_DoctorCard" model="d" />
+            }
+        </div>
+    </div>
+</section>
+
+<section class="section tight">
+    <div class="wrap">
+        <div class="section-head center">
+            <span class="eyebrow">Как это работает</span>
+            <h2>Запись на приём — три шага</h2>
+        </div>
+        <div class="steps">
+            <div class="card step reveal"><h3>Выберите врача и время</h3><p>Смотрите свободные окна всех врачей онлайн — без звонков и ожидания на линии.</p></div>
+            <div class="card step reveal"><h3>Подтвердите запись</h3><p>Зарегистрируйтесь за 30 секунд — запись сразу появится в личном кабинете.</p></div>
+            <div class="card step reveal"><h3>Приходите на приём</h3><p>Встретим вовремя, без очередей. Рекомендации врача сохранятся в вашей карте.</p></div>
+        </div>
+    </div>
+</section>
+
+@if (Model.Reviews.Count > 0)
+{
+    <section class="section">
+        <div class="wrap">
+            <div class="section-head">
+                <span class="eyebrow">Отзывы</span>
+                <h2>Что говорят наши пациенты</h2>
+            </div>
+            <div class="reviews">
+                @foreach (var r in Model.Reviews.Take(3))
+                {
+                    <partial name="_ReviewCard" model="r" />
+                }
+            </div>
+            @if (Model.Reviews.Count > 3)
+            {
+                <div class="reviews" style="margin-top:22px">
+                    @foreach (var r in Model.Reviews.Skip(3).Take(3))
+                    {
+                        <partial name="_ReviewCard" model="r" />
                     }
                 </div>
             }
         </div>
+    </section>
+}
+
+<section class="section tight">
+    <div class="wrap">
+        <div class="cta reveal">
+            <div class="cta-body">
+                <h2>Первая консультация — бесплатно</h2>
+                <p>Осмотр, снимок и понятный план лечения со сметой. Без давления и обязательств.</p>
+                <a class="btn btn-accent btn-lg" asp-controller="Home" asp-action="Schedule">Выбрать время <svg class="ic"><use href="#i-arrow"/></svg></a>
+            </div>
+            <div class="cta-img"><img src="~/img/smile.jpg" alt="" loading="lazy"></div>
+        </div>
     </div>
-</div>
+</section>

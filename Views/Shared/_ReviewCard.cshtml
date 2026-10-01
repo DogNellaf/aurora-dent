@@ -1,0 +1,9 @@
+@model ReviewCard
+<article class="card review reveal">
+    <partial name="_Stars" model="Model.Rating" />
+    <p>@Model.Text</p>
+    <footer>
+        <span class="avatar">@Fmt.Initials(Model.Author)</span>
+        <div><b>@Model.Author</b><small>Пациент клиники · @Fmt.Date(Model.CreatedAt)</small></div>
+    </footer>
+</article>

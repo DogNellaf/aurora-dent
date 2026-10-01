@@ -1,33 +1,50 @@
-﻿@model DentalClinic.Models.DTO.RegisterViewModel;
-
-<h2>Регистрация</h2>
-
-<form asp-controller="Auth" asp-action="Register" asp-antiforgery="true">
-    <div asp-validation-summary="ModelOnly"></div>
-    <div class="form-outline mb-4">
-        <input class="form-control" asp-for="Email" />
-        <label class="form-label" asp-for="Email">Email</label>
-        <span asp-validation-for="Email"></span>
+@model DentalClinic.Models.DTO.RegisterViewModel
+@{
+    ViewData["Title"] = "Регистрация";
+}
+<div class="auth">
+    <div class="auth-aside" style="background-image:url('/img/smile.jpg')">
+        <h2>Ваша улыбка — наша забота</h2>
+        <p>Зарегистрируйтесь, чтобы записываться онлайн и хранить историю лечения в одном месте.</p>
     </div>
-    <div class="form-outline mb-4">
-        <input class="form-control" asp-for="Password" />
-        <label class="form-label" asp-for="Password">Пароль</label>
-        <span asp-validation-for="Password"></span>
+    <div class="auth-main">
+        <div class="auth-box">
+            <h1>Регистрация</h1>
+            <p class="soft">Уже есть аккаунт? <a asp-action="LoginPage">Войти</a></p>
+            <form asp-controller="Auth" asp-action="Register" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="field">
+                    <label asp-for="FullName">Имя и фамилия</label>
+                    <input asp-for="FullName" autocomplete="name" placeholder="Анна Кузнецова" />
+                    <span asp-validation-for="FullName"></span>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label asp-for="Email">Email</label>
+                        <input asp-for="Email" autocomplete="email" placeholder="you@example.com" />
+                        <span asp-validation-for="Email"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Phone">Телефон</label>
+                        <input asp-for="Phone" type="tel" autocomplete="tel" placeholder="+7 (900) 000-00-00" />
+                        <span asp-validation-for="Phone"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label asp-for="Password">Пароль</label>
+                        <input asp-for="Password" autocomplete="new-password" />
+                        <span asp-validation-for="Password"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="ConfirmPassword">Повтор пароля</label>
+                        <input asp-for="ConfirmPassword" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword"></span>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">Создать аккаунт</button>
+            </form>
+        </div>
     </div>
-    <div class="form-outline mb-4">
-        <input class="form-control" asp-for="ConfirmPassword" />
-        <label class="form-label" asp-for="ConfirmPassword">Повторите пароль</label>
-        <span asp-validation-for="ConfirmPassword"></span>
-    </div>
-    <div class="form-outline mb-4">
-        <input class="form-control" asp-for="Phone" />
-        <label class="form-label" asp-for="Phone">Номер телефона</label>
-        <span asp-validation-for="Phone"></span>
-    </div>
-
-    <input class="btn btn-primary btn-block mb-4" type="submit" value="Зарегистрироваться" />
-
-    <div class="text-center">
-        <p>Уже клиент? <a asp-controller="Auth" asp-action="LoginPage">Войти в систему</a></p>
-    </div>
-</form>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

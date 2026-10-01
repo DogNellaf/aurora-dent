@@ -1,63 +1,33 @@
-﻿@using DentalClinic.Models.DTO
-@model DentalClinic.Models.DTO.NewProfile
+@using DentalClinic.Models.DTO
+@model NewProfile
 @{
-    ViewData["Title"] = "Панель администратора";
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Новый профиль";
+    ViewData["Cabinet"] = "admin";
+    ViewData["Tab"] = "profiles";
 }
-
-<div class="card text-center">
-    <div class="card-header">
-        Панель администратора
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Admin" asp-action="Appointments">Приемы</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Admin" asp-action="Profiles">Профили</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Admin" asp-action="Reviews">Отзывы</a>
-            </li>
-        </ul>
-    </div>
-    <div class="card-body">
-        <form asp-controller="Admin" asp-action="ProfileStore">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group mt-4">
-                <label asp-for="Email" class="form-label">Электронная почта</label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <label asp-for="Phone" class="form-label">Номер телефона</label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <label asp-for="Password" class="form-label">Пароль</label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <label asp-for="ConfirmPassword" class="form-label">Повторите пароль</label>
-                <input asp-for="ConfirmPassword" class="form-control" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <label asp-for="RoleTitle" class="form-label">Роль</label>
-                <select class="form-select" asp-for="RoleTitle" asp-items="Html.GetEnumSelectList<RoleTitle>()">
-                    
-                </select>
-                <span asp-validation-for="RoleTitle" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <input type="submit" value="Сохранить" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+<div class="cab-head"><div><div class="crumbs"><a asp-action="Profiles">Профили</a> / <span>Новый</span></div><h1>Новый профиль</h1></div></div>
+<div class="card card-pad" style="max-width:720px">
+    <form asp-action="ProfileStore" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+        <div class="field"><label asp-for="FullName">Имя и фамилия</label><input asp-for="FullName" /><span asp-validation-for="FullName"></span></div>
+        <div class="row">
+            <div class="field"><label asp-for="Email">Email</label><input asp-for="Email" /><span asp-validation-for="Email"></span></div>
+            <div class="field"><label asp-for="Phone">Телефон</label><input asp-for="Phone" type="tel" /><span asp-validation-for="Phone"></span></div>
+        </div>
+        <div class="row">
+            <div class="field"><label asp-for="Password">Пароль</label><input asp-for="Password" /><span asp-validation-for="Password"></span></div>
+            <div class="field"><label asp-for="ConfirmPassword">Повтор пароля</label><input asp-for="ConfirmPassword" /><span asp-validation-for="ConfirmPassword"></span></div>
+        </div>
+        <div class="field">
+            <label asp-for="RoleTitle">Роль</label>
+            <select asp-for="RoleTitle" asp-items="Html.GetEnumSelectList<RoleTitle>()"></select>
+            <div class="hint">Для роли «Доктор» автоматически создаётся карточка врача.</div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Создать</button>
+            <a class="btn btn-ghost" asp-action="Profiles">Отмена</a>
+        </div>
+    </form>
 </div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

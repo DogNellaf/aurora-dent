@@ -1,31 +1,41 @@
-﻿@model DentalClinic.Models.Appointment
-
+@model Appointment
 @{
+    Layout = "_CabinetLayout";
     ViewData["Title"] = "Информация о записи";
+    ViewData["Cabinet"] = "client";
+    ViewData["Tab"] = "records";
 }
-
-<div class="card text-center">
-    <div class="card-header">
-        Личный кабинет пациента
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Client" asp-action="Index">Больничная карта</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Client" asp-action="Review">Отзыв</a>
-            </li>
+<div class="cab-head">
+    <div>
+        <div class="crumbs"><a asp-action="Index">Мои записи</a> / <span>Приём</span></div>
+        <h1>Приём @Fmt.DayMonth(Model.StartAt), @Fmt.Time(Model.StartAt)</h1>
+    </div>
+    <span class="badge @(Model.IsPast ? "gray" : "ok")">@(Model.IsPast ? "Завершён" : "Предстоит")</span>
+</div>
+<div class="grid grid-2" style="align-items:start">
+    <div class="card card-pad">
+        <ul class="facts-list">
+            <li><span>Дата</span><b>@Fmt.Weekday(Model.StartAt), @Fmt.Date(Model.StartAt)</b></li>
+            <li><span>Время</span><b>@Fmt.Time(Model.StartAt) – @Fmt.Time(Model.EndAt)</b></li>
+            <li><span>Длительность</span><b>@Fmt.Minutes(Model.Duration)</b></li>
+            <li><span>Врач</span><b>@(Model.Staff?.DisplayName)<br><small class="muted">@(Model.Staff?.Specialty)</small></b></li>
+            <li><span>Услуги</span><b>@(Model.Services.Count > 0 ? string.Join(", ", Model.Services.Select(s => s.Title)) : "—")</b></li>
+            @if (!string.IsNullOrEmpty(Model.DurationChangeReason))
+            {
+                <li><span>Изменение длительности</span><b>@Model.DurationChangeReason</b></li>
+            }
         </ul>
     </div>
-    <div class="card-body">
-        <div>
-            <h4>Запись на @Model.StartAt</h4>
-            <hr />
-            <center>Длительность @Model.Duration минут</center>
-            <p>Тест рекомендации:</p>
-            <p class="text-left">@Model.Recommendation</p>
-        </div>
-        <div>
-            <a asp-controller="Client" asp-action="Index">Вернуться в больничную карту</a>
-        </div>
+    <div class="card card-pad">
+        <h3 style="display:flex;gap:10px;align-items:center"><svg class="ic" style="color:var(--teal)"><use href="#i-clipboard"/></svg> Рекомендации врача</h3>
+        @if (string.IsNullOrWhiteSpace(Model.Recommendation))
+        {
+            <p class="muted">@(Model.IsPast ? "Врач не оставил рекомендаций." : "Рекомендации появятся после приёма.")</p>
+        }
+        else
+        {
+            <div class="note">@Model.Recommendation</div>
+        }
     </div>
 </div>
+<p style="margin-top:24px"><a class="btn btn-ghost" asp-action="Index">← Ко всем записям</a></p>

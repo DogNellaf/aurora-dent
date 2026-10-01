@@ -1,33 +1,108 @@
-﻿@model List<Service>
-
+@model ScheduleViewModel
 @{
-    ViewData["Title"] = "Запись на прием";
+    ViewData["Title"] = "Онлайн-запись";
+    var hasDoctor = Model.SelectedDoctor != null;
 }
+<div class="wrap">
+    <div class="page-head">
+        <div class="crumbs"><a asp-controller="Home" asp-action="Index">Главная</a> / <span>Запись на приём</span></div>
+        <h1>Онлайн-запись</h1>
+        <p class="lead">Выберите услугу, врача и удобное время. Занимает меньше минуты.</p>
+    </div>
 
-@if (User.Identity?.IsAuthenticated == true)
-{
-    <form asp-controller="Home" asp-action="ScheduleWithService" method="GET">
-        <p>Выберите услугу:</p>
-        <select name="Service" class="form-select mt-4">
-            @foreach (var service in Model)
-            {
-                <option value="@service.Title">@service.Title</option>
-            }
-        </select>
-        <div class="form-group mt-4">
-            <input type="submit" value="Загрузить" class="btn btn-primary" />
+    <div class="steps-nav">
+        <span class="step-pill @(Model.SelectedService != null ? "done" : "now")"><i>1</i> Услуга</span>
+        <span class="step-pill @(hasDoctor ? "done" : "now")"><i>2</i> Врач</span>
+        <span class="step-pill @(hasDoctor ? "now" : "")"><i>3</i> Время</span>
+    </div>
+
+    @if (!Model.IsAuthenticated)
+    {
+        <div class="note warm" style="margin-bottom:28px">
+            <b>Свободное время видно всем.</b> Чтобы записаться, <a asp-controller="Auth" asp-action="LoginPage" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">войдите</a> или
+            <a asp-controller="Auth" asp-action="Registration">зарегистрируйтесь</a> — это займёт 30 секунд.
         </div>
-    </form>
-}
-else
-{
-    <p>Просмотр расписания доступен только авторизовным пользователям. </p>
-    <p>Не хотите регистрироваться? <a asp-controller="Home" asp-action="Contacts">Позвоните нам</a></p>
-}
-
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-}
+    else if (!Model.CanBook)
+    {
+        <div class="note warm" style="margin-bottom:28px">Вы вошли как сотрудник клиники. Записаться на приём можно только с аккаунта пациента.</div>
+    }
+
+    <h3 class="group-title">1. Что будем лечить? <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:600">(необязательно)</span></h3>
+    <div class="pick" style="margin-bottom:36px">
+        <a class="@(Model.ServiceId == null ? "active" : "")" asp-action="Schedule"><span class="svc-icon"><svg class="ic"><use href="#i-grid"/></svg></span> Любая услуга</a>
+        @foreach (var s in Model.Services)
+        {
+            <a class="@(Model.ServiceId == s.Id ? "active" : "")" asp-action="Schedule" asp-route-serviceId="@s.Id">
+                <span class="svc-icon"><partial name="_ServiceIcon" model="s.Icon" /></span>
+                <span>@s.Title<small>@(s.Price > 0 ? "от " : "")@Fmt.Money(s.Price)</small></span>
+            </a>
+        }
+    </div>
+
+    <h3 class="group-title">2. Выберите врача</h3>
+    @if (Model.Doctors.Count == 0)
+    {
+        <div class="card empty"><svg class="ic"><use href="#i-user"/></svg><h3>Врачей не найдено</h3><p>Для этой услуги пока нет специалистов. Выберите другую услугу.</p></div>
+    }
+    <div class="list" style="margin-bottom:36px">
+        @foreach (var d in Model.Doctors)
+        {
+            var selected = Model.SelectedDoctor?.Id == d.Doctor.Id;
+            <div class="card sched-doc" @(selected ? "style=border-color:var(--teal);box-shadow:var(--shadow)" : "")>
+                @if (!string.IsNullOrEmpty(d.Doctor.PhotoUrl)) { <img src="@d.Doctor.PhotoUrl" alt="@d.Doctor.DisplayName" loading="lazy"> } else { <div class="doc-fallback">@Fmt.Initials(d.Doctor.DisplayName)</div> }
+                <div>
+                    <h3>@d.Doctor.DisplayName</h3>
+                    <div class="soft">@d.Doctor.Specialty · стаж @Fmt.Years(d.Doctor.ExperienceYears)</div>
+                    <div style="margin-top:8px">
+                        @if (d.NextSlot != null)
+                        {
+                            <span class="badge ok"><svg class="ic"><use href="#i-clock"/></svg> Ближайшее: @Fmt.DayMonth(d.NextSlot.StartAt), @Fmt.Time(d.NextSlot.StartAt)</span>
+                            <span class="badge gray">@d.FreeCount свободных окон</span>
+                        }
+                        else
+                        {
+                            <span class="badge gray">Нет свободного времени</span>
+                        }
+                    </div>
+                </div>
+                <a class="btn @(selected ? "btn-primary" : "btn-ghost")" asp-action="Schedule" asp-route-serviceId="@Model.ServiceId" asp-route-staffId="@d.Doctor.Id" asp-fragment="time">Выбрать время</a>
+            </div>
+        }
+    </div>
+
+    @if (hasDoctor)
+    {
+        <div id="time" style="padding-bottom:70px">
+            <h3 class="group-title">3. Выберите время — @Model.SelectedDoctor!.DisplayName</h3>
+            @if (Model.Days.Count == 0)
+            {
+                <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>Свободного времени нет</h3><p>Попробуйте другого врача или зайдите позже.</p></div>
+            }
+            @foreach (var day in Model.Days)
+            {
+                <div class="day reveal in">
+                    <h4>@Fmt.WeekdayCap(day.Key), @Fmt.DayMonth(day.Key) <small>@day.Count() окон</small></h4>
+                    <div class="slots">
+                        @foreach (var slot in day)
+                        {
+                            if (Model.CanBook)
+                            {
+                                <form asp-controller="Home" asp-action="Book" method="post">
+                                    <input type="hidden" name="appointmentId" value="@slot.Id">
+                                    <input type="hidden" name="serviceId" value="@Model.ServiceId">
+                                    <button class="slot" type="submit" title="Записаться на @Fmt.Time(slot.StartAt)">@Fmt.Time(slot.StartAt)</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a class="slot" asp-controller="Auth" asp-action="LoginPage" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">@Fmt.Time(slot.StartAt)</a>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else { <div style="padding-bottom:70px"></div> }
+</div>

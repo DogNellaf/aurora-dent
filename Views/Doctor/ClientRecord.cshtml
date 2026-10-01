@@ -1,50 +1,40 @@
 @model List<Appointment>
 @{
-    ViewData["Title"] = "Больничная карта пациента";
-    long clientId = ViewBag.ClientId;
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Карта пациента";
+    ViewData["Cabinet"] = "doctor";
+    ViewData["Tab"] = "";
+    var client = (Profile)ViewBag.Client;
 }
-
-<div class="card">
-    <div class="card-header">
-        Больничная карта — пациент #@clientId
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Doctor" asp-action="Index">Текущий приём</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Doctor" asp-action="Appointments">Все приёмы</a>
-            </li>
-        </ul>
+<div class="cab-head">
+    <div>
+        <div class="crumbs"><a asp-action="Index">Кабинет</a> / <span>Карта пациента</span></div>
+        <h1>@client.DisplayName</h1>
+        <p>@client.PhoneNumber · @client.Email</p>
     </div>
-    <div class="card-body">
-        @if (Model.Count == 0)
-        {
-            <p class="text-muted">У пациента нет приёмов.</p>
-        }
-        else
-        {
-            <table class="table table-hover mt-2">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Дата и время</th>
-                        <th>Длительность (мин.)</th>
-                        <th>Рекомендации</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var appt in Model)
-                    {
-                        <tr>
-                            <td>@appt.Id</td>
-                            <td>@appt.StartAt.ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>@appt.Duration</td>
-                            <td>@(string.IsNullOrEmpty(appt.Recommendation) ? "—" : appt.Recommendation)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-        <a asp-controller="Doctor" asp-action="Index" class="btn btn-secondary mt-3">Назад к текущему приёму</a>
-    </div>
+    <span class="badge">@Model.Count визитов</span>
 </div>
+@if (Model.Count == 0)
+{
+    <div class="card empty"><h3>У пациента пока нет приёмов</h3></div>
+}
+else
+{
+    <div class="list">
+        @foreach (var a in Model)
+        {
+            <div class="card appt @(a.IsPast ? "past" : "")">
+                <partial name="_DateBox" model="a.StartAt" />
+                <div>
+                    <h4>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</h4>
+                    <div class="meta">
+                        <span><svg class="ic"><use href="#i-user"/></svg> @(a.Staff?.DisplayName)</span>
+                        <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Date(a.StartAt), @Fmt.Time(a.StartAt), @Fmt.Minutes(a.Duration)</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(a.Recommendation)) { <p class="soft" style="margin:10px 0 0;font-size:.92rem"><b>Рекомендации:</b> @a.Recommendation</p> }
+                </div>
+                <div></div>
+            </div>
+        }
+    </div>
+}

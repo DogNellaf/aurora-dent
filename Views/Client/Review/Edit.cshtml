@@ -1,58 +1,43 @@
-﻿@model DentalClinic.Models.Review
-
+@model Review
 @{
-    ViewData["Title"] = "Личный кабинет пациента: отзыв";
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Мой отзыв";
+    ViewData["Cabinet"] = "client";
+    ViewData["Tab"] = "review";
+    var exists = Model.Id != 0;
 }
-
-<div class="card text-center">
-    <div class="card-header">
-        Личный кабинет пациента
-        <ul class="nav nav-tabs card-header-tabs">
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Client" asp-action="Index">Больничная карта</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" aria-current="true" asp-controller="Client" asp-action="Review">Отзыв</a>
-            </li>
-        </ul>
-    </div>
-    <div class="card-body text-center">
-        <div class="row">
-            <div class="col-md">
-                <form asp-controller="Client" asp-action="ReviewCreate" method="post" class="mt-4">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group">
-                        <label asp-for="Text" class="control-label">Текст отзыва</label>
-                        <textarea asp-for="Text" class="form-control" rows="4">@(Model?.Text)</textarea>
-                        <span asp-validation-for="Text" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mt-4">
-                        <input type="submit" value="Сохранить" class="btn btn-primary" />
-                    </div>
-                </form>
+<div class="cab-head">
+    <div><h1>Мой отзыв</h1><p>Ваше мнение помогает другим пациентам и делает нас лучше</p></div>
+    @if (exists) { <span class="badge @(Model.IsVisible ? "ok" : "warn")">@(Model.IsVisible ? "Опубликован" : "На модерации")</span> }
+</div>
+<div class="card card-pad" style="max-width:720px">
+    <form asp-action="ReviewCreate" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+        <div class="field">
+            <label>Оценка</label>
+            <div class="rating-input">
+                @for (var i = 5; i >= 1; i--)
+                {
+                    <input type="radio" name="Rating" id="r@(i)" value="@i" checked="@(Model.Rating == i)">
+                    <label for="r@(i)" title="@i"><svg class="ic"><use href="#i-star"/></svg></label>
+                }
             </div>
         </div>
-    </div>
-
-    @if (Model != null && !string.IsNullOrEmpty(Model.Text))
+        <div class="field">
+            <label asp-for="Text">Расскажите о вашем визите</label>
+            <textarea asp-for="Text" rows="6" placeholder="Что понравилось? Что можно улучшить?"></textarea>
+            <span asp-validation-for="Text"></span>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">@(exists ? "Обновить отзыв" : "Отправить отзыв")</button>
+        </div>
+        <p class="hint muted" style="margin-top:14px;font-size:.85rem">Отзыв публикуется после проверки менеджером. На сайте указывается только ваше имя и первая буква фамилии.</p>
+    </form>
+    @if (exists && Model.IsVisible)
     {
-        @if (Model.IsVisible)
-        {
-            <form asp-controller="Client" asp-action="Hide" method="post">
-                <div class="form-group mt-4 mb-4">
-                    <input type="submit" value="Скрыть отзыв" class="btn btn-secondary" />
-                </div>
-            </form>
-        }
-        else
-        {
-            <p class="text-muted mt-3 mb-3">Отзыв отправлен на модерацию и временно скрыт.</p>
-        }
+        <form asp-action="Hide" method="post" style="margin-top:12px">
+            <button class="btn btn-ghost btn-sm" type="submit">Скрыть мой отзыв с сайта</button>
+        </form>
     }
 </div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }
