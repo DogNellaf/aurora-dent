@@ -12,6 +12,8 @@ updates:
     ignore:
       - dependency-name: "Microsoft.*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "dotnet-ef"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: nuget
     directory: "/DentalClinic.Tests"
     schedule:
