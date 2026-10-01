@@ -65,7 +65,7 @@ jobs:
           if lines < threshold:
               sys.exit(f"line coverage {lines:.1%} is below the {threshold:.0%} threshold")
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
