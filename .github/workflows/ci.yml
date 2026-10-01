@@ -22,8 +22,8 @@ jobs:
     name: Format and warnings
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
       - run: dotnet restore
@@ -50,8 +50,8 @@ jobs:
           --health-retries 12
           --health-start-period 20s
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
       - run: dotnet restore
@@ -79,7 +79,7 @@ jobs:
           if lines < threshold:
               sys.exit(f"line coverage {lines:.1%} is below the {threshold:.0%} threshold")
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, test]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build and start the stack
         run: docker compose up --build --detach --wait --wait-timeout 180
       - name: Smoke test over HTTP
