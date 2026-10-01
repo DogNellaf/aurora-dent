@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
 
 concurrency:
@@ -33,8 +33,22 @@ jobs:
         run: dotnet build DentalClinic.sln --no-restore -c Release -warnaserror
 
   test:
-    name: Tests on SQLite with coverage
+    name: Tests with coverage
     runs-on: ubuntu-latest
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Aurora_Dent_123"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Aurora_Dent_123 -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 20s
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -70,34 +84,6 @@ jobs:
         with:
           name: test-results
           path: TestResults/
-
-  test-sqlserver:
-    name: Tests on SQL Server
-    runs-on: ubuntu-latest
-    services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: "Y"
-          MSSQL_SA_PASSWORD: "Aurora_Dent_123"
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Aurora_Dent_123 -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 12
-          --health-start-period 20s
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-      - run: dotnet restore
-      - name: Run the whole suite against SQL Server
-        env:
-          TEST_SQLSERVER_CONNECTION: "Server=localhost,1433;User Id=sa;Password=Aurora_Dent_123;TrustServerCertificate=True"
-        run: dotnet test DentalClinic.sln -c Release --no-restore
 
   docker:
     name: Docker image and end-to-end smoke test

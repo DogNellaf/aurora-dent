@@ -230,9 +230,3 @@ __pycache__/
 
 # Windows thumbnail cache files
 Thumbs.db
-
-# Local SQLite database created at first run
-App_Data/
-*.db
-*.db-shm
-*.db-wal

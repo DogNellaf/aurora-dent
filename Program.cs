@@ -29,7 +29,16 @@ namespace DentalClinic
             // Render Cyrillic as-is instead of &#x...; entities (smaller pages, readable HTML).
             builder.Services.AddWebEncoders(o => o.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic));
 
-            builder.Services.AddDbContext<DatabaseContext>(options => ConfigureDatabase(options, builder.Configuration));
+            // The connection string is read lazily, so configuration added after Main starts (tests) still applies.
+            // The database container may still be starting when the app boots, so transient failures are retried.
+            builder.Services.AddDbContext<DatabaseContext>((services, options) =>
+            {
+                var connection = services.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")
+                    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+                options.UseSqlServer(connection, sql => sql.EnableRetryOnFailure(
+                    maxRetryCount: 10, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null));
+            });
 
             builder.Services.AddIdentity<Profile, Role>(options =>
             {
@@ -103,27 +112,6 @@ namespace DentalClinic
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
-        }
-
-        /// <summary>SQLite by default (zero setup); set Database:Provider=SqlServer to use SQL Server.</summary>
-        public static void ConfigureDatabase(DbContextOptionsBuilder options, IConfiguration configuration)
-        {
-            var provider = configuration["Database:Provider"] ?? "Sqlite";
-            var connection = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
-            if (provider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
-            {
-                options.UseSqlServer(connection);
-                return;
-            }
-
-            // Make sure the folder for the SQLite file exists.
-            var source = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connection).DataSource;
-            var dir = Path.GetDirectoryName(Path.GetFullPath(source));
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
-            options.UseSqlite(connection);
         }
     }
 }

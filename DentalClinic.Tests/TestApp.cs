@@ -8,27 +8,25 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DentalClinic.Tests;
 
 /// <summary>
-/// Boots the real app against a throw-away database seeded with the demo data: a temporary SQLite file by
-/// default, or a fresh database on a SQL Server when TEST_SQLSERVER_CONNECTION is set (used by CI to prove
-/// that the SQL Server provider works too). The value is a connection string without a database name.
+/// Boots the real app against a fresh SQL Server database seeded with the demo data. The server comes from
+/// TEST_SQLSERVER_CONNECTION (a connection string without a database name); the default matches the
+/// `db` service of docker-compose. Every instance creates its own database and drops it on dispose.
 /// </summary>
 public sealed class TestApp : WebApplicationFactory<Program>
 {
-    private static readonly string? SqlServer = Environment.GetEnvironmentVariable("TEST_SQLSERVER_CONNECTION");
+    private const string DefaultServer = "Server=localhost,1433;User Id=sa;Password=Aurora_Dent_123;TrustServerCertificate=True";
 
-    private readonly string _id = Guid.NewGuid().ToString("N");
-    private string DbPath => Path.Combine(Path.GetTempPath(), $"clinic-test-{_id}.db");
-    private string SqlDatabase => $"clinic_test_{_id}";
+    private static readonly string Server =
+        (Environment.GetEnvironmentVariable("TEST_SQLSERVER_CONNECTION") ?? DefaultServer).TrimEnd(';');
+
+    private readonly string _database = $"clinic_test_{Guid.NewGuid():N}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:DefaultConnection"] = SqlServer is null
-                ? $"Data Source={DbPath}"
-                : $"{SqlServer.TrimEnd(';')};Database={SqlDatabase}",
-            ["Database:Provider"] = SqlServer is null ? "Sqlite" : "SqlServer",
+            ["ConnectionStrings:DefaultConnection"] = $"{Server};Database={_database}",
             ["Seed:DemoData"] = "true"
         }));
     }
@@ -77,19 +75,12 @@ public sealed class TestApp : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (SqlServer is null)
-        {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-            try { File.Delete(DbPath); } catch (IOException) { }
-            return;
-        }
-
         try
         {
-            using var connection = new Microsoft.Data.SqlClient.SqlConnection(SqlServer);
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(Server);
             connection.Open();
             using var command = connection.CreateCommand();
-            command.CommandText = $"ALTER DATABASE [{SqlDatabase}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{SqlDatabase}];";
+            command.CommandText = $"ALTER DATABASE [{_database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{_database}];";
             command.ExecuteNonQuery();
         }
         catch (Exception) { /* best effort: the CI database is thrown away anyway */ }
