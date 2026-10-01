@@ -10,7 +10,7 @@
         <div class="crumbs"><a asp-action="Index">Мои записи</a> / <span>Приём</span></div>
         <h1>Приём @Fmt.DayMonth(Model.StartAt), @Fmt.Time(Model.StartAt)</h1>
     </div>
-    <span class="badge @(Model.IsPast ? "gray" : "ok")">@(Model.IsPast ? "Завершён" : "Предстоит")</span>
+    <span class="badge @(Model.IsPastAt(Clock.Now) ? "gray" : "ok")">@(Model.IsPastAt(Clock.Now) ? "Завершён" : "Предстоит")</span>
 </div>
 <div class="grid grid-2" style="align-items:start">
     <div class="card card-pad">
@@ -30,7 +30,7 @@
         <h3 style="display:flex;gap:10px;align-items:center"><svg class="ic" style="color:var(--teal)"><use href="#i-clipboard"/></svg> Рекомендации врача</h3>
         @if (string.IsNullOrWhiteSpace(Model.Recommendation))
         {
-            <p class="muted">@(Model.IsPast ? "Врач не оставил рекомендаций." : "Рекомендации появятся после приёма.")</p>
+            <p class="muted">@(Model.IsPastAt(Clock.Now) ? "Врач не оставил рекомендаций." : "Рекомендации появятся после приёма.")</p>
         }
         else
         {
@@ -38,4 +38,10 @@
         }
     </div>
 </div>
-<p style="margin-top:24px"><a class="btn btn-ghost" asp-action="Index">← Ко всем записям</a></p>
+<p style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
+    <a class="btn btn-ghost" asp-action="Index">← Ко всем записям</a>
+    @if (!Model.IsPastAt(Clock.Now))
+    {
+        <a class="btn btn-ghost" asp-action="Calendar" asp-route-appointmentId="@Model.Id"><svg class="ic"><use href="#i-calendar"/></svg> Добавить в календарь</a>
+    }
+</p>

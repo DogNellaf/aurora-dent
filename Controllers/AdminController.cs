@@ -5,6 +5,7 @@ using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 using DentalClinic.Models.DTO;
 using DentalClinic.Models.ViewModels;
+using DentalClinic.Services;
 
 namespace DentalClinic.Controllers
 {
@@ -12,30 +13,37 @@ namespace DentalClinic.Controllers
     [RoleRequired(RoleIds.Admin)]
     public class AdminController : BaseController
     {
-        private readonly UserManager<Profile> _userManager;
+        private readonly IClinicClock _clock;
+        private readonly IProfileService _profiles;
+        private readonly IReviewService _reviews;
+        private readonly IScheduleService _schedule;
 
-        public AdminController(DatabaseContext context, UserManager<Profile> userManager) : base(context)
+        public AdminController(DatabaseContext context, IClinicClock clock, IProfileService profiles,
+            IReviewService reviews, IScheduleService schedule) : base(context)
         {
-            _userManager = userManager;
+            _clock = clock;
+            _profiles = profiles;
+            _reviews = reviews;
+            _schedule = schedule;
         }
 
         // ---------------------------------------------------------------- overview
 
         [HttpGet("")]
-        public IActionResult Overview()
+        public async Task<IActionResult> Overview()
         {
-            var now = DateTime.Now;
-            var next = _context.Appointments.Include(a => a.Staff).Include(a => a.Services)
-                .Where(a => a.ClientId != 0 && a.StartAt > now)
-                .OrderBy(a => a.StartAt).Take(6).ToList();
+            var now = _clock.Now;
+            var next = await _context.Appointments.Include(a => a.Staff).Include(a => a.Services).Include(a => a.Client)
+                .Where(a => a.ClientId != null && a.StartAt > now)
+                .OrderBy(a => a.StartAt).Take(6).ToListAsync();
 
             return View(new AdminOverview
             {
-                Upcoming = _context.Appointments.Count(a => a.ClientId != 0 && a.StartAt > now),
-                FreeSlots = _context.Appointments.Count(a => a.ClientId == 0 && a.StartAt > now),
-                Clients = _context.Profiles.Count(p => p.RoleId == RoleIds.Client),
-                Doctors = _context.Staffs.Count(),
-                PendingReviews = _context.Reviews.Count(r => !r.IsVisible),
+                Upcoming = await _context.Appointments.CountAsync(a => a.ClientId != null && a.StartAt > now),
+                FreeSlots = await _context.Appointments.CountAsync(a => a.ClientId == null && a.StartAt > now),
+                Clients = await _context.Profiles.CountAsync(p => p.RoleId == RoleIds.Client),
+                Doctors = await _context.Staffs.CountAsync(),
+                PendingReviews = await _context.Reviews.CountAsync(r => !r.IsVisible),
                 NextAppointments = ToRows(next)
             });
         }
@@ -43,78 +51,78 @@ namespace DentalClinic.Controllers
         // ---------------------------------------------------------------- appointments
 
         [HttpGet("appointments")]
-        public IActionResult Index(string? filter)
+        public async Task<IActionResult> Index(string? filter, string? q, int page = 1)
         {
-            var now = DateTime.Now;
-            var query = _context.Appointments.Include(a => a.Staff).AsQueryable();
+            var now = _clock.Now;
+            var query = _context.Appointments.Include(a => a.Staff).Include(a => a.Client).AsQueryable();
 
             query = filter switch
             {
-                "free" => query.Where(a => a.ClientId == 0 && a.StartAt > now).OrderBy(a => a.StartAt),
+                "free" => query.Where(a => a.ClientId == null && a.StartAt > now).OrderBy(a => a.StartAt),
                 "past" => query.Where(a => a.StartAt <= now).OrderByDescending(a => a.StartAt),
-                _ => query.Where(a => a.ClientId != 0 && a.StartAt > now).OrderBy(a => a.StartAt)
+                _ => query.Where(a => a.ClientId != null && a.StartAt > now).OrderBy(a => a.StartAt)
             };
 
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = q.Trim();
+                query = query.Where(a => a.Staff!.FullName.Contains(term) || (a.Client != null && (a.Client.FullName.Contains(term) || a.Client.Email!.Contains(term))));
+            }
+
             ViewBag.Filter = filter is "free" or "past" ? filter : "upcoming";
-            return View("Appointments/Index", ToRows(query.Take(200).ToList()));
+            ViewBag.Query = q;
+            return View("Appointments/Index", (await query.ToPagedAsync(page)).Map(ToRows));
         }
 
-        private AppointmentEditViewModel EditModel(Appointment appointment, bool isNew) => new()
+        private async Task<AppointmentEditViewModel> EditModel(Models.Appointment appointment, bool isNew) => new()
         {
             Appointment = appointment,
             IsNew = isNew,
-            Staff = _context.Staffs.OrderBy(s => s.Id).ToList(),
-            Clients = _context.Profiles.Where(p => p.RoleId == RoleIds.Client).OrderBy(p => p.FullName).ToList()
+            Staff = await _context.Staffs.OrderBy(s => s.Id).ToListAsync(),
+            Clients = await _context.Profiles.Where(p => p.RoleId == RoleIds.Client).OrderBy(p => p.FullName).ToListAsync()
         };
 
         [HttpGet("appointments/new")]
-        public IActionResult AppointmentCreate()
-        {
-            var start = DateTime.Today.AddDays(1).AddHours(10);
-            return View("Appointments/Edit", EditModel(new Models.Appointment { StartAt = start, Duration = 60 }, true));
-        }
+        public async Task<IActionResult> AppointmentCreate() =>
+            View("Appointments/Edit", await EditModel(new Models.Appointment { StartAt = _clock.Today.AddDays(1).AddHours(10), Duration = 60 }, true));
 
         [HttpPost("appointments/new")]
-        public IActionResult AppointmentStore(Appointment appointment)
+        public async Task<IActionResult> AppointmentStore(Models.Appointment appointment)
         {
-            if (!_context.Staffs.Any(s => s.Id == appointment.StaffId))
-                ModelState.AddModelError("StaffId", "Выберите врача");
-
+            await ValidateAppointment(appointment, null);
             if (!ModelState.IsValid)
-                return View("Appointments/Edit", EditModel(appointment, true));
+                return View("Appointments/Edit", await EditModel(appointment, true));
 
             appointment.Id = 0;
             appointment.Recommendation ??= string.Empty;
             appointment.DurationChangeReason ??= string.Empty;
             _context.Appointments.Add(appointment);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = "Приём добавлен в расписание.";
             return RedirectToAction("Index", new { filter = appointment.IsBooked ? null : "free" });
         }
 
         [HttpGet("appointments/{appointmentId:long}")]
-        public IActionResult Appointment(long appointmentId)
+        public async Task<IActionResult> Appointment(long appointmentId)
         {
-            var appointment = _context.Appointments.FirstOrDefault(a => a.Id == appointmentId);
+            var appointment = await _context.Appointments.FirstOrDefaultAsync(a => a.Id == appointmentId);
             if (appointment == null) return NotFound();
 
-            return View("Appointments/Edit", EditModel(appointment, false));
+            return View("Appointments/Edit", await EditModel(appointment, false));
         }
 
         [HttpPost("appointments/{appointmentId:long}")]
-        public IActionResult AppointmentUpdate(long appointmentId, Appointment appointment)
+        public async Task<IActionResult> AppointmentUpdate(long appointmentId, Models.Appointment appointment)
         {
-            var existing = _context.Appointments.FirstOrDefault(a => a.Id == appointmentId);
+            var existing = await _context.Appointments.FirstOrDefaultAsync(a => a.Id == appointmentId);
             if (existing == null) return NotFound();
 
-            if (!_context.Staffs.Any(s => s.Id == appointment.StaffId))
-                ModelState.AddModelError("StaffId", "Выберите врача");
-
+            await ValidateAppointment(appointment, appointmentId);
             if (!ModelState.IsValid)
             {
                 appointment.Id = appointmentId;
-                return View("Appointments/Edit", EditModel(appointment, false));
+                return View("Appointments/Edit", await EditModel(appointment, false));
             }
 
             existing.StaffId = appointment.StaffId;
@@ -123,39 +131,84 @@ namespace DentalClinic.Controllers
             existing.Duration = appointment.Duration;
             existing.Recommendation = appointment.Recommendation ?? string.Empty;
             existing.DurationChangeReason = appointment.DurationChangeReason ?? string.Empty;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = "Изменения сохранены.";
             return RedirectToAction("Index");
         }
 
-        [HttpPost("appointments/{appointmentId:long}/delete")]
-        public IActionResult AppointmentDelete(long appointmentId)
+        private async Task ValidateAppointment(Models.Appointment appointment, long? ownId)
         {
-            var appointment = _context.Appointments.FirstOrDefault(a => a.Id == appointmentId);
-            if (appointment != null)
-            {
-                _context.Appointments.Remove(appointment);
-                _context.SaveChanges();
-                TempData["Success"] = "Приём удалён.";
-            }
+            if (!await _context.Staffs.AnyAsync(s => s.Id == appointment.StaffId))
+                ModelState.AddModelError("StaffId", "Выберите врача");
 
+            if (appointment.ClientId is { } clientId && !await _context.Profiles.AnyAsync(p => p.Id == clientId && p.RoleId == RoleIds.Client))
+                ModelState.AddModelError("ClientId", "Выберите пациента из списка");
+
+            // The database enforces this too (unique index), the check only gives a readable message.
+            if (await _context.Appointments.AnyAsync(a => a.StaffId == appointment.StaffId && a.StartAt == appointment.StartAt && a.Id != ownId))
+                ModelState.AddModelError("StartAt", "У этого врача уже есть приём на это время");
+        }
+
+        [HttpPost("appointments/{appointmentId:long}/delete")]
+        public async Task<IActionResult> AppointmentDelete(long appointmentId)
+        {
+            var deleted = await _context.Appointments.Where(a => a.Id == appointmentId).ExecuteDeleteAsync();
+            if (deleted > 0) TempData["Success"] = "Приём удалён.";
             return RedirectToAction("Index");
+        }
+
+        // ---------------------------------------------------------------- schedule generation
+
+        private async Task<GenerateScheduleViewModel> ScheduleForm(GenerateScheduleModel form) => new()
+        {
+            Form = form,
+            Staff = await _context.Staffs.OrderBy(s => s.Id).ToListAsync(),
+            CanChooseDoctor = true,
+            PostController = "Admin",
+            PostAction = nameof(GenerateSchedule)
+        };
+
+        [HttpGet("schedule")]
+        public async Task<IActionResult> Schedule()
+        {
+            var today = _clock.Today;
+            return View(await ScheduleForm(new GenerateScheduleModel { From = today.AddDays(1), To = today.AddDays(14) }));
+        }
+
+        [HttpPost("schedule")]
+        public async Task<IActionResult> GenerateSchedule(GenerateScheduleModel form)
+        {
+            if (!ModelState.IsValid)
+                return View("Schedule", await ScheduleForm(form));
+
+            var result = await _schedule.GenerateAsync(form);
+            TempData["Success"] = $"Создано окон {result.Created}, уже существовало {result.SkippedExisting}.";
+            return RedirectToAction("Index", new { filter = "free" });
         }
 
         // ---------------------------------------------------------------- profiles
 
         [HttpGet("profiles")]
-        public IActionResult Profiles()
+        public async Task<IActionResult> Profiles(string? q, long? role, int page = 1)
         {
-            var profiles = _context.Profiles.OrderBy(p => p.RoleId).ThenBy(p => p.FullName).ToList();
-            return View("Profiles/Index", profiles);
+            var query = _context.Profiles.AsQueryable();
+            if (role is { } roleId) query = query.Where(p => p.RoleId == roleId);
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = q.Trim();
+                query = query.Where(p => p.FullName.Contains(term) || p.Email!.Contains(term) || p.PhoneNumber!.Contains(term));
+            }
+
+            ViewBag.Query = q;
+            ViewBag.Role = role;
+            return View("Profiles/Index", await query.OrderBy(p => p.RoleId).ThenBy(p => p.FullName).ToPagedAsync(page));
         }
 
         [HttpGet("profiles/{profileId:long}")]
-        public IActionResult Profile(long profileId)
+        public async Task<IActionResult> Profile(long profileId)
         {
-            var profile = _context.Profiles.FirstOrDefault(p => p.Id == profileId);
+            var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.Id == profileId);
             if (profile == null) return NotFound();
 
             return View("Profiles/Edit", new ProfileEditModel
@@ -178,41 +231,9 @@ namespace DentalClinic.Controllers
             if (!ModelState.IsValid)
                 return View("Profiles/Create", model);
 
-            long roleId = model.RoleTitle switch
-            {
-                RoleTitle.Администратор => RoleIds.Admin,
-                RoleTitle.Менеджер => RoleIds.Manager,
-                RoleTitle.Доктор => RoleIds.Doctor,
-                _ => RoleIds.Client
-            };
-
-            var profile = new Profile
-            {
-                UserName = model.Email,
-                Email = model.Email,
-                PhoneNumber = model.Phone,
-                FullName = model.FullName.Trim(),
-                EmailConfirmed = true,
-                RoleId = roleId
-            };
-
-            var result = await _userManager.CreateAsync(profile, model.Password);
+            var (result, _) = await _profiles.CreateAsync(model);
             if (result.Succeeded)
             {
-                // A doctor needs a staff card, otherwise they cannot appear in the schedule or open their cabinet.
-                if (roleId == RoleIds.Doctor)
-                {
-                    _context.Staffs.Add(new Staff
-                    {
-                        Profile = profile,
-                        ExternalLogin = model.Email,
-                        FullName = profile.FullName,
-                        Specialty = "Стоматолог",
-                        Bio = "Информация о враче скоро появится."
-                    });
-                    _context.SaveChanges();
-                }
-
                 TempData["Success"] = "Профиль создан.";
                 return RedirectToAction("Profiles");
             }
@@ -226,157 +247,118 @@ namespace DentalClinic.Controllers
         [HttpPost("profiles/{profileId:long}")]
         public async Task<IActionResult> ProfileUpdate(long profileId, ProfileEditModel model)
         {
-            var profile = _context.Profiles.FirstOrDefault(p => p.Id == profileId);
+            var profile = await _context.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.Id == profileId);
             if (profile == null) return NotFound();
 
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                model.Id = profileId; model.RoleId = profile.RoleId; model.IsBanned = profile.IsBanned;
-                return View("Profiles/Edit", model);
+                switch (await _profiles.UpdateAsync(profileId, model))
+                {
+                    case UpdateProfileStatus.Updated:
+                        TempData["Success"] = "Профиль обновлён.";
+                        return RedirectToAction("Profiles");
+                    case UpdateProfileStatus.EmailTaken:
+                        ModelState.AddModelError(nameof(model.Email), "Этот email уже занят");
+                        break;
+                    default:
+                        return NotFound();
+                }
             }
 
-            var duplicate = _context.Profiles.Any(p => p.Id != profileId && p.NormalizedEmail == model.Email.ToUpperInvariant());
-            if (duplicate)
-            {
-                ModelState.AddModelError(nameof(model.Email), "Этот email уже занят");
-                model.Id = profileId; model.RoleId = profile.RoleId; model.IsBanned = profile.IsBanned;
-                return View("Profiles/Edit", model);
-            }
-
-            profile.FullName = model.FullName.Trim();
-            profile.PhoneNumber = model.Phone;
-            await _userManager.SetEmailAsync(profile, model.Email);
-            await _userManager.SetUserNameAsync(profile, model.Email);
-
-            var staff = _context.Staffs.FirstOrDefault(s => s.Profile.Id == profileId);
-            if (staff != null)
-            {
-                staff.FullName = profile.FullName;
-                staff.ExternalLogin = model.Email;
-                _context.SaveChanges();
-            }
-
-            TempData["Success"] = "Профиль обновлён.";
-            return RedirectToAction("Profiles");
+            model.Id = profileId;
+            model.RoleId = profile.RoleId;
+            model.IsBanned = profile.IsBanned;
+            return View("Profiles/Edit", model);
         }
 
         [HttpPost("profiles/{profileId:long}/delete")]
-        public IActionResult ProfileDelete(long profileId)
+        public async Task<IActionResult> ProfileDelete(long profileId)
         {
-            var profile = _context.Profiles.FirstOrDefault(p => p.Id == profileId);
-            if (profile == null) return NotFound();
-            if (profile.IsAdmin)
+            switch (await _profiles.DeleteAsync(profileId))
             {
-                TempData["Error"] = "Администратора удалить нельзя.";
-                return RedirectToAction("Profiles");
+                case ProfileChangeStatus.NotFound: return NotFound();
+                case ProfileChangeStatus.IsAdmin: TempData["Error"] = "Администратора удалить нельзя."; break;
+                default: TempData["Success"] = "Профиль удалён."; break;
             }
-
-            // Keep the data consistent: free the patient's future slots and drop their reviews and staff card.
-            var now = DateTime.Now;
-            foreach (var a in _context.Appointments.Include(a => a.Services).Where(a => a.ClientId == profileId && a.StartAt > now))
-            {
-                a.ClientId = 0;
-                a.Services.Clear();
-            }
-            _context.Reviews.RemoveRange(_context.Reviews.Where(r => r.ProfileId == profileId));
-
-            var staff = _context.Staffs.FirstOrDefault(s => s.Profile.Id == profileId);
-            if (staff != null)
-            {
-                _context.Appointments.RemoveRange(_context.Appointments.Where(a => a.StaffId == staff.Id));
-                _context.Staffs.Remove(staff);
-            }
-
-            _context.Profiles.Remove(profile);
-            _context.SaveChanges();
-
-            TempData["Success"] = "Профиль удалён.";
             return RedirectToAction("Profiles");
         }
 
         [HttpPost("profiles/{profileId:long}/ban")]
-        public IActionResult Ban(long profileId) => SetBan(profileId, true);
+        public Task<IActionResult> Ban(long profileId) => SetBan(profileId, true);
 
         [HttpPost("profiles/{profileId:long}/unban")]
-        public IActionResult Unban(long profileId) => SetBan(profileId, false);
+        public Task<IActionResult> Unban(long profileId) => SetBan(profileId, false);
 
-        private IActionResult SetBan(long profileId, bool banned)
+        private async Task<IActionResult> SetBan(long profileId, bool banned)
         {
-            var user = _context.Profiles.FirstOrDefault(p => p.Id == profileId);
-            if (user == null) return NotFound();
-            if (user.IsAdmin) return Forbid();
-
-            user.EmailConfirmed = !banned;
-            _context.SaveChanges();
-
-            TempData["Success"] = banned ? "Аккаунт заблокирован." : "Аккаунт разблокирован.";
-            return RedirectToAction("Profiles");
+            switch (await _profiles.SetBannedAsync(profileId, banned))
+            {
+                case ProfileChangeStatus.NotFound: return NotFound();
+                case ProfileChangeStatus.IsAdmin: return Forbid();
+                default:
+                    TempData["Success"] = banned ? "Аккаунт заблокирован." : "Аккаунт разблокирован.";
+                    return RedirectToAction("Profiles");
+            }
         }
 
         // ---------------------------------------------------------------- reviews
 
         [HttpGet("reviews")]
-        public IActionResult Reviews()
+        public async Task<IActionResult> Reviews(string? filter, int page = 1)
         {
-            var reviews = _context.Reviews.OrderByDescending(r => r.CreatedAt).ToList();
-            return View("Reviews/Index", ToCards(reviews));
+            var query = _context.Reviews.AsQueryable();
+            query = filter switch
+            {
+                "pending" => query.Where(r => !r.IsVisible),
+                "published" => query.Where(r => r.IsVisible),
+                _ => query
+            };
+
+            ViewBag.Filter = filter is "pending" or "published" ? filter : "all";
+            var paged = await query.OrderByDescending(r => r.CreatedAt).ToPagedAsync(page);
+            return View("Reviews/Index", paged.Map(items => ToCardsAsync(items).GetAwaiter().GetResult()));
         }
 
         [HttpGet("reviews/{reviewId:long}")]
-        public IActionResult Review(long reviewId)
+        public async Task<IActionResult> Review(long reviewId)
         {
-            var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
+            var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == reviewId);
             if (review == null) return NotFound();
 
             return View("Reviews/Edit", review);
         }
 
         [HttpPost("reviews/{reviewId:long}")]
-        public IActionResult ReviewUpdate(long reviewId, Review updated)
+        public async Task<IActionResult> ReviewUpdate(long reviewId, Review updated)
         {
-            var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
-            if (review == null) return NotFound();
-
             if (!ModelState.IsValid)
             {
                 updated.Id = reviewId;
                 return View("Reviews/Edit", updated);
             }
 
-            review.Text = updated.Text;
-            _context.SaveChanges();
+            if (!await _reviews.UpdateTextAsync(reviewId, updated.Text)) return NotFound();
 
             TempData["Success"] = "Отзыв обновлён.";
             return RedirectToAction("Reviews");
         }
 
         [HttpPost("reviews/{reviewId:long}/delete")]
-        public IActionResult ReviewDelete(long reviewId)
+        public async Task<IActionResult> ReviewDelete(long reviewId)
         {
-            var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
-            if (review != null)
-            {
-                _context.Reviews.Remove(review);
-                _context.SaveChanges();
-                TempData["Success"] = "Отзыв удалён.";
-            }
-
+            if (await _reviews.DeleteAsync(reviewId)) TempData["Success"] = "Отзыв удалён.";
             return RedirectToAction("Reviews");
         }
 
         [HttpPost("reviews/{reviewId:long}/show")]
-        public IActionResult ShowReview(long reviewId) => SetVisibility(reviewId, true);
+        public Task<IActionResult> ShowReview(long reviewId) => SetVisibility(reviewId, true);
 
         [HttpPost("reviews/{reviewId:long}/hide")]
-        public IActionResult HideReview(long reviewId) => SetVisibility(reviewId, false);
+        public Task<IActionResult> HideReview(long reviewId) => SetVisibility(reviewId, false);
 
-        private IActionResult SetVisibility(long reviewId, bool visible)
+        private async Task<IActionResult> SetVisibility(long reviewId, bool visible)
         {
-            var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
-            if (review == null) return NotFound();
-
-            review.IsVisible = visible;
-            _context.SaveChanges();
+            if (!await _reviews.SetVisibleAsync(reviewId, visible)) return NotFound();
             return RedirectToAction("Reviews");
         }
     }

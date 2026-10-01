@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using DentalClinic.Infrastructure;
 using DentalClinic.Models;
+using DentalClinic.Services;
 
 namespace DentalClinic.Controllers
 {
@@ -8,45 +10,42 @@ namespace DentalClinic.Controllers
     [RoleRequired(RoleIds.Manager)]
     public class ManagerController : BaseController
     {
-        public ManagerController(DatabaseContext context) : base(context) { }
+        private readonly IReviewService _reviews;
+
+        public ManagerController(DatabaseContext context, IReviewService reviews) : base(context)
+        {
+            _reviews = reviews;
+        }
 
         [HttpGet("reviews/all")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var reviews = _context.Reviews.Where(r => r.IsVisible).OrderByDescending(r => r.CreatedAt).ToList();
-            ViewBag.PendingCount = _context.Reviews.Count(r => !r.IsVisible);
-            return View(ToCards(reviews));
+            var reviews = await _context.Reviews.Where(r => r.IsVisible).OrderByDescending(r => r.CreatedAt).ToListAsync();
+            ViewBag.PendingCount = await _context.Reviews.CountAsync(r => !r.IsVisible);
+            return View(await ToCardsAsync(reviews));
         }
 
         [HttpGet("reviews/hidden")]
-        public IActionResult HiddenReviews()
+        public async Task<IActionResult> HiddenReviews()
         {
-            var reviews = _context.Reviews.Where(r => !r.IsVisible).OrderByDescending(r => r.CreatedAt).ToList();
+            var reviews = await _context.Reviews.Where(r => !r.IsVisible).OrderByDescending(r => r.CreatedAt).ToListAsync();
             ViewBag.PendingCount = reviews.Count;
-            return View(ToCards(reviews));
+            return View(await ToCardsAsync(reviews));
         }
 
         [HttpPost("reviews/{reviewId:long}/show")]
-        public IActionResult Show(long reviewId)
+        public async Task<IActionResult> Show(long reviewId)
         {
-            var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
-            if (review == null) return NotFound();
-
-            review.IsVisible = true;
-            _context.SaveChanges();
+            if (!await _reviews.SetVisibleAsync(reviewId, true)) return NotFound();
 
             TempData["Success"] = "Отзыв опубликован на сайте.";
             return RedirectToAction("HiddenReviews");
         }
 
         [HttpPost("reviews/{reviewId:long}/hide")]
-        public IActionResult Hide(long reviewId)
+        public async Task<IActionResult> Hide(long reviewId)
         {
-            var review = _context.Reviews.FirstOrDefault(r => r.Id == reviewId);
-            if (review == null) return NotFound();
-
-            review.IsVisible = false;
-            _context.SaveChanges();
+            if (!await _reviews.SetVisibleAsync(reviewId, false)) return NotFound();
 
             TempData["Success"] = "Отзыв скрыт с сайта.";
             return RedirectToAction("Index");

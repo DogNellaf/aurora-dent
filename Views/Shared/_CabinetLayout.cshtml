@@ -26,6 +26,7 @@
                     <a class="@A("today")" asp-controller="Doctor" asp-action="Index"><svg class="ic"><use href="#i-grid"/></svg> Сегодня</a>
                     <a class="@A("upcoming")" asp-controller="Doctor" asp-action="Appointments"><svg class="ic"><use href="#i-calendar"/></svg> Предстоящие</a>
                     <a class="@A("past")" asp-controller="Doctor" asp-action="Appointments" asp-route-filter="past"><svg class="ic"><use href="#i-clipboard"/></svg> История приёмов</a>
+                    <a class="@A("schedule")" asp-controller="Doctor" asp-action="Schedule"><svg class="ic"><use href="#i-clock"/></svg> Мои окна</a>
                     break;
                 case "manager":
                     var pending = ViewBag.PendingCount as int? ?? 0;
@@ -39,6 +40,7 @@
                     <a class="@A("reviews")" asp-controller="Admin" asp-action="Reviews"><svg class="ic"><use href="#i-message"/></svg> Отзывы</a>
                     break;
             }
+            <a class="@A("profile")" asp-controller="Account" asp-action="Index"><svg class="ic"><use href="#i-user"/></svg> Профиль</a>
             <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:8px 0 0">
                 <button class="btn btn-ghost btn-sm btn-block" type="submit"><svg class="ic"><use href="#i-logout"/></svg> Выйти</button>
             </form>

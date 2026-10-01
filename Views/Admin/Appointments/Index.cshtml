@@ -1,4 +1,4 @@
-@model List<AppointmentRow>
+@model Paged<AppointmentRow>
 @{
     Layout = "_CabinetLayout";
     ViewData["Title"] = "Приёмы";
@@ -8,14 +8,22 @@
 }
 <div class="cab-head">
     <div><h1>Приёмы</h1><p>Расписание всех врачей</p></div>
-    <a class="btn btn-primary" asp-action="AppointmentCreate"><svg class="ic"><use href="#i-plus"/></svg> Новое окно</a>
+    <div class="appt-actions">
+        <a class="btn btn-ghost" asp-action="Schedule"><svg class="ic"><use href="#i-calendar"/></svg> Создать расписание</a>
+        <a class="btn btn-primary" asp-action="AppointmentCreate"><svg class="ic"><use href="#i-plus"/></svg> Новое окно</a>
+    </div>
 </div>
 <div class="tabs">
     <a class="@(filter == "upcoming" ? "active" : "")" asp-action="Index">Записи впереди</a>
     <a class="@(filter == "free" ? "active" : "")" asp-action="Index" asp-route-filter="free">Свободные окна</a>
     <a class="@(filter == "past" ? "active" : "")" asp-action="Index" asp-route-filter="past">Прошедшие</a>
 </div>
-@if (Model.Count == 0)
+<form class="toolbar" method="get" asp-action="Index">
+    <input type="hidden" name="filter" value="@filter" />
+    <input class="input" type="search" name="q" value="@(ViewBag.Query as string)" placeholder="Поиск по врачу или пациенту" aria-label="Поиск" />
+    <button class="btn btn-ghost" type="submit">Найти</button>
+</form>
+@if (Model.Items.Count == 0)
 {
     <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>Ничего не найдено</h3></div>
 }
@@ -25,7 +33,7 @@ else
         <table class="table">
             <thead><tr><th>Дата и время</th><th>Врач</th><th>Пациент</th><th></th></tr></thead>
             <tbody>
-            @foreach (var r in Model)
+            @foreach (var r in Model.Items)
             {
                 var a = r.Appointment;
                 <tr>
@@ -46,3 +54,4 @@ else
         </table>
     </div>
 }
+<partial name="_Pager" model="Model" />

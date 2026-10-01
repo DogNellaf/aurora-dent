@@ -1,4 +1,4 @@
-@model List<ReviewCard>
+@model Paged<ReviewCard>
 @{
     Layout = "_CabinetLayout";
     ViewData["Title"] = "Отзывы";
@@ -6,14 +6,20 @@
     ViewData["Tab"] = "reviews";
 }
 <div class="cab-head"><div><h1>Отзывы</h1><p>Все отзывы пациентов, включая скрытые</p></div></div>
-@if (Model.Count == 0)
+@{ var filter = ViewBag.Filter as string ?? "all"; }
+<div class="tabs">
+    <a class="@(filter == "all" ? "active" : "")" asp-action="Reviews">Все</a>
+    <a class="@(filter == "pending" ? "active" : "")" asp-action="Reviews" asp-route-filter="pending">На модерации</a>
+    <a class="@(filter == "published" ? "active" : "")" asp-action="Reviews" asp-route-filter="published">Опубликованные</a>
+</div>
+@if (Model.Items.Count == 0)
 {
     <div class="card empty"><svg class="ic"><use href="#i-message"/></svg><h3>Отзывов пока нет</h3></div>
 }
 else
 {
     <div class="list">
-        @foreach (var r in Model)
+        @foreach (var r in Model.Items)
         {
             <div class="card rev-item">
                 <div>
@@ -40,3 +46,4 @@ else
         }
     </div>
 }
+<partial name="_Pager" model="Model" />

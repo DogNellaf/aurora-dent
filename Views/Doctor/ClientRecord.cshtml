@@ -23,7 +23,7 @@ else
     <div class="list">
         @foreach (var a in Model)
         {
-            <div class="card appt @(a.IsPast ? "past" : "")">
+            <div class="card appt @(a.IsPastAt(Clock.Now) ? "past" : "")">
                 <partial name="_DateBox" model="a.StartAt" />
                 <div>
                     <h4>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</h4>

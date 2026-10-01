@@ -7,7 +7,7 @@ public class BookingTests : IClassFixture<TestApp>
     public BookingTests(TestApp app) => _app = app;
 
     private long FreeSlotId() => _app.WithDb(db => db.Appointments
-        .Where(a => a.ClientId == 0 && a.StartAt > DateTime.Now.AddDays(3))
+        .Where(a => a.ClientId == null && a.StartAt > DateTime.UtcNow.AddDays(3))
         .OrderBy(a => a.StartAt).Select(a => a.Id).First());
 
     [Fact]
@@ -36,7 +36,7 @@ public class BookingTests : IClassFixture<TestApp>
 
         await TestApp.PostFormAsync(doctor, "/schedule", "/appointments/book", new() { ["appointmentId"] = slot.ToString() });
 
-        Assert.Equal(0L, _app.WithDb(db => db.Appointments.Single(a => a.Id == slot).ClientId));
+        Assert.Null(_app.WithDb(db => db.Appointments.Single(a => a.Id == slot).ClientId));
     }
 
     [Fact]
@@ -51,20 +51,20 @@ public class BookingTests : IClassFixture<TestApp>
     public async Task Client_can_cancel_an_upcoming_appointment_and_the_slot_is_freed()
     {
         var anna = _app.WithDb(db => db.Profiles.First(p => p.Email == "client@clinic.demo").Id);
-        var appt = _app.WithDb(db => db.Appointments.Where(a => a.ClientId == anna && a.StartAt > DateTime.Now.AddHours(3)).Select(a => a.Id).First());
+        var appt = _app.WithDb(db => db.Appointments.Where(a => a.ClientId == anna && a.StartAt > DateTime.UtcNow.AddHours(3)).Select(a => a.Id).First());
 
         var client = await _app.LoginAsync("client@clinic.demo");
         var response = await TestApp.PostFormAsync(client, "/client", $"/client/appointments/{appt}/cancel", new());
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
 
-        Assert.Equal(0L, _app.WithDb(db => db.Appointments.Single(a => a.Id == appt).ClientId));
+        Assert.Null(_app.WithDb(db => db.Appointments.Single(a => a.Id == appt).ClientId));
     }
 
     [Fact]
     public async Task Client_cannot_open_someone_elses_appointment()
     {
         var foreign = _app.WithDb(db => db.Appointments
-            .Where(a => a.ClientId != 0 && a.ClientId != db.Profiles.First(p => p.Email == "client@clinic.demo").Id)
+            .Where(a => a.ClientId != null && a.ClientId != db.Profiles.First(p => p.Email == "client@clinic.demo").Id)
             .Select(a => a.Id).First());
 
         var client = await _app.LoginAsync("client@clinic.demo");
@@ -76,7 +76,7 @@ public class BookingTests : IClassFixture<TestApp>
     {
         var doctorId = _app.WithDb(db => db.Staffs.First(s => s.ExternalLogin == "doctor@clinic.demo").Id);
         var anna = _app.WithDb(db => db.Profiles.First(p => p.Email == "client@clinic.demo").Id);
-        var appt = _app.WithDb(db => db.Appointments.First(a => a.StaffId == doctorId && a.ClientId == anna && a.StartAt > DateTime.Now).Id);
+        var appt = _app.WithDb(db => db.Appointments.First(a => a.StaffId == doctorId && a.ClientId == anna && a.StartAt > DateTime.UtcNow).Id);
 
         var doctor = await _app.LoginAsync("doctor@clinic.demo");
         await TestApp.PostFormAsync(doctor, $"/doctor/appointments/{appt}", $"/doctor/appointments/{appt}/recommend",

@@ -1,4 +1,4 @@
-@model List<AppointmentRow>
+@model Paged<AppointmentRow>
 @{
     Layout = "_CabinetLayout";
     var filter = ViewBag.Filter as string ?? "upcoming";
@@ -6,18 +6,18 @@
     ViewData["Cabinet"] = "doctor";
     ViewData["Tab"] = filter;
 }
-<div class="cab-head"><div><h1>@ViewData["Title"]</h1><p>@Model.Count записей</p></div></div>
-@if (Model.Count == 0)
+<div class="cab-head"><div><h1>@ViewData["Title"]</h1><p>@Model.Total записей</p></div></div>
+@if (Model.Items.Count == 0)
 {
     <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>Приёмов не найдено</h3></div>
 }
 else
 {
     <div class="list">
-        @foreach (var r in Model)
+        @foreach (var r in Model.Items)
         {
             var a = r.Appointment;
-            <div class="card appt @(a.IsPast ? "past" : "")">
+            <div class="card appt @(a.IsPastAt(Clock.Now) ? "past" : "")">
                 <partial name="_DateBox" model="a.StartAt" />
                 <div>
                     <h4>@r.ClientName</h4>
@@ -32,3 +32,4 @@ else
         }
     </div>
 }
+<partial name="_Pager" model="Model" />

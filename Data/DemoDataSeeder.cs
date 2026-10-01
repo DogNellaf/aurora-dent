@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using DentalClinic.Models;
+using DentalClinic.Services;
 
 namespace DentalClinic.Data
 {
@@ -8,17 +9,27 @@ namespace DentalClinic.Data
     /// Fills an empty database with a believable clinic: services, doctors, a schedule for the next two
     /// weeks, a few patients with visit history and reviews. All people and data are fictional.
     /// </summary>
-    public static class DemoDataSeeder
+    public class DemoDataSeeder
     {
         public const string DemoPassword = "Demo123!";
 
-        public static async Task SeedAsync(IServiceProvider services)
+        private readonly DatabaseContext db;
+        private readonly UserManager<Profile> users;
+        private readonly IClinicClock clock;
+        private readonly ILogger<DemoDataSeeder> logger;
+
+        public DemoDataSeeder(DatabaseContext db, UserManager<Profile> users, IClinicClock clock, ILogger<DemoDataSeeder> logger)
         {
-            var db = services.GetRequiredService<DatabaseContext>();
+            this.db = db;
+            this.users = users;
+            this.clock = clock;
+            this.logger = logger;
+        }
+
+        public async Task SeedAsync()
+        {
             if (await db.Services.AnyAsync() || await db.Profiles.AnyAsync())
                 return;
-
-            var users = services.GetRequiredService<UserManager<Profile>>();
 
             // ---- services -------------------------------------------------------------------------------
             var consult = Svc("Первичная консультация", "Диагностика", "scan", 0, 30,
@@ -75,7 +86,12 @@ namespace DentalClinic.Data
             // ---- schedule -------------------------------------------------------------------------------
             var staff = await db.Staffs.Include(s => s.Services).ToListAsync();
             var rnd = new Random(42);
-            var today = DateTime.Today;
+            var today = clock.Today;
+
+            // A visit that is happening right now, so the doctor dashboard has something to show.
+            // Regular slots of the same doctor that overlap it are skipped (a doctor has one patient at a time).
+            var inProgressStart = new DateTime(clock.Now.Year, clock.Now.Month, clock.Now.Day, clock.Now.Hour, clock.Now.Minute, 0).AddMinutes(-15);
+            var inProgressEnd = inProgressStart.AddMinutes(60);
             int[] hours = { 9, 10, 11, 12, 14, 15, 16, 17 };
 
             foreach (var doc in staff)
@@ -88,7 +104,8 @@ namespace DentalClinic.Data
                     foreach (var h in hours)
                     {
                         var start = day.AddHours(h);
-                        if (start <= DateTime.Now.AddMinutes(30)) continue;
+                        if (start <= clock.Now.AddMinutes(30)) continue;
+                        if (doc.Id == doctorA.Id && start < inProgressEnd && start.AddMinutes(60) > inProgressStart) continue;
 
                         var slot = new Appointment { StaffId = doc.Id, StartAt = start, Duration = 60 };
                         if (rnd.NextDouble() < 0.3)
@@ -140,14 +157,12 @@ namespace DentalClinic.Data
                 Recommendation = "Холод на область операции в первые сутки, мягкая пища 3 дня, полоскания хлоргексидином. Снятие швов — через 10 дней."
             });
 
-            // An appointment that is happening right now, so the doctor dashboard has something to show.
-            var now = DateTime.Now;
             db.Appointments.Add(new Appointment
             {
                 StaffId = doctorA.Id,
                 ClientId = maria.Id,
                 Duration = 60,
-                StartAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0).AddMinutes(-15),
+                StartAt = inProgressStart,
                 Services = { caries }
             });
 
@@ -197,7 +212,7 @@ namespace DentalClinic.Data
             await db.SaveChangesAsync();
         }
 
-        private static Service Svc(string title, string category, string icon, double price, int minutes, string description) =>
+        private static Service Svc(string title, string category, string icon, decimal price, int minutes, string description) =>
             new() { Title = title, Category = category, Icon = icon, Price = price, DurationMinutes = minutes, Description = description };
 
         private static async Task<Profile> CreateUser(UserManager<Profile> users, string email, string fullName, string phone, long roleId)

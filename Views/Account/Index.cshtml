@@ -1,0 +1,27 @@
+@model AccountViewModel
+@{
+    Layout = "_CabinetLayout";
+    ViewData["Title"] = "Профиль";
+    ViewData["Tab"] = "profile";
+}
+<div class="cab-head"><div><h1>Профиль</h1><p>@Model.Email · @Model.RoleName</p></div></div>
+<div class="grid grid-2" style="align-items:start">
+    <div class="card card-pad">
+        <h3>Личные данные</h3>
+        <form asp-action="UpdateProfile" method="post" novalidate>
+            <div class="field"><label asp-for="Profile.FullName">Имя и фамилия</label><input asp-for="Profile.FullName" autocomplete="name" /><span asp-validation-for="Profile.FullName"></span></div>
+            <div class="field"><label asp-for="Profile.Phone">Телефон</label><input asp-for="Profile.Phone" type="tel" autocomplete="tel" /><span asp-validation-for="Profile.Phone"></span></div>
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+        </form>
+    </div>
+    <div class="card card-pad">
+        <h3>Смена пароля</h3>
+        <form asp-action="ChangePassword" method="post" novalidate>
+            <div class="field"><label asp-for="Password.Current">Текущий пароль</label><input asp-for="Password.Current" autocomplete="current-password" /><span asp-validation-for="Password.Current"></span></div>
+            <div class="field"><label asp-for="Password.New">Новый пароль</label><input asp-for="Password.New" autocomplete="new-password" /><span asp-validation-for="Password.New"></span></div>
+            <div class="field"><label asp-for="Password.Confirm">Повтор нового пароля</label><input asp-for="Password.Confirm" autocomplete="new-password" /><span asp-validation-for="Password.Confirm"></span></div>
+            <button class="btn btn-primary" type="submit">Изменить пароль</button>
+        </form>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

@@ -72,3 +72,25 @@ namespace DentalClinic.Models.ViewModels
         public int PatientsCount { get; set; }
     }
 }
+
+namespace DentalClinic.Models.ViewModels
+{
+    public class AccountViewModel
+    {
+        public DTO.AccountProfileModel Profile { get; set; } = new();
+        public DTO.ChangePasswordModel Password { get; set; } = new();
+        public string Email { get; set; } = string.Empty;
+        public string RoleName { get; set; } = string.Empty;
+    }
+
+    public class GenerateScheduleViewModel
+    {
+        public DTO.GenerateScheduleModel Form { get; set; } = new();
+        public List<Staff> Staff { get; set; } = new();
+
+        /// <summary>Administrators choose a doctor (or all of them), a doctor generates only own slots.</summary>
+        public bool CanChooseDoctor { get; set; }
+        public string PostAction { get; set; } = string.Empty;
+        public string PostController { get; set; } = string.Empty;
+    }
+}

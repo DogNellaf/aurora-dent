@@ -19,28 +19,30 @@
                         <option value="@s.Id" selected="@(s.Id == a.StaffId)">@s.DisplayName</option>
                     }
                 </select>
-                <span class="text-danger field-validation-valid" data-valmsg-for="StaffId" data-valmsg-replace="true"></span>
+                @Html.ValidationMessage("StaffId", new { @class = "field-validation-error" })
             </div>
             <div class="field">
                 <label for="ClientId">Пациент</label>
                 <select name="ClientId" id="ClientId">
-                    <option value="0" selected="@(a.ClientId == 0)">— свободное окно —</option>
+                    <option value="" selected="@(a.ClientId == null)">Свободное окно</option>
                     @foreach (var c in Model.Clients)
                     {
                         <option value="@c.Id" selected="@(c.Id == a.ClientId)">@c.DisplayName</option>
                     }
                 </select>
+                @Html.ValidationMessage("ClientId", new { @class = "field-validation-error" })
             </div>
         </div>
         <div class="row">
             <div class="field">
                 <label asp-for="Appointment.StartAt">Время начала</label>
                 <input name="StartAt" id="StartAt" type="datetime-local" value="@a.StartAt.ToString("yyyy-MM-ddTHH:mm")" />
+                @Html.ValidationMessage("StartAt", new { @class = "field-validation-error" })
             </div>
             <div class="field">
                 <label for="Duration">Длительность, минут</label>
                 <input name="Duration" id="Duration" type="number" min="1" max="480" value="@a.Duration" />
-                <span class="text-danger field-validation-valid" data-valmsg-for="Duration" data-valmsg-replace="true"></span>
+                @Html.ValidationMessage("Duration", new { @class = "field-validation-error" })
             </div>
         </div>
         <div class="field">

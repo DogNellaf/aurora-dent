@@ -1,0 +1,42 @@
+@model GenerateScheduleViewModel
+@{
+    var f = Model.Form;
+    string Date(DateTime? d) => d?.ToString("yyyy-MM-dd") ?? "";
+    string Time(TimeSpan? t) => t?.ToString(@"hh\:mm") ?? "";
+}
+<div class="card card-pad" style="max-width:720px">
+    <form asp-controller="@Model.PostController" asp-action="@Model.PostAction" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly"></div>
+        @if (Model.CanChooseDoctor)
+        {
+            <div class="field">
+                <label for="StaffId">Врач</label>
+                <select name="StaffId" id="StaffId">
+                    <option value="">Все врачи</option>
+                    @foreach (var s in Model.Staff)
+                    {
+                        <option value="@s.Id" selected="@(f.StaffId == s.Id)">@s.DisplayName</option>
+                    }
+                </select>
+            </div>
+        }
+        <div class="row">
+            <div class="field"><label for="From">С даты</label><input type="date" name="From" id="From" value="@Date(f.From)" />@Html.ValidationMessage("From", new { @class = "field-validation-error" })</div>
+            <div class="field"><label for="To">По дату</label><input type="date" name="To" id="To" value="@Date(f.To)" />@Html.ValidationMessage("To", new { @class = "field-validation-error" })</div>
+        </div>
+        <div class="row">
+            <div class="field"><label for="StartTime">Начало работы</label><input type="time" name="StartTime" id="StartTime" value="@Time(f.StartTime)" />@Html.ValidationMessage("StartTime", new { @class = "field-validation-error" })</div>
+            <div class="field"><label for="EndTime">Конец работы</label><input type="time" name="EndTime" id="EndTime" value="@Time(f.EndTime)" />@Html.ValidationMessage("EndTime", new { @class = "field-validation-error" })</div>
+        </div>
+        <div class="row">
+            <div class="field"><label for="SlotMinutes">Длительность окна, минут</label><input type="number" name="SlotMinutes" id="SlotMinutes" min="15" max="240" step="5" value="@f.SlotMinutes" />@Html.ValidationMessage("SlotMinutes", new { @class = "field-validation-error" })</div>
+            <div class="field"><label for="BreakMinutes">Перерыв между окнами, минут</label><input type="number" name="BreakMinutes" id="BreakMinutes" min="0" max="120" step="5" value="@f.BreakMinutes" />@Html.ValidationMessage("BreakMinutes", new { @class = "field-validation-error" })</div>
+        </div>
+        <div class="field">
+            <label class="check"><input type="checkbox" name="SkipWeekends" value="true" checked="@f.SkipWeekends" /> Пропускать субботу и воскресенье</label>
+            <input type="hidden" name="SkipWeekends" value="false" />
+            <div class="hint">Уже существующие окна не изменяются, создаются только недостающие. Прошедшее время пропускается.</div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit"><svg class="ic"><use href="#i-calendar"/></svg> Создать окна</button></div>
+    </form>
+</div>

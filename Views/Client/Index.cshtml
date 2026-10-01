@@ -5,7 +5,7 @@
     ViewData["Cabinet"] = "client";
     ViewData["Tab"] = "records";
     var profile = (Profile)ViewBag.Profile;
-    var now = DateTime.Now;
+    var now = Clock.Now;
     var upcoming = Model.Where(a => a.EndAt >= now).OrderBy(a => a.StartAt).ToList();
     var past = Model.Where(a => a.EndAt < now).ToList();
 }

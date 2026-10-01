@@ -1,4 +1,4 @@
-@model List<Profile>
+@model Paged<Profile>
 @{
     Layout = "_CabinetLayout";
     ViewData["Title"] = "Профили";
@@ -9,11 +9,22 @@
     <div><h1>Профили</h1><p>Пациенты и сотрудники клиники</p></div>
     <a class="btn btn-primary" asp-action="ProfileCreate"><svg class="ic"><use href="#i-plus"/></svg> Добавить профиль</a>
 </div>
+<form class="toolbar" method="get" asp-action="Profiles">
+    <input class="input" type="search" name="q" value="@(ViewBag.Query as string)" placeholder="Имя, email или телефон" aria-label="Поиск" />
+    <select class="input" name="role" aria-label="Роль">
+        <option value="">Все роли</option>
+        <option value="1" selected="@((ViewBag.Role as long?) == 1)">Пациенты</option>
+        <option value="4" selected="@((ViewBag.Role as long?) == 4)">Врачи</option>
+        <option value="3" selected="@((ViewBag.Role as long?) == 3)">Менеджеры</option>
+        <option value="2" selected="@((ViewBag.Role as long?) == 2)">Администраторы</option>
+    </select>
+    <button class="btn btn-ghost" type="submit">Найти</button>
+</form>
 <div class="card table-wrap">
     <table class="table">
         <thead><tr><th>Пользователь</th><th>Роль</th><th>Телефон</th><th>Статус</th><th></th></tr></thead>
         <tbody>
-        @foreach (var p in Model)
+        @foreach (var p in Model.Items)
         {
             <tr>
                 <td><div class="person"><span class="avatar">@Fmt.Initials(p.DisplayName)</span><div><b>@p.DisplayName</b><small>@p.Email</small></div></div></td>
@@ -42,3 +53,4 @@
         </tbody>
     </table>
 </div>
+<partial name="_Pager" model="Model" />

@@ -1,0 +1,30 @@
+@model DentalClinic.Models.DTO.ForgotPasswordModel
+@{
+    ViewData["Title"] = "Восстановление пароля";
+}
+<div class="auth">
+    <div class="auth-aside" style="background-image:url('/img/office.jpg')">
+        <h2>Забыли пароль?</h2>
+        <p>Ссылка для создания нового пароля придёт на почту, указанную при регистрации.</p>
+    </div>
+    <div class="auth-main">
+        <div class="auth-box">
+            <h1>Восстановление</h1>
+            @if (ViewData["Sent"] is true)
+            {
+                <div class="note" style="margin:18px 0">Если адрес зарегистрирован, письмо со ссылкой уже отправлено. Ссылка действует ограниченное время.</div>
+                <p><a class="btn btn-ghost" asp-action="LoginPage">Вернуться ко входу</a></p>
+            }
+            else
+            {
+                <form asp-action="Forgot" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <div class="field"><label asp-for="Email">Email</label><input asp-for="Email" autocomplete="username" placeholder="you@example.com" /><span asp-validation-for="Email"></span></div>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit">Отправить ссылку</button>
+                </form>
+                <p class="soft" style="margin-top:20px"><a asp-action="LoginPage">Вернуться ко входу</a></p>
+            }
+        </div>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

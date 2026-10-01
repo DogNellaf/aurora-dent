@@ -39,12 +39,12 @@ public class AdminTests : IClassFixture<TestApp>
     {
         var admin = await _app.LoginAsync("admin@clinic.demo");
         var staffId = _app.WithDb(db => db.Staffs.First().Id);
-        var start = DateTime.Today.AddDays(30).AddHours(9);
+        var start = DateTime.UtcNow.Date.AddDays(30).AddHours(9);
 
         var created = await TestApp.PostFormAsync(admin, "/admin/appointments/new", "/admin/appointments/new", new()
         {
             ["StaffId"] = staffId.ToString(),
-            ["ClientId"] = "0",
+            ["ClientId"] = "",
             ["StartAt"] = Local(start),
             ["Duration"] = "45"
         });
@@ -55,7 +55,7 @@ public class AdminTests : IClassFixture<TestApp>
         var edited = await TestApp.PostFormAsync(admin, $"/admin/appointments/{slot.Id}", $"/admin/appointments/{slot.Id}", new()
         {
             ["StaffId"] = staffId.ToString(),
-            ["ClientId"] = "0",
+            ["ClientId"] = "",
             ["StartAt"] = Local(start),
             ["Duration"] = "90",
             ["Recommendation"] = "",
@@ -78,8 +78,8 @@ public class AdminTests : IClassFixture<TestApp>
         var response = await TestApp.PostFormAsync(admin, "/admin/appointments/new", "/admin/appointments/new", new()
         {
             ["StaffId"] = "9999",
-            ["ClientId"] = "0",
-            ["StartAt"] = Local(DateTime.Today.AddDays(31)),
+            ["ClientId"] = "",
+            ["StartAt"] = Local(DateTime.UtcNow.Date.AddDays(31)),
             ["Duration"] = "0"
         });
 
@@ -206,7 +206,7 @@ public class AdminTests : IClassFixture<TestApp>
         var admin = await _app.LoginAsync("admin@clinic.demo");
         var id = _app.WithDb(db => db.Profiles.Single(p => p.Email == "oleg@clinic.demo").Id);
         Assert.True(_app.WithDb(db => db.Reviews.Any(r => r.ProfileId == id)));
-        var future = _app.WithDb(db => db.Appointments.Where(a => a.ClientId == id && a.StartAt > DateTime.Now).Select(a => a.Id).ToList());
+        var future = _app.WithDb(db => db.Appointments.Where(a => a.ClientId == id && a.StartAt > DateTime.UtcNow).Select(a => a.Id).ToList());
         Assert.NotEmpty(future);
 
         var response = await TestApp.PostFormAsync(admin, "/admin/profiles", $"/admin/profiles/{id}/delete", new());
@@ -214,7 +214,7 @@ public class AdminTests : IClassFixture<TestApp>
 
         Assert.False(_app.WithDb(db => db.Profiles.Any(p => p.Id == id)));
         Assert.False(_app.WithDb(db => db.Reviews.Any(r => r.ProfileId == id)));
-        Assert.All(future, slot => Assert.Equal(0L, _app.WithDb(db => db.Appointments.Single(a => a.Id == slot).ClientId)));
+        Assert.All(future, slot => Assert.Null(_app.WithDb(db => db.Appointments.Single(a => a.Id == slot).ClientId)));
     }
 
     [Fact]

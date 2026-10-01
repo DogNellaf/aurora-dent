@@ -8,7 +8,7 @@ namespace DentalClinic.Infrastructure
     {
         private static readonly CultureInfo Ru = new("ru-RU");
 
-        public static string Money(double value) =>
+        public static string Money(decimal value) =>
             value <= 0 ? "Бесплатно" : value.ToString("N0", Ru).Replace(' ', ' ') + " ₽";
 
         public static string Date(DateTime d) => d.ToString("d MMMM yyyy", Ru);

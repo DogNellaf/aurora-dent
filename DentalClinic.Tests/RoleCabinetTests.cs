@@ -30,8 +30,8 @@ public class RoleCabinetTests : IClassFixture<TestApp>
     private (long Id, short Duration) CurrentVisit() => _app.WithDb(db =>
     {
         var staff = db.Staffs.Single(s => s.ExternalLogin == "doctor@clinic.demo");
-        var now = DateTime.Now;
-        var a = db.Appointments.AsEnumerable().First(x => x.StaffId == staff.Id && x.ClientId != 0 && x.StartAt <= now && x.EndAt >= now);
+        var now = DateTime.UtcNow;
+        var a = db.Appointments.AsEnumerable().First(x => x.StaffId == staff.Id && x.ClientId != null && x.StartAt <= now && x.EndAt >= now);
         return (a.Id, a.Duration);
     });
 
@@ -69,7 +69,7 @@ public class RoleCabinetTests : IClassFixture<TestApp>
             {
                 StaffId = db.Staffs.Single(s => s.ExternalLogin == "doctor@clinic.demo").Id,
                 ClientId = db.Profiles.First(p => p.Email == "igor@clinic.demo").Id,
-                StartAt = DateTime.Now.AddMinutes(-20),
+                StartAt = DateTime.UtcNow.AddMinutes(-20),
                 Duration = 60
             };
             db.Appointments.Add(visit);
@@ -93,7 +93,7 @@ public class RoleCabinetTests : IClassFixture<TestApp>
         Assert.Contains("Анна Кузнецова", await doctor.GetStringAsync($"/doctor/clients/{anna}/record"));
 
         var foreign = _app.WithDb(db => db.Appointments
-            .First(a => a.ClientId != 0 && a.StaffId != db.Staffs.First(s => s.ExternalLogin == "doctor@clinic.demo").Id).Id);
+            .First(a => a.ClientId != null && a.StaffId != db.Staffs.First(s => s.ExternalLogin == "doctor@clinic.demo").Id).Id);
         Assert.Equal(HttpStatusCode.NotFound, (await doctor.GetAsync($"/doctor/appointments/{foreign}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await doctor.GetAsync("/doctor/clients/999999/record")).StatusCode);
     }
@@ -152,7 +152,7 @@ public class RoleCabinetTests : IClassFixture<TestApp>
         var doctorId = _app.WithDb(db => db.Staffs.First().Id);
         var soon = _app.WithDb(db =>
         {
-            db.Appointments.Add(new Models.Appointment { StaffId = doctorId, ClientId = anna, StartAt = DateTime.Now.AddMinutes(30), Duration = 30 });
+            db.Appointments.Add(new Models.Appointment { StaffId = doctorId, ClientId = anna, StartAt = DateTime.UtcNow.AddMinutes(30), Duration = 30 });
             db.SaveChanges();
             return db.Appointments.OrderByDescending(a => a.Id).First().Id;
         });

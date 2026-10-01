@@ -25,8 +25,43 @@ namespace DentalClinic
             modelBuilder.Entity<IdentityRoleClaim<long>>(b => b.HasKey(x => x.Id));
             modelBuilder.Entity<IdentityUserClaim<long>>(b => b.HasKey(x => x.Id));
 
-            modelBuilder.Entity<Service>().HasMany(e => e.Staff).WithMany(e => e.Services);
-            modelBuilder.Entity<Service>().HasMany(e => e.Appointments).WithMany(e => e.Services);
+            // A profile has exactly one application role (Profile.RoleId). The ASP.NET Identity user-role
+            // table stays empty, authorization goes through the [RoleRequired] filter instead.
+            modelBuilder.Entity<Profile>().HasOne<Role>().WithMany().HasForeignKey(p => p.RoleId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Service>(e =>
+            {
+                e.Property(s => s.Price).HasPrecision(18, 2);
+                e.HasMany(s => s.Staff).WithMany(s => s.Services);
+                e.HasMany(s => s.Appointments).WithMany(a => a.Services);
+            });
+
+            modelBuilder.Entity<Staff>(e =>
+            {
+                e.HasOne(s => s.Profile).WithMany().HasForeignKey(s => s.ProfileId).OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(s => s.ProfileId).IsUnique();
+            });
+
+            modelBuilder.Entity<Appointment>(e =>
+            {
+                e.HasOne(a => a.Staff).WithMany().HasForeignKey(a => a.StaffId).OnDelete(DeleteBehavior.Cascade);
+
+                // NO ACTION on purpose: SQL Server rejects a second cascading path (Profile -> Staff -> Appointment).
+                // ProfileService frees or anonymises a patient's visits before deleting the profile.
+                e.HasOne(a => a.Client).WithMany().HasForeignKey(a => a.ClientId).OnDelete(DeleteBehavior.NoAction);
+
+                // A doctor cannot have two appointments that start at the same moment.
+                e.HasIndex(a => new { a.StaffId, a.StartAt }).IsUnique();
+                e.HasIndex(a => a.ClientId);
+                e.HasIndex(a => a.StartAt);
+            });
+
+            // One review per patient, removed together with the profile.
+            modelBuilder.Entity<Review>(e =>
+            {
+                e.HasOne<Profile>().WithMany().HasForeignKey(r => r.ProfileId).OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(r => r.ProfileId).IsUnique();
+            });
 
             // The four application roles are part of the schema, so a fresh database works out of the box.
             modelBuilder.Entity<Role>().HasData(

@@ -3,7 +3,7 @@
     Layout = "_CabinetLayout";
     ViewData["Title"] = "Приём";
     ViewData["Cabinet"] = "doctor";
-    ViewData["Tab"] = Model.Appointment.IsPast ? "past" : "upcoming";
+    ViewData["Tab"] = Model.Appointment.IsPastAt(Clock.Now) ? "past" : "upcoming";
     var a = Model.Appointment;
 }
 <div class="cab-head">
@@ -19,7 +19,7 @@
         <ul class="facts-list">
             <li><span>Услуги</span><b>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "—")</b></li>
             <li><span>Длительность</span><b>@Fmt.Minutes(a.Duration)</b></li>
-            <li><span>Статус</span><b>@(a.IsActive ? "Идёт сейчас" : a.IsPast ? "Завершён" : "Предстоит")</b></li>
+            <li><span>Статус</span><b>@(a.IsActiveAt(Clock.Now) ? "Идёт сейчас" : a.IsPastAt(Clock.Now) ? "Завершён" : "Предстоит")</b></li>
             @if (!string.IsNullOrEmpty(a.DurationChangeReason)) { <li><span>Изменение длительности</span><b>@a.DurationChangeReason</b></li> }
         </ul>
     </div>

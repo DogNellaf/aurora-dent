@@ -1,0 +1,16 @@
+@model IPaged
+@if (Model.TotalPages > 1)
+{
+    string Link(int page)
+    {
+        var query = Context.Request.Query.ToDictionary(k => k.Key, v => (string?)v.Value.ToString());
+        query["page"] = page.ToString();
+        return Context.Request.Path + QueryString.Create(query).ToString();
+    }
+
+    <nav class="pager" aria-label="Страницы">
+        @if (Model.Page > 1) { <a class="btn btn-ghost btn-sm" href="@Link(Model.Page - 1)"><svg class="ic" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg> Назад</a> }
+        <span class="muted">Страница @Model.Page из @Model.TotalPages · всего @Model.Total</span>
+        @if (Model.Page < Model.TotalPages) { <a class="btn btn-ghost btn-sm" href="@Link(Model.Page + 1)">Дальше <svg class="ic"><use href="#i-arrow"/></svg></a> }
+    </nav>
+}

@@ -8,7 +8,7 @@ public class FormattingTests
     [InlineData(0, "Бесплатно")]
     [InlineData(5500, "5 500 ₽")]
     [InlineData(95000, "95 000 ₽")]
-    public void Money_uses_russian_grouping(double value, string expected) => Assert.Equal(expected, Fmt.Money(value));
+    public void Money_uses_russian_grouping(decimal value, string expected) => Assert.Equal(expected, Fmt.Money(value));
 
     [Theory]
     [InlineData(1, "1 год")]

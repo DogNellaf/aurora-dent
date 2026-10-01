@@ -1,12 +1,15 @@
-using System.Globalization;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Localization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using System.Globalization;
 using DentalClinic.Data;
 using DentalClinic.Infrastructure;
 using DentalClinic.Models;
+using DentalClinic.Services;
 
 namespace DentalClinic
 {
@@ -15,6 +18,13 @@ namespace DentalClinic
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Structured logs to the console; levels and sinks come from the "Serilog" section of the configuration.
+            builder.Host.UseSerilog((context, services, logger) => logger
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.FromLogContext()
+                .WriteTo.Console());
 
             builder.Services.AddControllersWithViews(options =>
             {
@@ -47,9 +57,14 @@ namespace DentalClinic
                 options.Password.RequireUppercase = false;
                 options.Password.RequiredLength = 6;
                 options.User.RequireUniqueEmail = true;
+
+                // Five wrong passwords lock the account for fifteen minutes.
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             })
             .AddEntityFrameworkStores<DatabaseContext>()
-            ;
+            .AddDefaultTokenProviders();
 
             builder.Services.ConfigureApplicationCookie(options =>
             {
@@ -67,19 +82,36 @@ namespace DentalClinic
 
             builder.Services.AddHealthChecks().AddDbContextCheck<DatabaseContext>("database");
 
+            // Application services. Controllers only translate HTTP to these calls.
+            builder.Services.Configure<ClinicOptions>(builder.Configuration.GetSection(ClinicOptions.Section));
+            builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.Section));
+            builder.Services.AddSingleton(TimeProvider.System);
+            builder.Services.AddSingleton<IClinicClock, ClinicClock>();
+            builder.Services.AddScoped<IBookingService, BookingService>();
+            builder.Services.AddScoped<IScheduleService, ScheduleService>();
+            builder.Services.AddScoped<IProfileService, ProfileService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddSingleton<ICalendarExporter, CalendarExporter>();
+            builder.Services.AddScoped<INotifier, Notifier>();
+            builder.Services.AddScoped<DemoDataSeeder>();
+            if (string.IsNullOrWhiteSpace(builder.Configuration[$"{EmailOptions.Section}:Host"]))
+                builder.Services.AddSingleton<IEmailSender, LoggingEmailSender>();
+            else
+                builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-                db.Database.EnsureCreated();
+                scope.ServiceProvider.GetRequiredService<DatabaseContext>().Database.Migrate();
 
                 if (app.Configuration.GetValue("Seed:DemoData", true))
-                    DemoDataSeeder.SeedAsync(scope.ServiceProvider).GetAwaiter().GetResult();
+                    scope.ServiceProvider.GetRequiredService<DemoDataSeeder>().SeedAsync().GetAwaiter().GetResult();
             }
 
             app.UseForwardedHeaders();
             app.UseSecurityHeaders();
+            app.UseSerilogRequestLogging();
 
             if (!app.Environment.IsDevelopment())
                 app.UseExceptionHandler("/Home/Error");

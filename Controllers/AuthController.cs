@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 using DentalClinic.Models.DTO;
+using DentalClinic.Services;
 
 namespace DentalClinic.Controllers
 {
@@ -11,21 +12,27 @@ namespace DentalClinic.Controllers
     {
         private readonly UserManager<Profile> _userManager;
         private readonly SignInManager<Profile> _signInManager;
+        private readonly INotifier _notifier;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             DatabaseContext context,
             UserManager<Profile> userManager,
-            SignInManager<Profile> signInManager) : base(context)
+            SignInManager<Profile> signInManager,
+            INotifier notifier,
+            ILogger<AuthController> logger) : base(context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _notifier = notifier;
+            _logger = logger;
         }
 
-        /// <summary>Sends the user to the cabinet that matches their role.</summary>
+        /// <summary>Sends the user to the cabinet that matches the role.</summary>
         [HttpGet("")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var profile = TryGetProfile();
+            var profile = await TryGetProfileAsync();
             if (profile == null) return RedirectToAction("LoginPage");
 
             if (profile.IsAdmin) return RedirectToAction("Overview", "Admin");
@@ -56,6 +63,7 @@ namespace DentalClinic.Controllers
             var registerResult = await _userManager.CreateAsync(profile, model.Password);
             if (registerResult.Succeeded)
             {
+                _logger.LogInformation("Patient {ProfileId} registered", profile.Id);
                 await _signInManager.SignInAsync(profile, isPersistent: true);
                 return RedirectToAction("Index");
             }
@@ -83,7 +91,8 @@ namespace DentalClinic.Controllers
                 return View("Login", data);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(data.Email, data.Password, data.RememberMe, false);
+            // lockoutOnFailure counts wrong passwords and locks the account after too many of them.
+            var result = await _signInManager.PasswordSignInAsync(data.Email, data.Password, data.RememberMe, lockoutOnFailure: true);
             if (result.Succeeded)
             {
                 if (!string.IsNullOrEmpty(data.ReturnUrl) && Url.IsLocalUrl(data.ReturnUrl))
@@ -91,7 +100,16 @@ namespace DentalClinic.Controllers
                 return RedirectToAction("Index");
             }
 
-            ModelState.AddModelError("", "Неверный email или пароль");
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("Account {Email} is locked out after repeated failed sign-ins", data.Email);
+                ModelState.AddModelError("", "Слишком много неудачных попыток. Вход закрыт на 15 минут, попробуйте позже или сбросьте пароль.");
+            }
+            else
+            {
+                ModelState.AddModelError("", "Неверный email или пароль");
+            }
+
             return View("Login", data);
         }
 
@@ -107,6 +125,71 @@ namespace DentalClinic.Controllers
         {
             Response.StatusCode = 403;
             return View();
+        }
+
+        // ------------------------------------------------------------------ password reset
+
+        [HttpGet("forgot")]
+        public IActionResult Forgot() => View(new ForgotPasswordModel());
+
+        [HttpPost("forgot")]
+        public async Task<IActionResult> Forgot(ForgotPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var profile = await _userManager.FindByEmailAsync(model.Email);
+            if (profile != null && !profile.IsBanned)
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(profile);
+                var link = Url.Action("ResetPage", "Auth", new { email = profile.Email, token }, Request.Scheme)!;
+                await _notifier.PasswordResetAsync(profile, link);
+                _logger.LogInformation("Password reset requested for profile {ProfileId}", profile.Id);
+            }
+
+            // The same answer for known and unknown addresses, so the form cannot be used to find registered emails.
+            ViewData["Sent"] = true;
+            return View(model);
+        }
+
+        [HttpGet("reset")]
+        public IActionResult ResetPage(string? email, string? token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+                return RedirectToAction("Forgot");
+
+            return View("Reset", new ResetPasswordModel { Email = email, Token = token });
+        }
+
+        [HttpPost("reset")]
+        public async Task<IActionResult> Reset(ResetPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+                return View("Reset", model);
+
+            var profile = await _userManager.FindByEmailAsync(model.Email);
+            if (profile == null || profile.IsBanned)
+            {
+                ModelState.AddModelError("", "Ссылка недействительна. Запросите сброс пароля ещё раз.");
+                return View("Reset", model);
+            }
+
+            var result = await _userManager.ResetPasswordAsync(profile, model.Token, model.Password);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Code == "InvalidToken"
+                        ? "Ссылка недействительна или устарела. Запросите сброс пароля ещё раз."
+                        : IdentityErrors.Translate(error));
+                return View("Reset", model);
+            }
+
+            // A reset also lifts a lockout caused by failed attempts.
+            await _userManager.SetLockoutEndDateAsync(profile, null);
+            await _userManager.ResetAccessFailedCountAsync(profile);
+
+            TempData["Success"] = "Пароль изменён. Теперь можно войти.";
+            return RedirectToAction("LoginPage");
         }
     }
 }

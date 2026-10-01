@@ -6,6 +6,7 @@ namespace DentalClinic.Models
     public class Staff
     {
         public long Id { get; set; }
+        public long ProfileId { get; set; }
         public Profile Profile { get; set; } = null!;
         public string ExternalLogin { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;

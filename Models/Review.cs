@@ -15,6 +15,6 @@ namespace DentalClinic.Models
 
         public bool IsVisible { get; set; }
         public int Rating { get; set; } = 5;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; }
     }
 }

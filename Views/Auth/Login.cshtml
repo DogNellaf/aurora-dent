@@ -24,7 +24,10 @@
                     <input asp-for="Password" autocomplete="current-password" />
                     <span asp-validation-for="Password"></span>
                 </div>
-                <div class="field"><label class="check"><input asp-for="RememberMe" /> Запомнить меня</label></div>
+                <div class="field" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                    <label class="check"><input asp-for="RememberMe" /> Запомнить меня</label>
+                    <a asp-action="Forgot">Забыли пароль?</a>
+                </div>
                 <button class="btn btn-primary btn-lg btn-block" type="submit">Войти</button>
             </form>
 

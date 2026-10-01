@@ -1,0 +1,138 @@
+using DentalClinic.Models;
+using DentalClinic.Models.DTO;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace DentalClinic.Services
+{
+    public enum UpdateProfileStatus { Updated, NotFound, EmailTaken }
+
+    public enum ProfileChangeStatus { Done, NotFound, IsAdmin }
+
+    public interface IProfileService
+    {
+        Task<(IdentityResult Result, Profile? Profile)> CreateAsync(NewProfile model);
+        Task<UpdateProfileStatus> UpdateAsync(long id, ProfileEditModel model);
+        Task<ProfileChangeStatus> SetBannedAsync(long id, bool banned);
+        Task<ProfileChangeStatus> DeleteAsync(long id);
+    }
+
+    public sealed class ProfileService : IProfileService
+    {
+        private readonly DatabaseContext _db;
+        private readonly UserManager<Profile> _users;
+        private readonly IClinicClock _clock;
+        private readonly ILogger<ProfileService> _logger;
+
+        public ProfileService(DatabaseContext db, UserManager<Profile> users, IClinicClock clock, ILogger<ProfileService> logger)
+        {
+            _db = db;
+            _users = users;
+            _clock = clock;
+            _logger = logger;
+        }
+
+        public async Task<(IdentityResult, Profile?)> CreateAsync(NewProfile model)
+        {
+            var roleId = model.RoleTitle switch
+            {
+                RoleTitle.Администратор => RoleIds.Admin,
+                RoleTitle.Менеджер => RoleIds.Manager,
+                RoleTitle.Доктор => RoleIds.Doctor,
+                _ => RoleIds.Client
+            };
+
+            var profile = new Profile
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                PhoneNumber = model.Phone,
+                FullName = model.FullName.Trim(),
+                EmailConfirmed = true,
+                RoleId = roleId
+            };
+
+            var result = await _users.CreateAsync(profile, model.Password);
+            if (!result.Succeeded) return (result, null);
+
+            // A doctor needs a staff card, otherwise there is nobody to show in the schedule or the cabinet.
+            if (roleId == RoleIds.Doctor)
+            {
+                _db.Staffs.Add(new Staff
+                {
+                    ProfileId = profile.Id,
+                    ExternalLogin = model.Email,
+                    FullName = profile.FullName,
+                    Specialty = "Стоматолог",
+                    Bio = "Информация о враче скоро появится."
+                });
+                await _db.SaveChangesAsync();
+            }
+
+            _logger.LogInformation("Profile {ProfileId} created with role {RoleId}", profile.Id, roleId);
+            return (result, profile);
+        }
+
+        public async Task<UpdateProfileStatus> UpdateAsync(long id, ProfileEditModel model)
+        {
+            var profile = await _db.Profiles.FirstOrDefaultAsync(p => p.Id == id);
+            if (profile is null) return UpdateProfileStatus.NotFound;
+
+            var normalized = _users.NormalizeEmail(model.Email);
+            if (await _db.Profiles.AnyAsync(p => p.Id != id && p.NormalizedEmail == normalized))
+                return UpdateProfileStatus.EmailTaken;
+
+            profile.FullName = model.FullName.Trim();
+            profile.PhoneNumber = model.Phone;
+            await _users.SetEmailAsync(profile, model.Email);
+            await _users.SetUserNameAsync(profile, model.Email);
+
+            var staff = await _db.Staffs.FirstOrDefaultAsync(s => s.ProfileId == id);
+            if (staff != null)
+            {
+                staff.FullName = profile.FullName;
+                staff.ExternalLogin = model.Email;
+                await _db.SaveChangesAsync();
+            }
+
+            return UpdateProfileStatus.Updated;
+        }
+
+        public async Task<ProfileChangeStatus> SetBannedAsync(long id, bool banned)
+        {
+            var profile = await _db.Profiles.FirstOrDefaultAsync(p => p.Id == id);
+            if (profile is null) return ProfileChangeStatus.NotFound;
+            if (profile.IsAdmin) return ProfileChangeStatus.IsAdmin;
+
+            profile.EmailConfirmed = !banned;
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Profile {ProfileId} {Action}", id, banned ? "banned" : "unbanned");
+            return ProfileChangeStatus.Done;
+        }
+
+        public async Task<ProfileChangeStatus> DeleteAsync(long id)
+        {
+            var profile = await _db.Profiles.FirstOrDefaultAsync(p => p.Id == id);
+            if (profile is null) return ProfileChangeStatus.NotFound;
+            if (profile.IsAdmin) return ProfileChangeStatus.IsAdmin;
+
+            // Future visits return to the schedule, finished visits stay in the doctors' history without a patient.
+            var future = await _db.Appointments.Include(a => a.Services)
+                .Where(a => a.ClientId == id && a.StartAt > _clock.Now).ToListAsync();
+            foreach (var appointment in future)
+                appointment.Services.Clear();
+            await _db.SaveChangesAsync();
+
+            await _db.Appointments.Where(a => a.ClientId == id)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.ClientId, (long?)null));
+
+            // The staff card and the whole schedule of a deleted doctor go away through the foreign keys.
+            _db.Profiles.Remove(profile);
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Profile {ProfileId} deleted", id);
+            return ProfileChangeStatus.Done;
+        }
+    }
+}

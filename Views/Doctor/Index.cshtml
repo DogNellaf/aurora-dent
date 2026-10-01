@@ -5,10 +5,10 @@
     ViewData["Cabinet"] = "doctor";
     ViewData["Tab"] = "today";
     var cur = Model.Current?.Appointment;
-    var pct = cur == null ? 0 : Math.Clamp((int)((DateTime.Now - cur.StartAt).TotalMinutes * 100 / Math.Max(1, (int)cur.Duration)), 0, 100);
+    var pct = cur == null ? 0 : Math.Clamp((int)((Clock.Now - cur.StartAt).TotalMinutes * 100 / Math.Max(1, (int)cur.Duration)), 0, 100);
 }
 <div class="cab-head">
-    <div><h1>@Model.Staff.DisplayName</h1><p>@Model.Staff.Specialty · сегодня @Fmt.DayMonth(DateTime.Now)</p></div>
+    <div><h1>@Model.Staff.DisplayName</h1><p>@Model.Staff.Specialty · сегодня @Fmt.DayMonth(Clock.Now)</p></div>
 </div>
 
 <div class="stat-cards">
@@ -81,14 +81,14 @@ else
         @foreach (var r in Model.Today)
         {
             var a = r.Appointment;
-            <div class="card appt @(a.IsPast ? "past" : "")">
+            <div class="card appt @(a.IsPastAt(Clock.Now) ? "past" : "")">
                 <partial name="_DateBox" model="a.StartAt" />
                 <div>
                     <h4>@r.ClientName</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
                         <span>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</span>
-                        @if (a.IsActive) { <span class="badge ok">Сейчас</span> } else if (a.IsPast) { <span class="badge gray">Завершён</span> }
+                        @if (a.IsActiveAt(Clock.Now)) { <span class="badge ok">Сейчас</span> } else if (a.IsPastAt(Clock.Now)) { <span class="badge gray">Завершён</span> }
                     </div>
                 </div>
                 <div class="appt-actions"><a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">Открыть</a></div>
