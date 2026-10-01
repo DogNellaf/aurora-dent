@@ -2,6 +2,7 @@
 """End-to-end smoke test of a running Aurora Dent instance (standard library only).
 
     python docker/smoke_test.py http://localhost:8080
+    SMOKE_MAIL_URL=http://localhost:8025 python docker/smoke_test.py http://localhost:8080   # also checks the emails
 
 It walks the real user journey over HTTP, the same way a browser would: health check, public
 pages, sign in as the demo patient (antiforgery token and cookies included), book a free slot,
@@ -10,6 +11,8 @@ Exit code is 0 when everything passes.
 """
 import html
 import http.cookiejar
+import json
+import os
 import re
 import sys
 import time
@@ -105,14 +108,43 @@ _, cabinet, _ = patient.get("/client")
 cancel_urls = re.findall(r'/client/appointments/(\d+)/cancel', cabinet)
 check("new booking is listed in the cabinet", len(cancel_urls) == before + 1)
 
+mail_url = os.environ.get("SMOKE_MAIL_URL")
+if mail_url:
+    with urllib.request.urlopen(mail_url.rstrip("/") + "/api/v1/messages", timeout=20) as response:
+        messages = json.load(response)["messages"]
+    confirmation = [m for m in messages if m["Subject"].startswith("Запись на") and m["To"][0]["Address"] == "client@clinic.demo"]
+    check("a confirmation email with a calendar file reaches the mail server", bool(confirmation) and confirmation[0]["Attachments"] >= 1)
+
 other = Session()
 other.login("igor@clinic.demo")
 status, _, headers = other.post("/schedule?staffId=1", "/appointments/book", {"appointmentId": slot_id})
 check("the same slot cannot be taken by another patient", status == 302 and "/schedule" in headers.get("Location", ""), f"{status} {headers.get('Location')}")
 
+status, body, headers = patient.get(f"/client/appointments/{slot_id}/calendar.ics")
+check("calendar file can be downloaded", status == 200 and "BEGIN:VCALENDAR" in body and headers.get("Content-Type", "").startswith("text/calendar"), f"{status}")
+
+status, body, _ = patient.get("/account")
+check("profile page opens", status == 200 and "Смена пароля" in body)
+
 status, _, _ = patient.post("/client", f"/client/appointments/{slot_id}/cancel")
 _, cabinet, _ = patient.get("/client")
 check("cancelling frees the slot", status == 302 and f"/client/appointments/{slot_id}/cancel" not in cabinet)
+
+# --- password reset and lockout -------------------------------------------------------------
+status, body, _ = anon.get("/route/forgot")
+check("password reset form opens", status == 200)
+status, body, _ = anon.post("/route/forgot", "/route/forgot", {"Email": "nobody@example.com"})
+check("reset request does not reveal whether an address exists", status == 200 and "Если адрес зарегистрирован" in body)
+
+victim = Session()
+email = f"smoke{int(time.time())}@example.com"
+status, _, _ = victim.post("/route/register", "/route/register", {"FullName": "Smoke Test", "Email": email, "Phone": "+79001112233", "Password": "secret1", "ConfirmPassword": "secret1"})
+check("a new patient can register", status == 302)
+attacker = Session()
+for _ in range(5):
+    attacker.post("/route/login", "/route/login", {"Email": email, "Password": "wrong"})
+status, body, _ = attacker.post("/route/login", "/route/login", {"Email": email, "Password": "secret1"})
+check("the account is locked after five wrong passwords", status == 200 and "Слишком много неудачных попыток" in body)
 
 # --- role separation -------------------------------------------------------------------------
 check("patient cannot open the admin panel", patient.get("/admin")[0] == 302)
@@ -130,6 +162,11 @@ admin = Session()
 admin.login("admin@clinic.demo")
 status, body, _ = admin.get("/admin")
 check("admin overview opens", status == 200 and "Обзор клиники" in body)
+check("admin schedule generator opens", admin.get("/admin/schedule")[0] == 200)
+status, body, _ = admin.get("/admin/appointments?filter=free&page=2")
+check("admin lists are paged", status == 200 and "Страница 2 из" in body)
+status, body, _ = admin.get("/admin/profiles?q=" + urllib.parse.quote("Кузнецова"))
+check("admin profile search works", status == 200 and "Анна Кузнецова" in body and "Игорь Васильев" not in body)
 
 print()
 if failures:
