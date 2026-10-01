@@ -87,15 +87,14 @@ namespace DentalClinic.Services
             profile.FullName = model.FullName.Trim();
             profile.PhoneNumber = model.Phone;
 
-            // The email is also the login. SetEmailAsync marks the address as unconfirmed, which the application
-            // does not use, so the flag is put back. Banning has its own IsBanned column.
-            var emailResult = await _users.SetEmailAsync(profile, model.Email);
-            var nameResult = await _users.SetUserNameAsync(profile, model.Email);
+            // The email is also the login. The fields are set directly and validated and saved once by UpdateAsync,
+            // because SetEmailAsync and SetUserNameAsync save one by one and could leave a half applied change.
+            // SetEmailAsync would also mark the address as unconfirmed. Banning has its own IsBanned column.
+            profile.Email = model.Email;
+            profile.UserName = model.Email;
             profile.EmailConfirmed = true;
-
-            var errors = emailResult.Errors.Concat(nameResult.Errors).ToList();
-            if (errors.Count > 0)
-                return new UpdateProfileResult(UpdateProfileStatus.Invalid, errors);
+            await _users.UpdateNormalizedEmailAsync(profile);
+            await _users.UpdateNormalizedUserNameAsync(profile);
 
             var staff = await _db.Staffs.FirstOrDefaultAsync(s => s.ProfileId == id);
             if (staff != null)
@@ -104,7 +103,15 @@ namespace DentalClinic.Services
                 staff.ExternalLogin = model.Email;
             }
 
-            await _db.SaveChangesAsync();
+            var result = await _users.UpdateAsync(profile);
+            if (!result.Succeeded)
+            {
+                // Nothing was saved. Forget the tracked changes so the failed edit cannot leak into later work.
+                foreach (var entry in _db.ChangeTracker.Entries().ToList())
+                    entry.State = EntityState.Detached;
+                return new UpdateProfileResult(UpdateProfileStatus.Invalid, result.Errors.ToList());
+            }
+
             return new UpdateProfileResult(UpdateProfileStatus.Updated, Array.Empty<IdentityError>());
         }
 

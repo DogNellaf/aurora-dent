@@ -181,4 +181,76 @@ public class ReviewFindingsTests : IClassFixture<TestApp>
         for (var e = error; e != null; e = e.InnerException) messages.Add(e.Message);
         Assert.Contains(messages, m => m.Contains("no EF Core migration history"));
     }
+
+    [Theory]
+    [InlineData(false, 25, MailKit.Security.SecureSocketOptions.None)]
+    [InlineData(false, 465, MailKit.Security.SecureSocketOptions.None)]
+    [InlineData(true, 465, MailKit.Security.SecureSocketOptions.SslOnConnect)]
+    [InlineData(true, 587, MailKit.Security.SecureSocketOptions.StartTls)]
+    [InlineData(true, 25, MailKit.Security.SecureSocketOptions.StartTls)]
+    public void Smtp_encryption_is_required_or_absent_never_opportunistic(bool useSsl, int port, MailKit.Security.SecureSocketOptions expected)
+    {
+        var chosen = SmtpEmailSender.ChooseSecurity(new EmailOptions { UseSsl = useSsl, Port = port });
+
+        Assert.Equal(expected, chosen);
+        Assert.NotEqual(MailKit.Security.SecureSocketOptions.Auto, chosen);
+        Assert.NotEqual(MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable, chosen);
+    }
+
+    [Fact]
+    public async Task Moving_a_slot_to_another_patient_does_not_pass_on_the_old_visit_data()
+    {
+        var admin = await _app.LoginAsync("admin@clinic.demo");
+        var (igor, other) = _app.WithDb(db => (db.Profiles.Single(p => p.Email == "igor@clinic.demo").Id, db.Profiles.Single(p => p.Email == "oleg@clinic.demo").Id));
+        var slot = _app.WithDb(db =>
+        {
+            var a = db.Appointments.Include(x => x.Services).Where(x => x.ClientId == null && x.StartAt > DateTime.UtcNow.AddDays(5)).OrderByDescending(x => x.StartAt).First();
+            a.ClientId = igor;
+            a.Recommendation = "Рекомендация для Игоря";
+            a.DurationChangeReason = "причина Игоря";
+            a.Services.Add(db.Services.First());
+            db.SaveChanges();
+            return new { a.Id, a.StaffId, a.StartAt };
+        });
+
+        await TestApp.PostFormAsync(admin, $"/admin/appointments/{slot.Id}", $"/admin/appointments/{slot.Id}", new()
+        {
+            ["StaffId"] = slot.StaffId.ToString(),
+            ["ClientId"] = other.ToString(),
+            ["StartAt"] = slot.StartAt.ToString("yyyy-MM-ddTHH:mm"),
+            ["Duration"] = "60",
+            ["Recommendation"] = "Рекомендация для Игоря",
+            ["DurationChangeReason"] = "причина Игоря"
+        });
+
+        var moved = _app.WithDb(db => db.Appointments.Include(a => a.Services).Single(a => a.Id == slot.Id));
+        Assert.Equal(other, moved.ClientId);
+        Assert.Empty(moved.Services);
+        Assert.Equal(string.Empty, moved.Recommendation);
+        Assert.Equal(string.Empty, moved.DurationChangeReason);
+    }
+
+    [Fact]
+    public async Task A_rejected_profile_edit_changes_nothing()
+    {
+        var original = _app.WithDb(db => db.Profiles.Single(p => p.Email == "doctor3@clinic.demo"));
+        var staffName = _app.WithDb(db => db.Staffs.Single(s => s.ProfileId == original.Id).FullName);
+
+        using var scope = _app.Services.CreateScope();
+        var result = await scope.ServiceProvider.GetRequiredService<IProfileService>().UpdateAsync(original.Id, new ProfileEditModel
+        {
+            Id = original.Id,
+            FullName = "Не должно сохраниться",
+            Email = "not a valid login with spaces",
+            Phone = "+70000000000"
+        });
+
+        Assert.Equal(UpdateProfileStatus.Invalid, result.Status);
+        Assert.NotEmpty(result.Errors);
+
+        var after = _app.WithDb(db => db.Profiles.Single(p => p.Id == original.Id));
+        Assert.Equal(original.Email, after.Email);
+        Assert.Equal(original.FullName, after.FullName);
+        Assert.Equal(staffName, _app.WithDb(db => db.Staffs.Single(s => s.ProfileId == original.Id).FullName));
+    }
 }

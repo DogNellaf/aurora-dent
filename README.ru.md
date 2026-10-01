@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-151%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
@@ -259,7 +259,7 @@ docker compose up -d db
 dotnet test
 ```
 
-Всего 144 теста, покрытие строк 97%. Большинство интеграционные, с запуском
+Всего 151 тест, покрытие строк 97%. Большинство интеграционные, с запуском
 всего приложения на свежей базе и используют настоящие HTTP-запросы, cookie и
 antiforgery-токены. Покрыты публичные страницы, доступ для каждой роли,
 регистрация, вход и блокировки, запись с гонкой за одно окно, отмена, управление

@@ -131,13 +131,12 @@ namespace DentalClinic.Controllers
             existing.Recommendation = appointment.Recommendation ?? string.Empty;
             existing.DurationChangeReason = appointment.DurationChangeReason ?? string.Empty;
 
-            // Another patient is booked in, or the slot is released. A released slot keeps nothing of the old visit.
+            // A different patient, or none: the slot keeps nothing of the previous visit, so the new patient never
+            // sees the services or the recommendation of the old one. The text from the form is the old visit's text.
             if (appointment.ClientId != existing.ClientId)
             {
-                if (appointment.ClientId == null)
-                    existing.Release();
-                else
-                    existing.ClientId = appointment.ClientId;
+                existing.Release();
+                existing.ClientId = appointment.ClientId;
             }
 
             await _context.SaveChangesAsync();

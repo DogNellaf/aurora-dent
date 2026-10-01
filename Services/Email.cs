@@ -34,6 +34,15 @@ namespace DentalClinic.Services
 
         public SmtpEmailSender(IOptions<EmailOptions> options) => _options = options.Value;
 
+        /// <summary>
+        /// Encryption is either required or absent, never "when available": a downgrade to plain text would
+        /// expose credentials and password reset links. Port 465 is implicit TLS, other ports use STARTTLS.
+        /// </summary>
+        public static SecureSocketOptions ChooseSecurity(EmailOptions options) =>
+            !options.UseSsl ? SecureSocketOptions.None
+            : options.Port == 465 ? SecureSocketOptions.SslOnConnect
+            : SecureSocketOptions.StartTls;
+
         public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
         {
             var mime = new MimeMessage();
@@ -47,9 +56,7 @@ namespace DentalClinic.Services
             mime.Body = body.ToMessageBody();
 
             using var client = new SmtpClient();
-            // Auto picks implicit TLS on port 465 and STARTTLS on the other ports.
-            await client.ConnectAsync(_options.Host, _options.Port,
-                _options.UseSsl ? SecureSocketOptions.Auto : SecureSocketOptions.None, cancellationToken);
+            await client.ConnectAsync(_options.Host, _options.Port, ChooseSecurity(_options), cancellationToken);
             if (!string.IsNullOrEmpty(_options.User))
                 await client.AuthenticateAsync(_options.User, _options.Password, cancellationToken);
             await client.SendAsync(mime, cancellationToken);

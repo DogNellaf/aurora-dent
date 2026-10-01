@@ -1,5 +1,7 @@
 version: 2
 updates:
+  # The application targets .NET 8 (LTS). Microsoft packages and the base images stay on 8.x,
+  # a move to a new major version is a deliberate change, not an automatic pull request.
   - package-ecosystem: nuget
     directory: "/"
     schedule:
@@ -7,8 +9,9 @@ updates:
     groups:
       microsoft:
         patterns: ["Microsoft.*"]
-      testing:
-        patterns: ["xunit*", "coverlet*", "Microsoft.NET.Test.Sdk"]
+    ignore:
+      - dependency-name: "Microsoft.*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: nuget
     directory: "/DentalClinic.Tests"
     schedule:
@@ -18,11 +21,20 @@ updates:
         patterns: ["Microsoft.*"]
       testing:
         patterns: ["xunit*", "coverlet*"]
+    ignore:
+      - dependency-name: "Microsoft.*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
   - package-ecosystem: docker
     directory: "/"
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "dotnet/*"
+        update-types: ["version-update:semver-major"]
