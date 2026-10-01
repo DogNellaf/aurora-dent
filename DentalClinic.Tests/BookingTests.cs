@@ -51,7 +51,7 @@ public class BookingTests : IClassFixture<TestApp>
     public async Task Client_can_cancel_an_upcoming_appointment_and_the_slot_is_freed()
     {
         var anna = _app.WithDb(db => db.Profiles.First(p => p.Email == "client@clinic.demo").Id);
-        var appt = _app.WithDb(db => db.Appointments.Where(a => a.ClientId == anna && a.StartAt > DateTime.Now.AddDays(1)).Select(a => a.Id).First());
+        var appt = _app.WithDb(db => db.Appointments.Where(a => a.ClientId == anna && a.StartAt > DateTime.Now.AddHours(3)).Select(a => a.Id).First());
 
         var client = await _app.LoginAsync("client@clinic.demo");
         var response = await TestApp.PostFormAsync(client, "/client", $"/client/appointments/{appt}/cancel", new());
