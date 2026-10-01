@@ -6,6 +6,8 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![Database](https://img.shields.io/badge/database-SQLite%20%7C%20SQL%20Server-003B57)
+![Tests](https://img.shields.io/badge/tests-96%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A web app for a dental clinic: a public site with online booking and separate
@@ -34,12 +36,20 @@ for the demo accounts (password for all of them is `Demo123!`):
 | Manager | `manager@clinic.demo` | Review moderation queue |
 | Administrator | `admin@clinic.demo` | Clinic overview, schedule, profiles, reviews |
 
-With Docker:
+With Docker (the app on <http://localhost:8080>, data in a volume, health check included):
 
 ```bash
-docker build -t aurora-dent .
-docker run -p 8080:8080 -v aurora-data:/data aurora-dent
+docker compose up --build
 ```
+
+The same stack on SQL Server (<http://localhost:8081>):
+
+```bash
+docker compose --profile sqlserver up --build
+```
+
+A ready image is published to GitHub Container Registry by CI:
+`docker run -p 8080:8080 ghcr.io/dognellaf/dental-clinic:latest`.
 
 ## Case study
 
@@ -85,6 +95,11 @@ only patients can book it.
   and removes their reviews; deleting a doctor also removes the staff card and
   schedule. Creating a doctor creates the staff card too, so the cabinet works
   immediately.
+- **Operations built in.** A `/health` endpoint that checks the database, a
+  Docker health check that uses it, security headers on every response
+  (Content Security Policy without inline scripts, `X-Frame-Options`,
+  `nosniff`, referrer and permissions policies), long-lived caching for
+  versioned static files.
 - **No client-side framework.** A hand-written CSS design system (tokens, one
   stylesheet), about 100 lines of vanilla JS, an inline SVG icon sprite and
   self-hosted fonts. Cyrillic is rendered as-is instead of `&#x...;` entities.
@@ -101,6 +116,8 @@ only patients can book it.
 - The post-login `returnUrl` is accepted only if it is local.
 - Input is validated on the server with Russian messages; mass assignment is
   avoided by binding explicit view models for profile edits.
+- A Content Security Policy forbids inline scripts and third-party code; a test
+  scans the pages so no inline script or `onclick` sneaks in.
 - Passwords are hashed by ASP.NET Core Identity. The demo accounts share a
   published password, so set `Seed__DemoData=false` in any real deployment.
 
@@ -121,6 +138,7 @@ flowchart LR
 | `Controllers/HomeController.cs` | Public pages, schedule browsing and atomic booking |
 | `Controllers/{Auth,Client,Doctor,Manager,Admin}Controller.cs` | One controller per role, protected by `[RoleRequired]` |
 | `Infrastructure/RoleRequiredAttribute.cs` | Authentication, role check and ban enforcement |
+| `Infrastructure/SecurityHeaders.cs` | CSP and other security headers |
 | `Infrastructure/Fmt.cs` | Russian formatting: money, dates, declensions |
 | `Data/DemoDataSeeder.cs` | Demo clinic: services, doctors, schedule, patients, reviews |
 | `Models/ViewModels/` | Shapes passed to views so they never run extra queries |
@@ -144,8 +162,10 @@ state involved:
 - making bans real: they used to change a flag that nothing checked;
 - creating a staff card when an administrator adds a doctor, which used to
   leave that doctor with an unusable cabinet;
-- adding integration tests, a Dockerfile and CI, and deleting dead
-  placeholder files.
+- adding 96 tests (which found and fixed a form bug: an empty optional text
+  field made the administrator's appointment form fail validation), a
+  Dockerfile, docker-compose, a health check, security headers and CI, and
+  deleting dead placeholder files and an unused entity.
 
 ## Screenshots
 
@@ -174,6 +194,8 @@ dotnet run --Database:Provider=SqlServer \
 
 Tables and roles are created on the first start (`EnsureCreated`). There are no
 migrations: the project is a showcase, and the schema is created from the model.
+CI runs the whole test suite against a real SQL Server as well, so both
+providers are covered.
 
 ## Configuration
 
@@ -196,15 +218,44 @@ The first administrator in a real deployment has to be created in the database
 dotnet test
 ```
 
-There are 54 tests. Most are integration tests that start the whole app
-against a temporary SQLite file and use real HTTP requests, cookies and
-antiforgery tokens: public pages, access control for every role, registration,
-login and bans, booking including the race for one slot, cancelling,
-recommendations and the review moderation flow. The rest are unit tests of the
-formatting helpers. No external services are needed.
+There are 96 tests with 97% line coverage. Most are integration tests that
+start the whole app against a temporary SQLite file and use real HTTP requests,
+cookies and antiforgery tokens: public pages, access control for every role,
+registration, login and bans, booking including the race for one slot,
+cancelling, the doctor's visit controls, the administrator's CRUD with its
+clean-up rules, review moderation, security headers and the health check. The
+rest are unit tests of the formatting helpers. No external services are needed.
 
-CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) builds in Release
-and runs the tests on every push and pull request.
+To run the same suite against SQL Server, point the tests at a server (each run
+creates and drops its own database):
+
+```bash
+TEST_SQLSERVER_CONNECTION="Server=localhost,1433;User Id=sa;Password=...;TrustServerCertificate=True" dotnet test
+```
+
+An end-to-end smoke test walks the real user journey over HTTP against a
+running instance (health, public pages, sign in, booking and cancelling,
+role separation):
+
+```bash
+python3 docker/smoke_test.py http://localhost:5000
+```
+
+### CI
+
+[`ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
+
+| Job | What it does |
+|---|---|
+| **Format and warnings** | `dotnet format` against `.editorconfig`, Release build with warnings as errors |
+| **Tests on SQLite** | The whole suite with coverage; fails below 85% line coverage; coverage is written to the job summary |
+| **Tests on SQL Server** | The same suite against a SQL Server service container |
+| **Docker** | Builds the image, starts the compose stack, waits for the health check and runs the smoke test |
+
+[`docker-publish.yml`](.github/workflows/docker-publish.yml) pushes the image to
+GitHub Container Registry from `main` and on version tags. Dependabot keeps
+NuGet packages, GitHub Actions and the base images up to date. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the checks to run locally.
 
 ## Project structure
 
@@ -216,9 +267,11 @@ and runs the tests on every push and pull request.
 ├── Views/                 # Razor views, layouts and partials
 ├── wwwroot/               # CSS, JS, fonts and images
 ├── DentalClinic.Tests/    # xUnit integration and unit tests
+├── docker/smoke_test.py   # End-to-end smoke test of a running instance
 ├── docs/screenshots/
 ├── Dockerfile
-└── .github/workflows/ci.yml
+├── docker-compose.yml     # App on SQLite, optional SQL Server profile
+└── .github/               # CI, image publishing, Dependabot, PR template
 ```
 
 ## Credits

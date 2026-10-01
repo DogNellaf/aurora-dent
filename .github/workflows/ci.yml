@@ -5,8 +5,21 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  COVERAGE_THRESHOLD: "0.85"
+
 jobs:
-  build-and-test:
+  lint:
+    name: Format and warnings
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,5 +27,91 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: dotnet restore
-      - run: dotnet build --no-restore -c Release
-      - run: dotnet test --no-build -c Release --logger "trx;LogFileName=results.trx"
+      - name: Whitespace and style (.editorconfig)
+        run: dotnet format whitespace DentalClinic.sln --verify-no-changes --no-restore
+      - name: Build with warnings as errors
+        run: dotnet build DentalClinic.sln --no-restore -c Release -warnaserror
+
+  test:
+    name: Tests on SQLite with coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - name: Run tests
+        run: >
+          dotnet test DentalClinic.sln -c Release --no-restore
+          --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+          --results-directory ./TestResults
+          --logger "trx;LogFileName=results.trx"
+      - name: Coverage summary and threshold
+        run: |
+          python3 - <<'PY'
+          import glob, os, sys, xml.etree.ElementTree as ET
+          files = glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True)
+          if not files:
+              sys.exit("no coverage report found")
+          root = ET.parse(files[0]).getroot()
+          lines, branches = float(root.get("line-rate")), float(root.get("branch-rate"))
+          threshold = float(os.environ["COVERAGE_THRESHOLD"])
+          rows = ["| Metric | Value |", "|---|---|",
+                  f"| Line coverage | {lines:.1%} |", f"| Branch coverage | {branches:.1%} |",
+                  f"| Threshold (lines) | {threshold:.0%} |"]
+          open(os.environ["GITHUB_STEP_SUMMARY"], "a").write("## Coverage\n\n" + "\n".join(rows) + "\n")
+          print(f"lines {lines:.1%}, branches {branches:.1%}")
+          if lines < threshold:
+              sys.exit(f"line coverage {lines:.1%} is below the {threshold:.0%} threshold")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/
+
+  test-sqlserver:
+    name: Tests on SQL Server
+    runs-on: ubuntu-latest
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Aurora_Dent_123"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Aurora_Dent_123 -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 20s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - name: Run the whole suite against SQL Server
+        env:
+          TEST_SQLSERVER_CONNECTION: "Server=localhost,1433;User Id=sa;Password=Aurora_Dent_123;TrustServerCertificate=True"
+        run: dotnet test DentalClinic.sln -c Release --no-restore
+
+  docker:
+    name: Docker image and end-to-end smoke test
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start the stack
+        run: docker compose up --build --detach --wait --wait-timeout 180
+      - name: Smoke test over HTTP
+        run: python3 docker/smoke_test.py http://localhost:8080
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs --no-color app
+      - name: Stop the stack
+        if: always()
+        run: docker compose down --volumes

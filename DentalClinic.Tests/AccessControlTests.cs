@@ -67,7 +67,8 @@ public class AccessControlTests : IClassFixture<TestApp>
         var client = _app.NewClient();
         var response = await TestApp.PostFormAsync(client, "/route/login", "/route/login", new()
         {
-            ["Email"] = "client@clinic.demo", ["Password"] = "nope"
+            ["Email"] = "client@clinic.demo",
+            ["Password"] = "nope"
         });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("Неверный email или пароль", await response.Content.ReadAsStringAsync());
@@ -94,8 +95,11 @@ public class AccessControlTests : IClassFixture<TestApp>
         var client = _app.NewClient();
         var response = await TestApp.PostFormAsync(client, "/route/register", "/route/register", new()
         {
-            ["FullName"] = "Новый Пациент", ["Email"] = "new@example.com", ["Phone"] = "+79001234567",
-            ["Password"] = "secret1", ["ConfirmPassword"] = "secret1"
+            ["FullName"] = "Новый Пациент",
+            ["Email"] = "new@example.com",
+            ["Phone"] = "+79001234567",
+            ["Password"] = "secret1",
+            ["ConfirmPassword"] = "secret1"
         });
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);

@@ -102,8 +102,11 @@ namespace DentalClinic.Controllers
             {
                 _context.Reviews.Add(new Review
                 {
-                    ProfileId = profile.Id, Text = review.Text, Rating = rating,
-                    IsVisible = false, CreatedAt = DateTime.Now
+                    ProfileId = profile.Id,
+                    Text = review.Text,
+                    Rating = rating,
+                    IsVisible = false,
+                    CreatedAt = DateTime.Now
                 });
             }
 

@@ -6,6 +6,8 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![Database](https://img.shields.io/badge/database-SQLite%20%7C%20SQL%20Server-003B57)
+![Tests](https://img.shields.io/badge/tests-96%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 Веб-приложение стоматологической клиники: публичный сайт с онлайн-записью и
@@ -35,12 +37,20 @@ dotnet run
 | Менеджер | `manager@clinic.demo` | Очередь модерации отзывов |
 | Администратор | `admin@clinic.demo` | Обзор клиники, расписание, профили, отзывы |
 
-Через Docker:
+Через Docker (приложение на <http://localhost:8080>, данные в томе, health check включён):
 
 ```bash
-docker build -t aurora-dent .
-docker run -p 8080:8080 -v aurora-data:/data aurora-dent
+docker compose up --build
 ```
+
+То же на SQL Server (<http://localhost:8081>):
+
+```bash
+docker compose --profile sqlserver up --build
+```
+
+Готовый образ публикуется в GitHub Container Registry из CI:
+`docker run -p 8080:8080 ghcr.io/dognellaf/dental-clinic:latest`.
 
 ## Кейс
 
@@ -86,6 +96,10 @@ docker run -p 8080:8080 -v aurora-data:/data aurora-dent
 - **Согласованное удаление.** Удаление профиля освобождает будущие окна пациента
   и удаляет его отзывы; удаление врача убирает ещё и карточку и расписание.
   Создание врача создаёт и карточку, поэтому кабинет работает сразу.
+- **Эксплуатация из коробки.** Эндпоинт `/health`, проверяющий базу, Docker
+  health check на его основе, заголовки безопасности в каждом ответе
+  (Content Security Policy без inline-скриптов, `X-Frame-Options`, `nosniff`,
+  политики referrer и permissions), долгое кэширование статики с версиями.
 - **Без клиентского фреймворка.** Собственная дизайн-система на CSS (токены,
   один файл стилей), около 100 строк обычного JS, SVG-спрайт иконок и шрифты в
   проекте. Кириллица отдаётся как есть, а не в виде `&#x...;`.
@@ -103,6 +117,8 @@ docker run -p 8080:8080 -v aurora-data:/data aurora-dent
 - `returnUrl` после входа принимается только локальный.
 - Ввод валидируется на сервере с русскими сообщениями; при правке профиля
   привязываются явные view-модели, а не сущности.
+- Content Security Policy запрещает inline-скрипты и сторонний код; тест
+  просматривает страницы, чтобы inline-скрипт или `onclick` не проскочили.
 - Пароли хэширует ASP.NET Core Identity. У демо-аккаунтов общий опубликованный
   пароль, поэтому в боевом запуске задайте `Seed__DemoData=false`.
 
@@ -123,6 +139,7 @@ flowchart LR
 | `Controllers/HomeController.cs` | Публичные страницы, просмотр расписания и атомарная запись |
 | `Controllers/{Auth,Client,Doctor,Manager,Admin}Controller.cs` | По контроллеру на роль, защищены `[RoleRequired]` |
 | `Infrastructure/RoleRequiredAttribute.cs` | Аутентификация, проверка роли и блокировки |
+| `Infrastructure/SecurityHeaders.cs` | CSP и другие заголовки безопасности |
 | `Infrastructure/Fmt.cs` | Русское форматирование: деньги, даты, склонения |
 | `Data/DemoDataSeeder.cs` | Демо-клиника: услуги, врачи, расписание, пациенты, отзывы |
 | `Models/ViewModels/` | Модели для представлений, чтобы они не делали лишних запросов |
@@ -147,7 +164,10 @@ flowchart LR
   проверял;
 - создавать карточку сотрудника, когда администратор добавляет врача: раньше у
   такого врача не открывался кабинет;
-- добавить интеграционные тесты, Dockerfile и CI, удалить пустые файлы-заглушки.
+- добавить 96 тестов (они нашли и помогли исправить баг формы: пустое
+  необязательное текстовое поле не давало администратору сохранить приём),
+  Dockerfile, docker-compose, health check, заголовки безопасности и CI,
+  удалить пустые файлы-заглушки и неиспользуемую сущность.
 
 ## Скриншоты
 
@@ -175,7 +195,8 @@ dotnet run --Database:Provider=SqlServer \
 ```
 
 Таблицы и роли создаются при первом запуске (`EnsureCreated`). Миграций нет:
-проект демонстрационный, схема строится из модели.
+проект демонстрационный, схема строится из модели. CI гоняет весь набор тестов
+ещё и на настоящем SQL Server, так что оба провайдера покрыты.
 
 ## Конфигурация
 
@@ -198,15 +219,44 @@ dotnet run --Database:Provider=SqlServer \
 dotnet test
 ```
 
-Всего 54 теста. Большинство — интеграционные: они запускают всё приложение на
-временном файле SQLite и используют настоящие HTTP-запросы, cookie и
-antiforgery-токены: публичные страницы, доступ для каждой роли, регистрация,
-вход и блокировки, запись, включая гонку за одно окно, отмена, рекомендации и
-модерация отзывов. Остальные — unit-тесты форматирования. Внешние сервисы не
-нужны.
+Всего 96 тестов, покрытие строк 97%. Большинство — интеграционные: они
+запускают всё приложение на временном файле SQLite и используют настоящие
+HTTP-запросы, cookie и antiforgery-токены: публичные страницы, доступ для
+каждой роли, регистрация, вход и блокировки, запись, включая гонку за одно окно,
+отмена, управление приёмом у врача, CRUD администратора с правилами очистки,
+модерация отзывов, заголовки безопасности и health check. Остальные — unit-тесты
+форматирования. Внешние сервисы не нужны.
 
-CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) собирает проект в
-Release и запускает тесты при каждом push и pull request.
+Чтобы прогнать тот же набор на SQL Server, укажите сервер (каждый запуск
+создаёт и удаляет собственную базу):
+
+```bash
+TEST_SQLSERVER_CONNECTION="Server=localhost,1433;User Id=sa;Password=...;TrustServerCertificate=True" dotnet test
+```
+
+Сквозной smoke-тест проходит настоящий пользовательский путь по HTTP на
+запущенном экземпляре (health, публичные страницы, вход, запись и отмена,
+разделение ролей):
+
+```bash
+python3 docker/smoke_test.py http://localhost:5000
+```
+
+### CI
+
+[`ci.yml`](.github/workflows/ci.yml) запускается при каждом push и pull request:
+
+| Задача | Что делает |
+|---|---|
+| **Format and warnings** | `dotnet format` по `.editorconfig`, сборка Release с предупреждениями как ошибками |
+| **Tests on SQLite** | Весь набор с покрытием; падает при покрытии строк ниже 85%; покрытие пишется в summary задачи |
+| **Tests on SQL Server** | Тот же набор на контейнере SQL Server |
+| **Docker** | Собирает образ, поднимает compose-стенд, ждёт health check и запускает smoke-тест |
+
+[`docker-publish.yml`](.github/workflows/docker-publish.yml) публикует образ в
+GitHub Container Registry из `main` и по тегам версий. Dependabot следит за
+пакетами NuGet, GitHub Actions и базовыми образами. Проверки для локального
+запуска — в [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Структура проекта
 
@@ -218,9 +268,11 @@ Release и запускает тесты при каждом push и pull reques
 ├── Views/                 # Razor-представления, layout и partial
 ├── wwwroot/               # CSS, JS, шрифты и изображения
 ├── DentalClinic.Tests/    # Интеграционные и unit-тесты xUnit
+├── docker/smoke_test.py   # Сквозной smoke-тест запущенного экземпляра
 ├── docs/screenshots/
 ├── Dockerfile
-└── .github/workflows/ci.yml
+├── docker-compose.yml     # Приложение на SQLite, профиль с SQL Server
+└── .github/               # CI, публикация образа, Dependabot, шаблон PR
 ```
 
 ## Благодарности

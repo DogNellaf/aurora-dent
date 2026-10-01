@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Microsoft.EntityFrameworkCore;
 using DentalClinic.Data;
+using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 
 namespace DentalClinic
@@ -17,6 +18,10 @@ namespace DentalClinic
 
             builder.Services.AddControllersWithViews(options =>
             {
+                // A non-nullable string such as Appointment.Recommendation is optional in the forms,
+                // required fields carry an explicit [Required].
+                options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+
                 // Every POST form carries an antiforgery token (the form tag helper adds it automatically).
                 options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
             });
@@ -51,6 +56,8 @@ namespace DentalClinic
                 options.KnownProxies.Clear();
             });
 
+            builder.Services.AddHealthChecks().AddDbContextCheck<DatabaseContext>("database");
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -63,16 +70,11 @@ namespace DentalClinic
             }
 
             app.UseForwardedHeaders();
+            app.UseSecurityHeaders();
 
             if (!app.Environment.IsDevelopment())
-            {
                 app.UseExceptionHandler("/Home/Error");
-                app.UseStatusCodePagesWithReExecute("/Home/Error", "?code={0}");
-            }
-            else
-            {
-                app.UseStatusCodePagesWithReExecute("/Home/Error", "?code={0}");
-            }
+            app.UseStatusCodePagesWithReExecute("/Home/Error", "?code={0}");
 
             if (app.Configuration.GetValue("Hosting:HttpsRedirection", false))
                 app.UseHttpsRedirection();
@@ -85,10 +87,16 @@ namespace DentalClinic
                 SupportedUICultures = new List<CultureInfo> { ru }
             });
 
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                // CSS and JS are versioned with asp-append-version, so they can be cached for a long time.
+                OnPrepareResponse = ctx => ctx.Context.Response.Headers.CacheControl = "public,max-age=604800"
+            });
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapHealthChecks("/health");
 
             app.MapControllerRoute(
                 name: "default",

@@ -160,8 +160,12 @@ namespace DentalClinic.Controllers
 
             return View("Profiles/Edit", new ProfileEditModel
             {
-                Id = profile.Id, FullName = profile.FullName, Email = profile.Email ?? string.Empty,
-                Phone = profile.PhoneNumber, RoleId = profile.RoleId, IsBanned = profile.IsBanned
+                Id = profile.Id,
+                FullName = profile.FullName,
+                Email = profile.Email ?? string.Empty,
+                Phone = profile.PhoneNumber,
+                RoleId = profile.RoleId,
+                IsBanned = profile.IsBanned
             });
         }
 
@@ -200,8 +204,11 @@ namespace DentalClinic.Controllers
                 {
                     _context.Staffs.Add(new Staff
                     {
-                        Profile = profile, ExternalLogin = model.Email, FullName = profile.FullName,
-                        Specialty = "Стоматолог", Bio = "Информация о враче скоро появится."
+                        Profile = profile,
+                        ExternalLogin = model.Email,
+                        FullName = profile.FullName,
+                        Specialty = "Стоматолог",
+                        Bio = "Информация о враче скоро появится."
                     });
                     _context.SaveChanges();
                 }
@@ -211,7 +218,7 @@ namespace DentalClinic.Controllers
             }
 
             foreach (var error in result.Errors)
-                ModelState.AddModelError("", error.Description);
+                ModelState.AddModelError("", IdentityErrors.Translate(error));
 
             return View("Profiles/Create", model);
         }

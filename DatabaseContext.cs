@@ -7,7 +7,6 @@ namespace DentalClinic
 {
     public class DatabaseContext : IdentityDbContext<Profile, Role, long>
     {
-        public DbSet<Client> Clients { get; set; } = null!;
         public DbSet<Staff> Staffs { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Profile> Profiles { get; set; } = null!;
@@ -31,10 +30,10 @@ namespace DentalClinic
 
             // The four application roles are part of the schema, so a fresh database works out of the box.
             modelBuilder.Entity<Role>().HasData(
-                new Role { Id = RoleIds.Client,  Name = "Клиент",        NormalizedName = "КЛИЕНТ",        Title = "Клиент",        ConcurrencyStamp = "role-1" },
-                new Role { Id = RoleIds.Admin,   Name = "Администратор", NormalizedName = "АДМИНИСТРАТОР", Title = "Администратор", ConcurrencyStamp = "role-2" },
-                new Role { Id = RoleIds.Manager, Name = "Менеджер",      NormalizedName = "МЕНЕДЖЕР",      Title = "Менеджер",      ConcurrencyStamp = "role-3" },
-                new Role { Id = RoleIds.Doctor,  Name = "Доктор",        NormalizedName = "ДОКТОР",        Title = "Доктор",        ConcurrencyStamp = "role-4" });
+                new Role { Id = RoleIds.Client, Name = "Клиент", NormalizedName = "КЛИЕНТ", Title = "Клиент", ConcurrencyStamp = "role-1" },
+                new Role { Id = RoleIds.Admin, Name = "Администратор", NormalizedName = "АДМИНИСТРАТОР", Title = "Администратор", ConcurrencyStamp = "role-2" },
+                new Role { Id = RoleIds.Manager, Name = "Менеджер", NormalizedName = "МЕНЕДЖЕР", Title = "Менеджер", ConcurrencyStamp = "role-3" },
+                new Role { Id = RoleIds.Doctor, Name = "Доктор", NormalizedName = "ДОКТОР", Title = "Доктор", ConcurrencyStamp = "role-4" });
         }
     }
 }

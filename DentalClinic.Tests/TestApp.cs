@@ -7,18 +7,28 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DentalClinic.Tests;
 
-/// <summary>Boots the real app against a throw-away SQLite file seeded with the demo data.</summary>
+/// <summary>
+/// Boots the real app against a throw-away database seeded with the demo data: a temporary SQLite file by
+/// default, or a fresh database on a SQL Server when TEST_SQLSERVER_CONNECTION is set (used by CI to prove
+/// that the SQL Server provider works too). The value is a connection string without a database name.
+/// </summary>
 public sealed class TestApp : WebApplicationFactory<Program>
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"clinic-test-{Guid.NewGuid():N}.db");
+    private static readonly string? SqlServer = Environment.GetEnvironmentVariable("TEST_SQLSERVER_CONNECTION");
+
+    private readonly string _id = Guid.NewGuid().ToString("N");
+    private string DbPath => Path.Combine(Path.GetTempPath(), $"clinic-test-{_id}.db");
+    private string SqlDatabase => $"clinic_test_{_id}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:DefaultConnection"] = $"Data Source={_dbPath}",
-            ["Database:Provider"] = "Sqlite",
+            ["ConnectionStrings:DefaultConnection"] = SqlServer is null
+                ? $"Data Source={DbPath}"
+                : $"{SqlServer.TrimEnd(';')};Database={SqlDatabase}",
+            ["Database:Provider"] = SqlServer is null ? "Sqlite" : "SqlServer",
             ["Seed:DemoData"] = "true"
         }));
     }
@@ -45,7 +55,9 @@ public sealed class TestApp : WebApplicationFactory<Program>
         var client = NewClient();
         var response = await PostFormAsync(client, "/route/login", "/route/login", new()
         {
-            ["Email"] = email, ["Password"] = password, ["RememberMe"] = "true"
+            ["Email"] = email,
+            ["Password"] = password,
+            ["RememberMe"] = "true"
         });
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         return client;
@@ -65,7 +77,21 @@ public sealed class TestApp : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-        try { File.Delete(_dbPath); } catch (IOException) { }
+        if (SqlServer is null)
+        {
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            try { File.Delete(DbPath); } catch (IOException) { }
+            return;
+        }
+
+        try
+        {
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(SqlServer);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = $"ALTER DATABASE [{SqlDatabase}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{SqlDatabase}];";
+            command.ExecuteNonQuery();
+        }
+        catch (Exception) { /* best effort: the CI database is thrown away anyway */ }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using DentalClinic.Infrastructure;
 using DentalClinic.Models;
 using DentalClinic.Models.DTO;
 
@@ -27,9 +28,9 @@ namespace DentalClinic.Controllers
             var profile = TryGetProfile();
             if (profile == null) return RedirectToAction("LoginPage");
 
-            if (profile.IsAdmin)   return RedirectToAction("Overview", "Admin");
+            if (profile.IsAdmin) return RedirectToAction("Overview", "Admin");
             if (profile.IsManager) return RedirectToAction("HiddenReviews", "Manager");
-            if (profile.IsDoctor)  return RedirectToAction("Index", "Doctor");
+            if (profile.IsDoctor) return RedirectToAction("Index", "Doctor");
             return RedirectToAction("Index", "Client");
         }
 
@@ -60,7 +61,7 @@ namespace DentalClinic.Controllers
             }
 
             foreach (var error in registerResult.Errors)
-                ModelState.AddModelError("", Translate(error));
+                ModelState.AddModelError("", IdentityErrors.Translate(error));
 
             return View("Registration", model);
         }
@@ -107,14 +108,5 @@ namespace DentalClinic.Controllers
             Response.StatusCode = 403;
             return View();
         }
-
-        private static string Translate(IdentityError error) => error.Code switch
-        {
-            "DuplicateUserName" or "DuplicateEmail" => "Пользователь с таким email уже зарегистрирован",
-            "PasswordTooShort" => "Пароль слишком короткий (минимум 6 символов)",
-            "PasswordRequiresDigit" => "Пароль должен содержать хотя бы одну цифру",
-            "PasswordRequiresLower" => "Пароль должен содержать строчную букву",
-            _ => error.Description
-        };
     }
 }
