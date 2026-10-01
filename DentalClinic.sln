@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DentalClinic", "DentalClinic.csproj", "{413CC245-0ED7-4110-8990-66C25BA41F34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DentalClinic.Tests", "DentalClinic.Tests\DentalClinic.Tests.csproj", "{F2A6C795-1AF9-4BC4-A296-5B9D99CBC6E6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{413CC245-0ED7-4110-8990-66C25BA41F34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{413CC245-0ED7-4110-8990-66C25BA41F34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{413CC245-0ED7-4110-8990-66C25BA41F34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{413CC245-0ED7-4110-8990-66C25BA41F34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2A6C795-1AF9-4BC4-A296-5B9D99CBC6E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2A6C795-1AF9-4BC4-A296-5B9D99CBC6E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2A6C795-1AF9-4BC4-A296-5B9D99CBC6E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2A6C795-1AF9-4BC4-A296-5B9D99CBC6E6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
