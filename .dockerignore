@@ -1,6 +1,6 @@
 **/bin
 **/obj
 .git
-DentalClinic.Tests
+tests
 docs
 *.md

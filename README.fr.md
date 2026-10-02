@@ -18,7 +18,7 @@ au premier démarrage. L'interface est disponible en russe, en anglais, en
 français et en allemand. La clinique, les médecins et les avis sont fictifs, les
 photos viennent d'[Unsplash](https://unsplash.com).
 
-![Page d'accueil](docs/screenshots/home.png)
+![Page d'accueil](docs/screenshots/fr/home.png)
 
 ## Démarrage rapide
 
@@ -46,7 +46,7 @@ données et de lancer l'application.
 
 ```bash
 docker compose up -d db
-dotnet run
+dotnet run --project src/DentalClinic
 ```
 
 L'application écoute sur <http://localhost:5000>. Une image prête à l'emploi est
@@ -254,40 +254,40 @@ règles de mise en forme si la langue en a besoin.
 
 | Réservation en ligne | Espace patient |
 |---|---|
-| ![Planning](docs/screenshots/schedule.png) | ![Espace patient](docs/screenshots/client.png) |
+| ![Planning](docs/screenshots/fr/schedule.png) | ![Espace patient](docs/screenshots/fr/client.png) |
 
 | Tableau de bord du médecin | Vue d'ensemble de l'administrateur |
 |---|---|
-| ![Médecin](docs/screenshots/doctor.png) | ![Administrateur](docs/screenshots/admin.png) |
+| ![Médecin](docs/screenshots/fr/doctor.png) | ![Administrateur](docs/screenshots/fr/admin.png) |
 
 | Soins | Modération des avis |
 |---|---|
-| ![Soins](docs/screenshots/services.png) | ![Gestionnaire](docs/screenshots/manager.png) |
+| ![Soins](docs/screenshots/fr/services.png) | ![Gestionnaire](docs/screenshots/fr/manager.png) |
 
 | Générateur de planning | Rendez-vous côté administrateur |
 |---|---|
-| ![Générateur de planning](docs/screenshots/admin-schedule.png) | ![Rendez-vous](docs/screenshots/admin-appointments.png) |
+| ![Générateur de planning](docs/screenshots/fr/admin-schedule.png) | ![Rendez-vous](docs/screenshots/fr/admin-appointments.png) |
 
 | Accueil sur mobile | Réservation sur mobile |
 |---|---|
-| ![Accueil sur mobile](docs/screenshots/mobile-home.png) | ![Réservation sur mobile](docs/screenshots/mobile-schedule.png) |
+| ![Accueil sur mobile](docs/screenshots/fr/mobile-home.png) | ![Réservation sur mobile](docs/screenshots/fr/mobile-schedule.png) |
 
 ## Configuration
 
 Les réglages viennent de `appsettings.json` ou de variables d'environnement
 comme `ConnectionStrings__DefaultConnection`.
 
-| Clé | Rôle | Valeur par défaut |
-|---|---|---|
-| `ConnectionStrings:DefaultConnection` | Chaîne de connexion SQL Server | `localhost,1433`, base `dental_clinic`, le service `db` de `docker-compose.yml` |
-| `Seed:DemoData` | Remplit une base vide avec des données de démonstration, activé en développement et dans `docker-compose.yml` | `false` |
-| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Crée le premier administrateur quand il n'en existe aucun | vide |
-| `Hosting:TrustedProxies` | Réseaux CIDR dont les en-têtes `X-Forwarded-*` sont crus | boucle locale et plages privées |
-| `Hosting:HttpsRedirection` | Redirige HTTP vers HTTPS, désactivé car TLS est en général terminé par un proxy | `false` |
-| `Clinic:TimeZone` | Fuseau horaire IANA de la clinique, utilisé pour toutes les heures de rendez-vous | `Europe/Moscow` |
-| `Clinic:PublicUrl` | Adresse publique du site, utilisée pour les liens des e-mails à la place de l'en-tête Host | vide, déduite de la requête |
-| `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Informations affichées dans les e-mails et les fichiers de calendrier | clinique de démonstration |
-| `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | Serveur SMTP, un hôte vide signifie que les e-mails sont seulement journalisés | vide |
+| Clé | Rôle et valeur par défaut |
+|---|---|
+| `ConnectionStrings:DefaultConnection` | Chaîne de connexion SQL Server. Par défaut `localhost,1433`, base `dental_clinic`, le service `db` de `docker-compose.yml`. |
+| `Seed:DemoData` | Remplit une base vide avec des données de démonstration, activé en développement et dans `docker-compose.yml`. Par défaut `false`. |
+| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Crée le premier administrateur quand il n'en existe aucun. Par défaut vide. |
+| `Hosting:TrustedProxies` | Réseaux CIDR dont les en-têtes `X-Forwarded-*` sont crus. Par défaut boucle locale et plages privées. |
+| `Hosting:HttpsRedirection` | Redirige HTTP vers HTTPS, désactivé car TLS est en général terminé par un proxy. Par défaut `false`. |
+| `Clinic:TimeZone` | Fuseau horaire IANA de la clinique, utilisé pour toutes les heures de rendez-vous. Par défaut `Europe/Moscow`. |
+| `Clinic:PublicUrl` | Adresse publique du site, utilisée pour les liens des e-mails à la place de l'en-tête Host. Par défaut vide, déduite de la requête. |
+| `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Informations affichées dans les e-mails et les fichiers de calendrier. Par défaut clinique de démonstration. |
+| `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | Serveur SMTP, un hôte vide signifie que les e-mails sont seulement journalisés. Par défaut vide. |
 
 Un vrai déploiement laisse les données de démonstration désactivées et définit
 une seule fois `Bootstrap__AdminEmail` et `Bootstrap__AdminPassword`, ce qui crée
@@ -303,7 +303,7 @@ doit être supprimée. Une nouvelle migration se crée avec l'outil EF local.
 
 ```bash
 dotnet tool restore
-dotnet ef migrations add AddSomething --project DentalClinic.csproj -o Data/Migrations
+dotnet ef migrations add AddSomething --project src/DentalClinic/DentalClinic.csproj -o Data/Migrations
 ```
 
 ## Tests
@@ -359,21 +359,24 @@ locaux sont listés dans [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Structure du projet
 
+Le code de l'application se trouve dans `src/DentalClinic` et les tests dans `tests/DentalClinic.Tests`. Les chemins du tableau des modules ci-dessus sont relatifs à `src/DentalClinic`. Aurora Dent est la marque de la clinique, tandis que `DentalClinic` est le nom de la solution, des projets et de l'espace de noms.
+
 ```
-├── Controllers/           # Site public et un contrôleur par rôle
-├── Data/                  # Seeder de démonstration et migrations EF Core
-├── Services/              # Réservation, planning, profils, avis, notifications, horloge
-├── Infrastructure/        # Filtre [RoleRequired], en-têtes de sécurité, pagination, mise en forme
-├── Localization/          # Langues et tables de traduction (en, fr, de)
-├── Models/                # Entités EF, DTO et modèles de vue
-├── Views/                 # Vues Razor, layouts et partials
-├── wwwroot/               # CSS, JS, polices et images
-├── DentalClinic.Tests/    # Tests d'intégration et unitaires xUnit
-├── docker/smoke_test.py   # Test de fumée de bout en bout d'une instance en cours d'exécution
-├── docs/screenshots/
+├── src/DentalClinic/
+│   ├── Controllers/               # Site public et un contrôleur par rôle
+│   ├── Data/                      # Seeder de démonstration et migrations EF Core
+│   ├── Services/                  # Réservation, planning, profils, avis, notifications, horloge
+│   ├── Infrastructure/            # Filtre [RoleRequired], en-têtes de sécurité, pagination, mise en forme
+│   ├── Localization/              # Langues et tables de traduction (en, fr, de)
+│   ├── Models/                    # Entités EF, DTO et modèles de vue
+│   ├── Views/                     # Vues Razor, layouts et partials
+│   └── wwwroot/                   # CSS, JS, polices et images
+├── tests/DentalClinic.Tests/      # Tests d'intégration et unitaires xUnit
+├── docker/smoke_test.py           # Test de fumée de bout en bout d'une instance en cours d'exécution
+├── docs/screenshots/              # Screenshots in four languages
 ├── Dockerfile
-├── docker-compose.yml     # Application, SQL Server et serveur de messagerie de test
-└── .github/               # CI, publication de l'image, Dependabot, modèle de PR
+├── docker-compose.yml             # Application, SQL Server et serveur de messagerie de test
+└── .github/                       # CI, publication de l'image, Dependabot, modèle de PR
 ```
 
 ## Crédits

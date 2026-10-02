@@ -17,7 +17,7 @@ wird beim ersten Start mit einer Demo-Klinik gefüllt. Die Oberfläche steht auf
 Russisch, Englisch, Französisch und Deutsch zur Verfügung. Klinik, Ärzte und
 Bewertungen sind erfunden, die Fotos stammen von [Unsplash](https://unsplash.com).
 
-![Startseite](docs/screenshots/home.png)
+![Startseite](docs/screenshots/de/home.png)
 
 ## Schnellstart
 
@@ -44,7 +44,7 @@ und die Anwendung auszuführen.
 
 ```bash
 docker compose up -d db
-dotnet run
+dotnet run --project src/DentalClinic
 ```
 
 Die Anwendung lauscht auf <http://localhost:5000>. Ein fertiges Image wird von
@@ -249,40 +249,40 @@ sie braucht.
 
 | Online-Buchung | Patientenbereich |
 |---|---|
-| ![Terminplan](docs/screenshots/schedule.png) | ![Patientenbereich](docs/screenshots/client.png) |
+| ![Terminplan](docs/screenshots/de/schedule.png) | ![Patientenbereich](docs/screenshots/de/client.png) |
 
 | Übersicht des Arztes | Übersicht des Administrators |
 |---|---|
-| ![Arzt](docs/screenshots/doctor.png) | ![Administrator](docs/screenshots/admin.png) |
+| ![Arzt](docs/screenshots/de/doctor.png) | ![Administrator](docs/screenshots/de/admin.png) |
 
 | Leistungen | Moderation der Bewertungen |
 |---|---|
-| ![Leistungen](docs/screenshots/services.png) | ![Manager](docs/screenshots/manager.png) |
+| ![Leistungen](docs/screenshots/de/services.png) | ![Manager](docs/screenshots/de/manager.png) |
 
 | Terminplan-Generator | Termine des Administrators |
 |---|---|
-| ![Terminplan-Generator](docs/screenshots/admin-schedule.png) | ![Termine](docs/screenshots/admin-appointments.png) |
+| ![Terminplan-Generator](docs/screenshots/de/admin-schedule.png) | ![Termine](docs/screenshots/de/admin-appointments.png) |
 
 | Startseite mobil | Buchung mobil |
 |---|---|
-| ![Startseite mobil](docs/screenshots/mobile-home.png) | ![Buchung mobil](docs/screenshots/mobile-schedule.png) |
+| ![Startseite mobil](docs/screenshots/de/mobile-home.png) | ![Buchung mobil](docs/screenshots/de/mobile-schedule.png) |
 
 ## Konfiguration
 
 Die Einstellungen stammen aus `appsettings.json` oder aus Umgebungsvariablen
 wie `ConnectionStrings__DefaultConnection`.
 
-| Schlüssel | Zweck | Standardwert |
-|---|---|---|
-| `ConnectionStrings:DefaultConnection` | SQL-Server-Verbindungszeichenfolge | `localhost,1433`, Datenbank `dental_clinic`, der Dienst `db` aus `docker-compose.yml` |
-| `Seed:DemoData` | Füllt eine leere Datenbank mit Demo-Daten, eingeschaltet in Development und in `docker-compose.yml` | `false` |
-| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Legt den ersten Administrator an, wenn noch keiner existiert | leer |
-| `Hosting:TrustedProxies` | CIDR-Netze, deren `X-Forwarded-*`-Header geglaubt werden | Loopback und private Bereiche |
-| `Hosting:HttpsRedirection` | Leitet HTTP auf HTTPS um, aus, weil TLS meist von einem Proxy beendet wird | `false` |
-| `Clinic:TimeZone` | IANA-Zeitzone der Klinik, verwendet für alle Terminzeiten | `Europe/Moscow` |
-| `Clinic:PublicUrl` | Öffentliche Adresse der Website, für Links in E-Mails statt des Host-Headers | leer, aus der Anfrage abgeleitet |
-| `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Angaben in E-Mails und Kalenderdateien | Demo-Klinik |
-| `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | SMTP-Server, ein leerer Host bedeutet, dass E-Mails nur protokolliert werden | leer |
+| Schlüssel | Zweck und Standardwert |
+|---|---|
+| `ConnectionStrings:DefaultConnection` | SQL-Server-Verbindungszeichenfolge. Standardwert `localhost,1433`, Datenbank `dental_clinic`, der Dienst `db` aus `docker-compose.yml`. |
+| `Seed:DemoData` | Füllt eine leere Datenbank mit Demo-Daten, eingeschaltet in Development und in `docker-compose.yml`. Standardwert `false`. |
+| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Legt den ersten Administrator an, wenn noch keiner existiert. Standardwert leer. |
+| `Hosting:TrustedProxies` | CIDR-Netze, deren `X-Forwarded-*`-Header geglaubt werden. Standardwert Loopback und private Bereiche. |
+| `Hosting:HttpsRedirection` | Leitet HTTP auf HTTPS um, aus, weil TLS meist von einem Proxy beendet wird. Standardwert `false`. |
+| `Clinic:TimeZone` | IANA-Zeitzone der Klinik, verwendet für alle Terminzeiten. Standardwert `Europe/Moscow`. |
+| `Clinic:PublicUrl` | Öffentliche Adresse der Website, für Links in E-Mails statt des Host-Headers. Standardwert leer, aus der Anfrage abgeleitet. |
+| `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Angaben in E-Mails und Kalenderdateien. Standardwert Demo-Klinik. |
+| `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | SMTP-Server, ein leerer Host bedeutet, dass E-Mails nur protokolliert werden. Standardwert leer. |
 
 Ein echter Betrieb lässt die Demo-Daten aus und setzt einmalig
 `Bootstrap__AdminEmail` und `Bootstrap__AdminPassword`, was beim Start den
@@ -298,7 +298,7 @@ Eine neue Migration entsteht mit dem lokalen EF-Werkzeug.
 
 ```bash
 dotnet tool restore
-dotnet ef migrations add AddSomething --project DentalClinic.csproj -o Data/Migrations
+dotnet ef migrations add AddSomething --project src/DentalClinic/DentalClinic.csproj -o Data/Migrations
 ```
 
 ## Tests
@@ -352,21 +352,24 @@ stehen in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Projektstruktur
 
+Der Anwendungscode liegt in `src/DentalClinic` und die Tests in `tests/DentalClinic.Tests`. Die Pfade in der Modultabelle oben beziehen sich auf `src/DentalClinic`. Aurora Dent ist die Marke der Klinik, während `DentalClinic` der Name der Lösung, der Projekte und des Namespace ist.
+
 ```
-├── Controllers/           # Öffentliche Website und ein Controller pro Rolle
-├── Data/                  # Demo-Daten-Seeder und EF-Core-Migrationen
-├── Services/              # Buchung, Terminplan, Profile, Bewertungen, Benachrichtigungen, Uhr
-├── Infrastructure/        # [RoleRequired]-Filter, Sicherheits-Header, Seitenwechsel, Formatierung
-├── Localization/          # Sprachen und Übersetzungstabellen (en, fr, de)
-├── Models/                # EF-Entitäten, DTOs und View-Modelle
-├── Views/                 # Razor-Views, Layouts und Partials
-├── wwwroot/               # CSS, JS, Schriften und Bilder
-├── DentalClinic.Tests/    # xUnit-Integrations- und Unit-Tests
-├── docker/smoke_test.py   # Smoke-Test einer laufenden Instanz von Anfang bis Ende
-├── docs/screenshots/
+├── src/DentalClinic/
+│   ├── Controllers/               # Öffentliche Website und ein Controller pro Rolle
+│   ├── Data/                      # Demo-Daten-Seeder und EF-Core-Migrationen
+│   ├── Services/                  # Buchung, Terminplan, Profile, Bewertungen, Benachrichtigungen, Uhr
+│   ├── Infrastructure/            # [RoleRequired]-Filter, Sicherheits-Header, Seitenwechsel, Formatierung
+│   ├── Localization/              # Sprachen und Übersetzungstabellen (en, fr, de)
+│   ├── Models/                    # EF-Entitäten, DTOs und View-Modelle
+│   ├── Views/                     # Razor-Views, Layouts und Partials
+│   └── wwwroot/                   # CSS, JS, Schriften und Bilder
+├── tests/DentalClinic.Tests/      # xUnit-Integrations- und Unit-Tests
+├── docker/smoke_test.py           # Smoke-Test einer laufenden Instanz von Anfang bis Ende
+├── docs/screenshots/              # Screenshots in four languages
 ├── Dockerfile
-├── docker-compose.yml     # Anwendung, SQL Server und ein Test-Mailserver
-└── .github/               # CI, Image-Veröffentlichung, Dependabot, PR-Vorlage
+├── docker-compose.yml             # Anwendung, SQL Server und ein Test-Mailserver
+└── .github/                       # CI, Image-Veröffentlichung, Dependabot, PR-Vorlage
 ```
 
 ## Danksagung

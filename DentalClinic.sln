@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DentalClinic", "DentalClinic.csproj", "{413CC245-0ED7-4110-8990-66C25BA41F34}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DentalClinic", "src\DentalClinic\DentalClinic.csproj", "{413CC245-0ED7-4110-8990-66C25BA41F34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DentalClinic.Tests", "DentalClinic.Tests\DentalClinic.Tests.csproj", "{F2A6C795-1AF9-4BC4-A296-5B9D99CBC6E6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DentalClinic.Tests", "tests\DentalClinic.Tests\DentalClinic.Tests.csproj", "{F2A6C795-1AF9-4BC4-A296-5B9D99CBC6E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

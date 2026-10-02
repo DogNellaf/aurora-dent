@@ -3,19 +3,10 @@ updates:
   # The application targets .NET 8 (LTS). Microsoft packages and the base images stay on 8.x,
   # a move to a new major version is a deliberate change, not an automatic pull request.
   - package-ecosystem: nuget
-    directory: "/"
-    schedule:
-      interval: weekly
-    groups:
-      microsoft:
-        patterns: ["Microsoft.*"]
-    ignore:
-      - dependency-name: "Microsoft.*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "dotnet-ef"
-        update-types: ["version-update:semver-major"]
-  - package-ecosystem: nuget
-    directory: "/DentalClinic.Tests"
+    directories:
+      - "/"                          # the local tool manifest (dotnet-ef)
+      - "/src/DentalClinic"
+      - "/tests/DentalClinic.Tests"
     schedule:
       interval: weekly
     groups:
@@ -25,6 +16,8 @@ updates:
         patterns: ["xunit*", "coverlet*"]
     ignore:
       - dependency-name: "Microsoft.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "dotnet-ef"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: "/"

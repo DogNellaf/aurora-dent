@@ -1,10 +1,10 @@
 # ---- build ----
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY DentalClinic.csproj ./
-RUN dotnet restore DentalClinic.csproj
-COPY . .
-RUN dotnet publish DentalClinic.csproj -c Release -o /app --no-restore
+COPY src/DentalClinic/DentalClinic.csproj src/DentalClinic/
+RUN dotnet restore src/DentalClinic/DentalClinic.csproj
+COPY src/DentalClinic src/DentalClinic
+RUN dotnet publish src/DentalClinic/DentalClinic.csproj -c Release -o /app --no-restore
 
 # ---- run ----
 FROM mcr.microsoft.com/dotnet/aspnet:8.0

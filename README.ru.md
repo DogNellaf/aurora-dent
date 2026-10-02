@@ -16,7 +16,7 @@
 запуске. Интерфейс доступен на русском, английском, французском и немецком языках. Клиника, врачи и отзывы вымышлены,
 фотографии взяты с [Unsplash](https://unsplash.com).
 
-![Главная страница](docs/screenshots/home.png)
+![Главная страница](docs/screenshots/ru/home.png)
 
 ## Быстрый старт
 
@@ -42,7 +42,7 @@ docker compose up --build
 
 ```bash
 docker compose up -d db
-dotnet run
+dotnet run --project src/DentalClinic
 ```
 
 Приложение слушает <http://localhost:5000>. Готовый образ публикуется в GitHub
@@ -228,40 +228,40 @@ erDiagram
 
 | Онлайн-запись | Кабинет пациента |
 |---|---|
-| ![Запись](docs/screenshots/schedule.png) | ![Кабинет пациента](docs/screenshots/client.png) |
+| ![Запись](docs/screenshots/ru/schedule.png) | ![Кабинет пациента](docs/screenshots/ru/client.png) |
 
 | Кабинет врача | Обзор администратора |
 |---|---|
-| ![Врач](docs/screenshots/doctor.png) | ![Администратор](docs/screenshots/admin.png) |
+| ![Врач](docs/screenshots/ru/doctor.png) | ![Администратор](docs/screenshots/ru/admin.png) |
 
 | Услуги | Модерация отзывов |
 |---|---|
-| ![Услуги](docs/screenshots/services.png) | ![Менеджер](docs/screenshots/manager.png) |
+| ![Услуги](docs/screenshots/ru/services.png) | ![Менеджер](docs/screenshots/ru/manager.png) |
 
 | Генератор расписания | Приёмы у администратора |
 |---|---|
-| ![Генератор расписания](docs/screenshots/admin-schedule.png) | ![Приёмы](docs/screenshots/admin-appointments.png) |
+| ![Генератор расписания](docs/screenshots/ru/admin-schedule.png) | ![Приёмы](docs/screenshots/ru/admin-appointments.png) |
 
 | Главная на телефоне | Запись на телефоне |
 |---|---|
-| ![Главная на телефоне](docs/screenshots/mobile-home.png) | ![Запись на телефоне](docs/screenshots/mobile-schedule.png) |
+| ![Главная на телефоне](docs/screenshots/ru/mobile-home.png) | ![Запись на телефоне](docs/screenshots/ru/mobile-schedule.png) |
 
 ## Конфигурация
 
 Настройки берутся из `appsettings.json` или переменных окружения, например
 `ConnectionStrings__DefaultConnection`.
 
-| Ключ | Назначение | По умолчанию |
-|---|---|---|
-| `ConnectionStrings:DefaultConnection` | Строка подключения к SQL Server | `localhost,1433`, база `dental_clinic`, сервис `db` из `docker-compose.yml` |
-| `Seed:DemoData` | Заполнение пустой базы демо-данными, включено в Development и в `docker-compose.yml` | `false` |
-| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Создаёт первого администратора при отсутствии администраторов | пусто |
-| `Hosting:TrustedProxies` | Сети в формате CIDR, чьим заголовкам `X-Forwarded-*` верят | loopback и частные диапазоны |
-| `Hosting:HttpsRedirection` | Перенаправление HTTP на HTTPS, выключено, так как TLS обычно завершает прокси | `false` |
-| `Clinic:TimeZone` | Часовой пояс клиники по IANA, по нему считается время всех визитов | `Europe/Moscow` |
-| `Clinic:PublicUrl` | Публичный адрес сайта, по нему строятся ссылки в письмах вместо заголовка Host запроса | пусто, берётся из запроса |
-| `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Данные для писем и файлов календаря | демо-клиника |
-| `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | SMTP-сервер, пустой хост означает, что письма только пишутся в лог | пусто |
+| Ключ | Назначение и значение по умолчанию |
+|---|---|
+| `ConnectionStrings:DefaultConnection` | Строка подключения к SQL Server. По умолчанию `localhost,1433`, база `dental_clinic`, сервис `db` из `docker-compose.yml`. |
+| `Seed:DemoData` | Заполнение пустой базы демо-данными, включено в Development и в `docker-compose.yml`. По умолчанию `false`. |
+| `Bootstrap:AdminEmail`, `Bootstrap:AdminPassword`, `Bootstrap:AdminName` | Создаёт первого администратора при отсутствии администраторов. По умолчанию пусто. |
+| `Hosting:TrustedProxies` | Сети в формате CIDR, чьим заголовкам `X-Forwarded-*` верят. По умолчанию loopback и частные диапазоны. |
+| `Hosting:HttpsRedirection` | Перенаправление HTTP на HTTPS, выключено, так как TLS обычно завершает прокси. По умолчанию `false`. |
+| `Clinic:TimeZone` | Часовой пояс клиники по IANA, по нему считается время всех визитов. По умолчанию `Europe/Moscow`. |
+| `Clinic:PublicUrl` | Публичный адрес сайта, по нему строятся ссылки в письмах вместо заголовка Host запроса. По умолчанию пусто, берётся из запроса. |
+| `Clinic:Name`, `Clinic:Address`, `Clinic:Phone` | Данные для писем и файлов календаря. По умолчанию демо-клиника. |
+| `Email:Host`, `Email:Port`, `Email:UseSsl`, `Email:User`, `Email:Password`, `Email:FromAddress` | SMTP-сервер, пустой хост означает, что письма только пишутся в лог. По умолчанию пусто. |
 
 Боевое развёртывание оставляет демо-данные выключенными и один раз задаёт
 `Bootstrap__AdminEmail` и `Bootstrap__AdminPassword`, после чего первый
@@ -277,7 +277,7 @@ erDiagram
 
 ```bash
 dotnet tool restore
-dotnet ef migrations add AddSomething --project DentalClinic.csproj -o Data/Migrations
+dotnet ef migrations add AddSomething --project src/DentalClinic/DentalClinic.csproj -o Data/Migrations
 ```
 
 ## Тесты
@@ -328,21 +328,24 @@ GitHub Container Registry из `master` и по тегам версий. Dependa
 
 ## Структура проекта
 
+Код приложения лежит в `src/DentalClinic`, а тесты в `tests/DentalClinic.Tests`. Пути в таблице модулей выше указаны относительно `src/DentalClinic`. Аврора Дент это бренд клиники, а `DentalClinic` это имя решения, проектов и пространства имён.
+
 ```
-├── Controllers/           # Публичный сайт и по контроллеру на роль
-├── Data/                  # Сидер демо-данных и миграции EF Core
-├── Services/              # Запись, расписание, профили, отзывы, уведомления, часы
-├── Infrastructure/        # Фильтр [RoleRequired], заголовки безопасности, страницы, форматирование
-├── Localization/          # Языки и таблицы переводов (en, fr, de)
-├── Models/                # Сущности EF, DTO и view-модели
-├── Views/                 # Razor-представления, layout и partial
-├── wwwroot/               # CSS, JS, шрифты и изображения
-├── DentalClinic.Tests/    # Интеграционные и unit-тесты xUnit
-├── docker/smoke_test.py   # Сквозной smoke-тест запущенного экземпляра
-├── docs/screenshots/
+├── src/DentalClinic/
+│   ├── Controllers/               # Публичный сайт и по контроллеру на роль
+│   ├── Data/                      # Сидер демо-данных и миграции EF Core
+│   ├── Services/                  # Запись, расписание, профили, отзывы, уведомления, часы
+│   ├── Infrastructure/            # Фильтр [RoleRequired], заголовки безопасности, страницы, форматирование
+│   ├── Localization/              # Языки и таблицы переводов (en, fr, de)
+│   ├── Models/                    # Сущности EF, DTO и view-модели
+│   ├── Views/                     # Razor-представления, layout и partial
+│   └── wwwroot/                   # CSS, JS, шрифты и изображения
+├── tests/DentalClinic.Tests/      # Интеграционные и unit-тесты xUnit
+├── docker/smoke_test.py           # Сквозной smoke-тест запущенного экземпляра
+├── docs/screenshots/              # Screenshots in four languages
 ├── Dockerfile
-├── docker-compose.yml     # Приложение, SQL Server и почтовый стенд
-└── .github/               # CI, публикация образа, Dependabot, шаблон PR
+├── docker-compose.yml             # Приложение, SQL Server и почтовый стенд
+└── .github/                       # CI, публикация образа, Dependabot, шаблон PR
 ```
 
 ## Благодарности
