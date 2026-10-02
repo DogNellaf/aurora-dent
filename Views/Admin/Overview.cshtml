@@ -31,8 +31,8 @@ else
             {
                 <tr>
                     <td><b>@Fmt.DateTimeShort(r.Appointment.StartAt)</b></td>
-                    <td>@r.ClientName</td>
-                    <td>@r.Appointment.Staff?.DisplayName</td>
+                    <td>@T[r.ClientName]</td>
+                    <td>@T[r.Appointment.Staff?.DisplayName ?? ""]</td>
                     <td>@T.ServiceList(r.Appointment.Services, "—")</td>
                 </tr>
             }

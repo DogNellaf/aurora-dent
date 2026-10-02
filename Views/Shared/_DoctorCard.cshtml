@@ -3,11 +3,11 @@
     <div class="doc-photo">
         @if (!string.IsNullOrEmpty(Model.PhotoUrl))
         {
-            <img src="@Model.PhotoUrl" alt="@Model.DisplayName" loading="lazy">
+            <img src="@Model.PhotoUrl" alt="@T[Model.DisplayName]" loading="lazy">
         }
         else
         {
-            <div class="doc-fallback">@Fmt.Initials(Model.DisplayName)</div>
+            <div class="doc-fallback">@Fmt.Initials(T[Model.DisplayName].Value)</div>
         }
         @if (Model.ExperienceYears > 0)
         {

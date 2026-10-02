@@ -10,7 +10,7 @@
     var past = Model.Where(a => a.EndAt < now).ToList();
 }
 <div class="cab-head">
-    <div><h1>@T["Здравствуйте, {0}!", profile.DisplayName.Split(' ')[0]]</h1><p>@T["Ваши записи и история лечения"]</p></div>
+    <div><h1>@T["Здравствуйте, {0}!", T[profile.DisplayName].Value.Split(' ')[0]]</h1><p>@T["Ваши записи и история лечения"]</p></div>
     <a class="btn btn-accent" asp-controller="Home" asp-action="Schedule"><svg class="ic"><use href="#i-plus"/></svg> @T["Записаться на приём"]</a>
 </div>
 
@@ -30,7 +30,7 @@ else
                     <h4>@T.ServiceList(a.Services)</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Weekday(a.StartAt), @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
-                        <span><svg class="ic"><use href="#i-user"/></svg> @(a.Staff?.DisplayName)</span>
+                        <span><svg class="ic"><use href="#i-user"/></svg> @T[a.Staff?.DisplayName ?? ""]</span>
                     </div>
                 </div>
                 <div class="appt-actions">
@@ -56,7 +56,7 @@ else
                     <h4>@T.ServiceList(a.Services)</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Date(a.StartAt), @Fmt.Time(a.StartAt)</span>
-                        <span><svg class="ic"><use href="#i-user"/></svg> @(a.Staff?.DisplayName)</span>
+                        <span><svg class="ic"><use href="#i-user"/></svg> @T[a.Staff?.DisplayName ?? ""]</span>
                         @if (!string.IsNullOrEmpty(a.Recommendation)) { <span class="badge ok"><svg class="ic"><use href="#i-clipboard"/></svg> @T["Есть рекомендации"]</span> }
                     </div>
                 </div>

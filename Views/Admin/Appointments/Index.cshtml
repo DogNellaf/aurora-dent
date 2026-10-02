@@ -38,8 +38,8 @@ else
                 var a = r.Appointment;
                 <tr>
                     <td><b>@Fmt.DateTimeShort(a.StartAt)</b><br><small class="muted">#@a.Id · @Fmt.Minutes(a.Duration)</small></td>
-                    <td>@a.Staff?.DisplayName</td>
-                    <td>@if (a.IsBooked) { @r.ClientName } else { <span class="badge ok">@T["Свободно"]</span> }</td>
+                    <td>@T[a.Staff?.DisplayName ?? ""]</td>
+                    <td>@if (a.IsBooked) { @T[r.ClientName] } else { <span class="badge ok">@T["Свободно"]</span> }</td>
                     <td>
                         <div class="actions">
                             <a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id"><svg class="ic"><use href="#i-edit"/></svg> @T["Изменить"]</a>

@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-242%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-246%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
@@ -315,7 +315,7 @@ docker compose up -d db
 dotnet test
 ```
 
-La suite compte 242 tests avec 97 % de couverture de lignes. La plupart sont des
+La suite compte 246 tests avec 97 % de couverture de lignes. La plupart sont des
 tests d'intégration qui démarrent toute l'application sur une base neuve et
 utilisent de vraies requêtes HTTP, des cookies et des jetons antiforgery. Ils
 couvrent les pages publiques, le contrôle d'accès de chaque rôle, l'inscription,

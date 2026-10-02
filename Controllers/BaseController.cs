@@ -57,7 +57,7 @@ namespace DentalClinic.Controllers
 
             return list.Select(r => new ReviewCard(
                 r.Id,
-                profiles.TryGetValue(r.ProfileId, out var p) ? p.PublicName : T["Пациент клиники"].Value,
+                profiles.TryGetValue(r.ProfileId, out var p) ? p.PublicName(n => T[n].Value) : T["Пациент клиники"].Value,
                 r.Text, r.Rating, r.CreatedAt, r.IsVisible, r.ProfileId)).ToList();
         }
     }

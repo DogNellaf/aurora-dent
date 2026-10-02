@@ -50,7 +50,7 @@
         {
             var selected = Model.SelectedDoctor?.Id == d.Doctor.Id;
             <div class="card sched-doc" @(selected ? "style=border-color:var(--teal);box-shadow:var(--shadow)" : "")>
-                @if (!string.IsNullOrEmpty(d.Doctor.PhotoUrl)) { <img src="@d.Doctor.PhotoUrl" alt="@d.Doctor.DisplayName" loading="lazy"> } else { <div class="doc-fallback">@Fmt.Initials(d.Doctor.DisplayName)</div> }
+                @if (!string.IsNullOrEmpty(d.Doctor.PhotoUrl)) { <img src="@d.Doctor.PhotoUrl" alt="@T[d.Doctor.DisplayName]" loading="lazy"> } else { <div class="doc-fallback">@Fmt.Initials(T[d.Doctor.DisplayName].Value)</div> }
                 <div>
                     <h3>@T[d.Doctor.DisplayName]</h3>
                     <div class="soft">@T[d.Doctor.Specialty] · @T["стаж {0}", Fmt.Years(d.Doctor.ExperienceYears)]</div>
@@ -74,7 +74,7 @@
     @if (hasDoctor)
     {
         <div id="time" style="padding-bottom:70px">
-            <h3 class="group-title">@T["3. Выберите время"] — @Model.SelectedDoctor!.DisplayName</h3>
+            <h3 class="group-title">@T["3. Выберите время"] — @T[Model.SelectedDoctor!.DisplayName]</h3>
             @if (Model.Days.Count == 0)
             {
                 <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>@T["Свободного времени нет"]</h3><p>@T["Попробуйте другого врача или зайдите позже."]</p></div>

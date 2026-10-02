@@ -8,9 +8,9 @@
 <div class="wrap cabinet">
     <aside class="side card">
         <div class="side-user">
-            <span class="avatar">@Fmt.Initials(profile?.DisplayName)</span>
+            <span class="avatar">@Fmt.Initials(T[profile?.DisplayName ?? ""].Value)</span>
             <div>
-                <b>@(profile?.DisplayName)</b>
+                <b>@T[profile?.DisplayName ?? ""]</b>
                 <small>@(profile == null ? "" : Fmt.RoleName(profile))</small>
             </div>
         </div>

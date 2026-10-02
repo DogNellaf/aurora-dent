@@ -21,7 +21,7 @@
 {
     <div class="live">
         <span class="pulse">@T["Идёт приём"]</span>
-        <h2>@Model.Current.ClientName</h2>
+        <h2>@T[Model.Current.ClientName]</h2>
         <div class="facts">
             <div><b>@Fmt.Time(cur.StartAt) – @Fmt.Time(cur.EndAt)</b>@T["время приёма"]</div>
             <div><b>@Fmt.Minutes(cur.Duration)</b>@T["длительность"]</div>
@@ -63,7 +63,7 @@ else
         <h3><svg class="ic"><use href="#i-chair"/></svg> @T["Сейчас нет активного приёма"]</h3>
         @if (Model.Next != null)
         {
-            <p class="soft" style="margin:0">@T["Следующий:"] <b>@Model.Next.ClientName</b> — @Fmt.DayMonth(Model.Next.Appointment.StartAt), @Fmt.Time(Model.Next.Appointment.StartAt).
+            <p class="soft" style="margin:0">@T["Следующий:"] <b>@T[Model.Next.ClientName]</b> — @Fmt.DayMonth(Model.Next.Appointment.StartAt), @Fmt.Time(Model.Next.Appointment.StartAt).
                 <a asp-action="Appointment" asp-route-appointmentId="@Model.Next.Appointment.Id">@T["Открыть"]</a></p>
         }
         else { <p class="muted" style="margin:0">@T["Предстоящих записей нет."]</p> }
@@ -84,7 +84,7 @@ else
             <div class="card appt @(a.IsPastAt(Clock.Now) ? "past" : "")">
                 <partial name="_DateBox" model="a.StartAt" />
                 <div>
-                    <h4>@r.ClientName</h4>
+                    <h4>@T[r.ClientName]</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
                         <span>@T.ServiceList(a.Services)</span>

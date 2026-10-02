@@ -26,6 +26,17 @@ namespace DentalClinic.Localization
             return Tables.Value.TryGetValue(language, out var table) && table.TryGetValue(key, out var text) ? text : key;
         }
 
+        /// <summary>
+        /// Russian texts whose translation into the current language contains <paramref name="term"/>. Lets a search
+        /// typed in the language of the reader find data that is stored in Russian, such as the demo names.
+        /// </summary>
+        public static IReadOnlyList<string> SourcesMatching(string term)
+        {
+            var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            if (string.IsNullOrWhiteSpace(term) || !Tables.Value.TryGetValue(language, out var table)) return Array.Empty<string>();
+            return table.Where(p => p.Value.Contains(term, StringComparison.CurrentCultureIgnoreCase)).Select(p => p.Key).ToList();
+        }
+
         public static bool Has(string key, string language) =>
             Tables.Value.TryGetValue(language, out var table) && table.ContainsKey(key);
 

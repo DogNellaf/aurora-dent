@@ -269,6 +269,31 @@ public class LocalizationTests : IClassFixture<TestApp>
             Assert.Contains($"value=\"{language.Code}\"", html);
     }
 
+    // ------------------------------------------------------------------ search
+
+    [Theory]
+    [InlineData("en", "Kuznetsova", "Anna Kuznetsova")]
+    [InlineData("de", "Kusnezowa", "Anna Kusnezowa")]
+    [InlineData("fr", "Vassiliev", "Igor Vassiliev")]
+    public async Task Admin_search_finds_demo_people_by_their_translated_name(string language, string term, string shown)
+    {
+        var admin = In(await _app.LoginAsync("admin@clinic.demo"), language);
+        var html = WebUtility.HtmlDecode(await admin.GetStringAsync("/admin/profiles?q=" + term));
+        Assert.Contains(shown, html);
+
+        var visits = WebUtility.HtmlDecode(await admin.GetStringAsync("/admin/appointments?filter=past&q=" + term));
+        Assert.DoesNotContain("Application error", visits);
+    }
+
+    [Fact]
+    public async Task Admin_search_in_russian_still_works()
+    {
+        var admin = await _app.LoginAsync("admin@clinic.demo");
+        var html = await admin.GetStringAsync("/admin/profiles?q=Кузнецова");
+        Assert.Contains("Анна Кузнецова", html);
+        Assert.DoesNotContain("Игорь Васильев", html);
+    }
+
     // ------------------------------------------------------------------ messages and emails
 
     [Theory]

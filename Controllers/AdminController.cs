@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DentalClinic.Infrastructure;
+using DentalClinic.Localization;
 using DentalClinic.Models;
 using DentalClinic.Models.DTO;
 using DentalClinic.Models.ViewModels;
@@ -66,7 +67,10 @@ namespace DentalClinic.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var term = q.Trim();
-                query = query.Where(a => a.Staff!.FullName.Contains(term) || (a.Client != null && (a.Client.FullName.Contains(term) || a.Client.Email!.Contains(term))));
+                // Names of the demo people are stored in Russian, so a term typed in another language also matches their translation.
+                var names = Translations.SourcesMatching(term);
+                query = query.Where(a => a.Staff!.FullName.Contains(term) || names.Contains(a.Staff!.FullName)
+                    || (a.Client != null && (a.Client.FullName.Contains(term) || names.Contains(a.Client.FullName) || a.Client.Email!.Contains(term))));
             }
 
             ViewBag.Filter = filter is "free" or "past" ? filter : "upcoming";
@@ -215,7 +219,8 @@ namespace DentalClinic.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var term = q.Trim();
-                query = query.Where(p => p.FullName.Contains(term) || p.Email!.Contains(term) || p.PhoneNumber!.Contains(term));
+                var names = Translations.SourcesMatching(term);
+                query = query.Where(p => p.FullName.Contains(term) || names.Contains(p.FullName) || p.Email!.Contains(term) || p.PhoneNumber!.Contains(term));
             }
 
             ViewBag.Query = q;

@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-242%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-246%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
@@ -310,7 +310,7 @@ docker compose up -d db
 dotnet test
 ```
 
-Es gibt 242 Tests mit 97 % Zeilenabdeckung. Die meisten sind Integrationstests,
+Es gibt 246 Tests mit 97 % Zeilenabdeckung. Die meisten sind Integrationstests,
 die die gesamte Anwendung auf einer frischen Datenbank starten und echte
 HTTP-Anfragen, Cookies und Antiforgery-Tokens verwenden. Sie decken öffentliche
 Seiten, die Zugriffskontrolle jeder Rolle, Registrierung, Anmeldung und Sperren,

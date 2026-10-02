@@ -20,7 +20,7 @@ else
             <div class="card appt @(a.IsPastAt(Clock.Now) ? "past" : "")">
                 <partial name="_DateBox" model="a.StartAt" />
                 <div>
-                    <h4>@r.ClientName</h4>
+                    <h4>@T[r.ClientName]</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Weekday(a.StartAt), @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
                         <span>@T.ServiceList(a.Services)</span>

@@ -27,7 +27,7 @@
         @foreach (var p in Model.Items)
         {
             <tr>
-                <td><div class="person"><span class="avatar">@Fmt.Initials(p.DisplayName)</span><div><b>@T[p.DisplayName]</b><small>@p.Email</small></div></div></td>
+                <td><div class="person"><span class="avatar">@Fmt.Initials(T[p.DisplayName].Value)</span><div><b>@T[p.DisplayName]</b><small>@p.Email</small></div></div></td>
                 <td><span class="badge @(p.IsAdmin ? "warn" : p.IsDoctor || p.IsManager ? "" : "gray")">@Fmt.RoleName(p)</span></td>
                 <td>@p.PhoneNumber</td>
                 <td>@if (p.IsBanned) { <span class="badge danger">@T["Заблокирован"]</span> } else { <span class="badge ok">@T["Активен"]</span> }</td>
@@ -42,9 +42,9 @@
                             }
                             else
                             {
-                                <form asp-action="Ban" asp-route-profileId="@p.Id" method="post" data-confirm="@T["Заблокировать аккаунт {0}?", p.DisplayName]"><button class="btn btn-ghost btn-sm" type="submit"><svg class="ic"><use href="#i-ban"/></svg></button></form>
+                                <form asp-action="Ban" asp-route-profileId="@p.Id" method="post" data-confirm="@T["Заблокировать аккаунт {0}?", T[p.DisplayName]]"><button class="btn btn-ghost btn-sm" type="submit"><svg class="ic"><use href="#i-ban"/></svg></button></form>
                             }
-                            <form asp-action="ProfileDelete" asp-route-profileId="@p.Id" method="post" data-confirm="@T["Удалить профиль {0}? Это действие необратимо.", p.DisplayName]"><button class="btn btn-danger btn-sm" type="submit" aria-label="@T["Удалить"]"><svg class="ic"><use href="#i-trash"/></svg></button></form>
+                            <form asp-action="ProfileDelete" asp-route-profileId="@p.Id" method="post" data-confirm="@T["Удалить профиль {0}? Это действие необратимо.", T[p.DisplayName]]"><button class="btn btn-danger btn-sm" type="submit" aria-label="@T["Удалить"]"><svg class="ic"><use href="#i-trash"/></svg></button></form>
                         }
                     </div>
                 </td>

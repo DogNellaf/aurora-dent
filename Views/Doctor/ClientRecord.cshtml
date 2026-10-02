@@ -28,7 +28,7 @@ else
                 <div>
                     <h4>@T.ServiceList(a.Services)</h4>
                     <div class="meta">
-                        <span><svg class="ic"><use href="#i-user"/></svg> @(a.Staff?.DisplayName)</span>
+                        <span><svg class="ic"><use href="#i-user"/></svg> @T[a.Staff?.DisplayName ?? ""]</span>
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Date(a.StartAt), @Fmt.Time(a.StartAt), @Fmt.Minutes(a.Duration)</span>
                     </div>
                     @if (!string.IsNullOrEmpty(a.Recommendation)) { <p class="soft" style="margin:10px 0 0;font-size:.92rem"><b>@T["Рекомендации:"]</b> @a.Recommendation</p> }

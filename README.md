@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-242%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-246%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
@@ -291,7 +291,7 @@ docker compose up -d db
 dotnet test
 ```
 
-There are 242 tests with 97% line coverage. Most are integration tests starting
+There are 246 tests with 97% line coverage. Most are integration tests starting
 the whole application on a fresh database and use real HTTP requests,
 cookies and antiforgery tokens. They cover public pages, access control for
 every role, registration, login and bans, booking including the race for one

@@ -18,7 +18,7 @@
             <li><span>@T["Дата"]</span><b>@Fmt.Weekday(Model.StartAt), @Fmt.Date(Model.StartAt)</b></li>
             <li><span>@T["Время"]</span><b>@Fmt.Time(Model.StartAt) – @Fmt.Time(Model.EndAt)</b></li>
             <li><span>@T["Длительность"]</span><b>@Fmt.Minutes(Model.Duration)</b></li>
-            <li><span>@T["Врач"]</span><b>@(Model.Staff?.DisplayName)<br><small class="muted">@T[Model.Staff?.Specialty ?? ""]</small></b></li>
+            <li><span>@T["Врач"]</span><b>@T[Model.Staff?.DisplayName ?? ""]<br><small class="muted">@T[Model.Staff?.Specialty ?? ""]</small></b></li>
             <li><span>@T["Услуги"]</span><b>@T.ServiceList(Model.Services, "—")</b></li>
             @if (!string.IsNullOrEmpty(Model.DurationChangeReason))
             {

@@ -32,10 +32,10 @@ namespace DentalClinic.Services
         {
             var ics = _calendar.Export(appointment);
             var html = Layout(T("Вы записаны на приём"),
-                $"<p>{Enc(T("{0}, ждём вас в клинике.", client.PublicName))}</p>" + Details(appointment) +
+                $"<p>{Enc(T("{0}, ждём вас в клинике.", client.PublicName(Translations.Get)))}</p>" + Details(appointment) +
                 $"<p>{Enc(T("Файл календаря во вложении. Отменить запись можно в личном кабинете не позднее чем за 2 часа до приёма."))}</p>");
 
-            return SafeSend(new EmailMessage(client.Email!, client.DisplayName,
+            return SafeSend(new EmailMessage(client.Email!, T(client.DisplayName),
                 T("Запись на {0} в {1}", Fmt.DayMonth(appointment.StartAt), Fmt.Time(appointment.StartAt)), html,
                 new EmailAttachment("appointment.ics", "text/calendar", Encoding.UTF8.GetBytes(ics))));
         }
@@ -43,10 +43,10 @@ namespace DentalClinic.Services
         public Task BookingCancelledAsync(Appointment appointment, Profile client)
         {
             var html = Layout(T("Запись отменена"),
-                $"<p>{Enc(T("{0}, запись отменена.", client.PublicName))}</p>" + Details(appointment) +
+                $"<p>{Enc(T("{0}, запись отменена.", client.PublicName(Translations.Get)))}</p>" + Details(appointment) +
                 $"<p>{Enc(T("Выбрать новое время можно на сайте в разделе «Запись на приём»."))}</p>");
 
-            return SafeSend(new EmailMessage(client.Email!, client.DisplayName,
+            return SafeSend(new EmailMessage(client.Email!, T(client.DisplayName),
                 T("Отмена записи на {0}", Fmt.DayMonth(appointment.StartAt)), html));
         }
 
@@ -56,7 +56,7 @@ namespace DentalClinic.Services
                 $"<p>{Enc(T("Для создания нового пароля перейдите по ссылке."))}</p><p><a href=\"{Enc(link)}\">{Enc(T("Сбросить пароль"))}</a></p>" +
                 $"<p>{Enc(T("Если сброс не запрашивался, письмо можно проигнорировать."))}</p>");
 
-            return SafeSend(new EmailMessage(profile.Email!, profile.DisplayName, T("Сброс пароля"), html));
+            return SafeSend(new EmailMessage(profile.Email!, T(profile.DisplayName), T("Сброс пароля"), html));
         }
 
         private string Details(Appointment a)

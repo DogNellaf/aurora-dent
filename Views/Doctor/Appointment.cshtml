@@ -9,7 +9,7 @@
 <div class="cab-head">
     <div>
         <div class="crumbs"><a asp-action="Appointments">@T["Приёмы"]</a> / <span>@T["Приём"]</span></div>
-        <h1>@Model.ClientName</h1>
+        <h1>@T[Model.ClientName]</h1>
         <p>@Fmt.Weekday(a.StartAt), @Fmt.Date(a.StartAt), @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</p>
     </div>
     <a class="btn btn-ghost" asp-action="ClientRecord" asp-route-clientId="@a.ClientId"><svg class="ic"><use href="#i-clipboard"/></svg> @T["Карта пациента"]</a>

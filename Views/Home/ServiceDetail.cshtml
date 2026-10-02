@@ -24,7 +24,7 @@
                     @foreach (var d in Model.Doctors)
                     {
                         <div class="card sched-doc">
-                            @if (!string.IsNullOrEmpty(d.PhotoUrl)) { <img src="@d.PhotoUrl" alt="@d.DisplayName" loading="lazy"> } else { <div class="doc-fallback">@Fmt.Initials(d.DisplayName)</div> }
+                            @if (!string.IsNullOrEmpty(d.PhotoUrl)) { <img src="@d.PhotoUrl" alt="@T[d.DisplayName]" loading="lazy"> } else { <div class="doc-fallback">@Fmt.Initials(T[d.DisplayName].Value)</div> }
                             <div><h3>@T[d.DisplayName]</h3><span class="soft">@T[d.Specialty] · @T["стаж {0}", Fmt.Years(d.ExperienceYears)]</span></div>
                             <a class="btn btn-ghost btn-sm" asp-controller="Home" asp-action="Schedule" asp-route-serviceId="@Model.Service.Id" asp-route-staffId="@d.Id">@T["Время приёма"]</a>
                         </div>
