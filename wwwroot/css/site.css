@@ -486,3 +486,9 @@ a.slot { display: inline-block; }
 .toolbar select.input { flex: 0 0 auto; }
 .toolbar .input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 4px color-mix(in srgb, var(--teal) 15%, transparent); }
 .pager { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 22px; flex-wrap: wrap; }
+
+/* Language switcher in the top bar */
+.lang { display: inline-flex; gap: 2px; margin-right: 14px; }
+.lang button { background: none; border: 0; color: inherit; font: inherit; font-size: .8rem; font-weight: 600; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; cursor: pointer; opacity: .75; }
+.lang button:hover { opacity: 1; }
+.lang button.active { background: rgba(255,255,255,.18); opacity: 1; }

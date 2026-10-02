@@ -1,33 +1,33 @@
 @model AppointmentEditViewModel
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = Model.IsNew ? "Новое окно" : "Редактирование приёма";
+    ViewData["Title"] = Model.IsNew ? T["Новое окно"] : T["Редактирование приёма"];
     ViewData["Cabinet"] = "admin";
     ViewData["Tab"] = "appointments";
     var a = Model.Appointment;
 }
-<div class="cab-head"><div><div class="crumbs"><a asp-action="Index">Приёмы</a> / <span>@ViewData["Title"]</span></div><h1>@ViewData["Title"]</h1></div></div>
+<div class="cab-head"><div><div class="crumbs"><a asp-action="Index">@T["Приёмы"]</a> / <span>@ViewData["Title"]</span></div><h1>@ViewData["Title"]</h1></div></div>
 <div class="card card-pad" style="max-width:720px">
     <form method="post" asp-action="@(Model.IsNew ? "AppointmentStore" : "AppointmentUpdate")" asp-route-appointmentId="@(Model.IsNew ? null : a.Id)" novalidate>
         <div asp-validation-summary="ModelOnly"></div>
         <div class="row">
             <div class="field">
-                <label for="StaffId">Врач</label>
+                <label for="StaffId">@T["Врач"]</label>
                 <select name="StaffId" id="StaffId">
                     @foreach (var s in Model.Staff)
                     {
-                        <option value="@s.Id" selected="@(s.Id == a.StaffId)">@s.DisplayName</option>
+                        <option value="@s.Id" selected="@(s.Id == a.StaffId)">@T[s.DisplayName]</option>
                     }
                 </select>
                 @Html.ValidationMessage("StaffId", new { @class = "field-validation-error" })
             </div>
             <div class="field">
-                <label for="ClientId">Пациент</label>
+                <label for="ClientId">@T["Пациент"]</label>
                 <select name="ClientId" id="ClientId">
-                    <option value="" selected="@(a.ClientId == null)">Свободное окно</option>
+                    <option value="" selected="@(a.ClientId == null)">@T["Свободное окно"]</option>
                     @foreach (var c in Model.Clients)
                     {
-                        <option value="@c.Id" selected="@(c.Id == a.ClientId)">@c.DisplayName</option>
+                        <option value="@c.Id" selected="@(c.Id == a.ClientId)">@T[c.DisplayName]</option>
                     }
                 </select>
                 @Html.ValidationMessage("ClientId", new { @class = "field-validation-error" })
@@ -35,27 +35,27 @@
         </div>
         <div class="row">
             <div class="field">
-                <label asp-for="Appointment.StartAt">Время начала</label>
+                <label asp-for="Appointment.StartAt">@T["Время начала"]</label>
                 <input name="StartAt" id="StartAt" type="datetime-local" value="@a.StartAt.ToString("yyyy-MM-ddTHH:mm")" />
                 @Html.ValidationMessage("StartAt", new { @class = "field-validation-error" })
             </div>
             <div class="field">
-                <label for="Duration">Длительность, минут</label>
+                <label for="Duration">@T["Длительность, минут"]</label>
                 <input name="Duration" id="Duration" type="number" min="1" max="480" value="@a.Duration" />
                 @Html.ValidationMessage("Duration", new { @class = "field-validation-error" })
             </div>
         </div>
         <div class="field">
-            <label for="Recommendation">Рекомендации</label>
+            <label for="Recommendation">@T["Рекомендации"]</label>
             <textarea name="Recommendation" id="Recommendation" rows="3">@a.Recommendation</textarea>
         </div>
         <div class="field">
-            <label for="DurationChangeReason">Причина изменения длительности</label>
+            <label for="DurationChangeReason">@T["Причина изменения длительности"]</label>
             <input name="DurationChangeReason" id="DurationChangeReason" value="@a.DurationChangeReason" />
         </div>
         <div class="form-actions">
-            <button class="btn btn-primary" type="submit">Сохранить</button>
-            <a class="btn btn-ghost" asp-action="Index">Отмена</a>
+            <button class="btn btn-primary" type="submit">@T["Сохранить"]</button>
+            <a class="btn btn-ghost" asp-action="Index">@T["Отмена"]</a>
         </div>
     </form>
 </div>

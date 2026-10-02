@@ -99,7 +99,7 @@ namespace DentalClinic.Controllers
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Приём добавлен в расписание.";
+            TempData["Success"] = T["Приём добавлен в расписание."].Value;
             return RedirectToAction("Index", new { filter = appointment.IsBooked ? null : "free" });
         }
 
@@ -141,28 +141,28 @@ namespace DentalClinic.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Изменения сохранены.";
+            TempData["Success"] = T["Изменения сохранены."].Value;
             return RedirectToAction("Index");
         }
 
         private async Task ValidateAppointment(Models.Appointment appointment, long? ownId)
         {
             if (!await _context.Staffs.AnyAsync(s => s.Id == appointment.StaffId))
-                ModelState.AddModelError("StaffId", "Выберите врача");
+                ModelState.AddModelError("StaffId", T["Выберите врача"].Value);
 
             if (appointment.ClientId is { } clientId && !await _context.Profiles.AnyAsync(p => p.Id == clientId && p.RoleId == RoleIds.Client))
-                ModelState.AddModelError("ClientId", "Выберите пациента из списка");
+                ModelState.AddModelError("ClientId", T["Выберите пациента из списка"].Value);
 
             // The database enforces this too (unique index), the check only gives a readable message.
             if (await _context.Appointments.AnyAsync(a => a.StaffId == appointment.StaffId && a.StartAt == appointment.StartAt && a.Id != ownId))
-                ModelState.AddModelError("StartAt", "У этого врача уже есть приём на это время");
+                ModelState.AddModelError("StartAt", T["У этого врача уже есть приём на это время"].Value);
         }
 
         [HttpPost("appointments/{appointmentId:long}/delete")]
         public async Task<IActionResult> AppointmentDelete(long appointmentId)
         {
             var deleted = await _context.Appointments.Where(a => a.Id == appointmentId).ExecuteDeleteAsync();
-            if (deleted > 0) TempData["Success"] = "Приём удалён.";
+            if (deleted > 0) TempData["Success"] = T["Приём удалён."].Value;
             return RedirectToAction("Index");
         }
 
@@ -194,14 +194,14 @@ namespace DentalClinic.Controllers
             switch (result.Status)
             {
                 case GenerateStatus.UnknownDoctor:
-                    ModelState.AddModelError("StaffId", "Выберите врача из списка");
+                    ModelState.AddModelError("StaffId", T["Выберите врача из списка"].Value);
                     return View("Schedule", await ScheduleForm(form));
                 case GenerateStatus.Conflict:
-                    TempData["Error"] = "Расписание изменили одновременно. Повторите создание, существующие окна будут пропущены.";
+                    TempData["Error"] = T["Расписание изменили одновременно. Повторите создание, существующие окна будут пропущены."].Value;
                     return RedirectToAction("Schedule");
             }
 
-            TempData["Success"] = $"Создано окон {result.Created}, уже существовало {result.SkippedExisting}.";
+            TempData["Success"] = T["Создано окон {0}, уже существовало {1}.", result.Created, result.SkippedExisting].Value;
             return RedirectToAction("Index", new { filter = "free" });
         }
 
@@ -252,7 +252,7 @@ namespace DentalClinic.Controllers
             var (result, _) = await _profiles.CreateAsync(model);
             if (result.Succeeded)
             {
-                TempData["Success"] = "Профиль создан.";
+                TempData["Success"] = T["Профиль создан."].Value;
                 return RedirectToAction("Profiles");
             }
 
@@ -274,10 +274,10 @@ namespace DentalClinic.Controllers
                 switch (result.Status)
                 {
                     case UpdateProfileStatus.Updated:
-                        TempData["Success"] = "Профиль обновлён.";
+                        TempData["Success"] = T["Профиль обновлён."].Value;
                         return RedirectToAction("Profiles");
                     case UpdateProfileStatus.EmailTaken:
-                        ModelState.AddModelError(nameof(model.Email), "Этот email уже занят");
+                        ModelState.AddModelError(nameof(model.Email), T["Этот email уже занят"].Value);
                         break;
                     case UpdateProfileStatus.Invalid:
                         foreach (var error in result.Errors)
@@ -300,11 +300,11 @@ namespace DentalClinic.Controllers
             switch (await _profiles.DeleteAsync(profileId))
             {
                 case ProfileChangeStatus.NotFound: return NotFound();
-                case ProfileChangeStatus.IsAdmin: TempData["Error"] = "Администратора удалить нельзя."; break;
+                case ProfileChangeStatus.IsAdmin: TempData["Error"] = T["Администратора удалить нельзя."].Value; break;
                 case ProfileChangeStatus.HasVisits:
-                    TempData["Error"] = "У врача есть записи пациентов, удаление затронуло бы их визиты. Заблокируйте профиль, чтобы закрыть вход.";
+                    TempData["Error"] = T["У врача есть записи пациентов, удаление затронуло бы их визиты. Заблокируйте профиль, чтобы закрыть вход."].Value;
                     break;
-                default: TempData["Success"] = "Профиль удалён."; break;
+                default: TempData["Success"] = T["Профиль удалён."].Value; break;
             }
             return RedirectToAction("Profiles");
         }
@@ -322,7 +322,7 @@ namespace DentalClinic.Controllers
                 case ProfileChangeStatus.NotFound: return NotFound();
                 case ProfileChangeStatus.IsAdmin: return Forbid();
                 default:
-                    TempData["Success"] = banned ? "Аккаунт заблокирован." : "Аккаунт разблокирован.";
+                    TempData["Success"] = banned ? T["Аккаунт заблокирован."].Value : T["Аккаунт разблокирован."].Value;
                     return RedirectToAction("Profiles");
             }
         }
@@ -366,14 +366,14 @@ namespace DentalClinic.Controllers
 
             if (!await _reviews.UpdateTextAsync(reviewId, updated.Text)) return NotFound();
 
-            TempData["Success"] = "Отзыв обновлён.";
+            TempData["Success"] = T["Отзыв обновлён."].Value;
             return RedirectToAction("Reviews");
         }
 
         [HttpPost("reviews/{reviewId:long}/delete")]
         public async Task<IActionResult> ReviewDelete(long reviewId)
         {
-            if (await _reviews.DeleteAsync(reviewId)) TempData["Success"] = "Отзыв удалён.";
+            if (await _reviews.DeleteAsync(reviewId)) TempData["Success"] = T["Отзыв удалён."].Value;
             return RedirectToAction("Reviews");
         }
 

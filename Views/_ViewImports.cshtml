@@ -3,5 +3,9 @@
 @using DentalClinic.Models.ViewModels
 @using DentalClinic.Infrastructure
 @using DentalClinic.Services
+@using DentalClinic.Localization
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> T
 @inject IClinicClock Clock
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

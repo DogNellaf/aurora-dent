@@ -2,31 +2,31 @@
 @model NewProfile
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Новый профиль";
+    ViewData["Title"] = T["Новый профиль"];
     ViewData["Cabinet"] = "admin";
     ViewData["Tab"] = "profiles";
 }
-<div class="cab-head"><div><div class="crumbs"><a asp-action="Profiles">Профили</a> / <span>Новый</span></div><h1>Новый профиль</h1></div></div>
+<div class="cab-head"><div><div class="crumbs"><a asp-action="Profiles">@T["Профили"]</a> / <span>@T["Новый"]</span></div><h1>@T["Новый профиль"]</h1></div></div>
 <div class="card card-pad" style="max-width:720px">
     <form asp-action="ProfileStore" method="post" novalidate>
         <div asp-validation-summary="ModelOnly"></div>
-        <div class="field"><label asp-for="FullName">Имя и фамилия</label><input asp-for="FullName" /><span asp-validation-for="FullName"></span></div>
+        <div class="field"><label asp-for="FullName">@T["Имя и фамилия"]</label><input asp-for="FullName" /><span asp-validation-for="FullName"></span></div>
         <div class="row">
             <div class="field"><label asp-for="Email">Email</label><input asp-for="Email" /><span asp-validation-for="Email"></span></div>
-            <div class="field"><label asp-for="Phone">Телефон</label><input asp-for="Phone" type="tel" /><span asp-validation-for="Phone"></span></div>
+            <div class="field"><label asp-for="Phone">@T["Телефон"]</label><input asp-for="Phone" type="tel" /><span asp-validation-for="Phone"></span></div>
         </div>
         <div class="row">
-            <div class="field"><label asp-for="Password">Пароль</label><input asp-for="Password" /><span asp-validation-for="Password"></span></div>
-            <div class="field"><label asp-for="ConfirmPassword">Повтор пароля</label><input asp-for="ConfirmPassword" /><span asp-validation-for="ConfirmPassword"></span></div>
+            <div class="field"><label asp-for="Password">@T["Пароль"]</label><input asp-for="Password" /><span asp-validation-for="Password"></span></div>
+            <div class="field"><label asp-for="ConfirmPassword">@T["Повтор пароля"]</label><input asp-for="ConfirmPassword" /><span asp-validation-for="ConfirmPassword"></span></div>
         </div>
         <div class="field">
-            <label asp-for="RoleTitle">Роль</label>
-            <select asp-for="RoleTitle" asp-items="Html.GetEnumSelectList<RoleTitle>()"></select>
-            <div class="hint">Для роли «Доктор» автоматически создаётся карточка врача.</div>
+            <label asp-for="RoleTitle">@T["Роль"]</label>
+            <select asp-for="RoleTitle" asp-items="Html.GetEnumSelectList<RoleTitle>().Select(i => new SelectListItem(T[i.Text].Value, i.Value, i.Selected))"></select>
+            <div class="hint">@T["Для роли «Доктор» автоматически создаётся карточка врача."]</div>
         </div>
         <div class="form-actions">
-            <button class="btn btn-primary" type="submit">Создать</button>
-            <a class="btn btn-ghost" asp-action="Profiles">Отмена</a>
+            <button class="btn btn-primary" type="submit">@T["Создать"]</button>
+            <a class="btn btn-ghost" asp-action="Profiles">@T["Отмена"]</a>
         </div>
     </form>
 </div>

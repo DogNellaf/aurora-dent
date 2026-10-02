@@ -55,7 +55,7 @@ namespace DentalClinic.Controllers
             if (staff != null) staff.FullName = profile.FullName;
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Профиль сохранён.";
+            TempData["Success"] = T["Профиль сохранён."].Value;
             return RedirectToAction("Index");
         }
 
@@ -71,13 +71,13 @@ namespace DentalClinic.Controllers
             {
                 foreach (var error in result.Errors)
                     ModelState.AddModelError("Password." + (error.Code == "PasswordMismatch" ? nameof(model.Current) : nameof(model.New)),
-                        error.Code == "PasswordMismatch" ? "Текущий пароль указан неверно" : IdentityErrors.Translate(error));
+                        error.Code == "PasswordMismatch" ? T["Текущий пароль указан неверно"].Value : IdentityErrors.Translate(error));
                 return Page(new AccountViewModel { Password = new ChangePasswordModel() });
             }
 
             // The security stamp changed, so keep the current session signed in.
             await _signInManager.RefreshSignInAsync(profile!);
-            TempData["Success"] = "Пароль изменён.";
+            TempData["Success"] = T["Пароль изменён."].Value;
             return RedirectToAction("Index");
         }
     }

@@ -9,6 +9,7 @@ using Serilog;
 using System.Globalization;
 using DentalClinic.Data;
 using DentalClinic.Infrastructure;
+using DentalClinic.Localization;
 using DentalClinic.Models;
 using DentalClinic.Services;
 
@@ -35,10 +36,18 @@ namespace DentalClinic
 
                 // Every POST form carries an antiforgery token (the form tag helper adds it automatically).
                 options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
-            });
+            })
+            // Validation messages and display names are translated through the same table as the views.
+            .AddDataAnnotationsLocalization(options =>
+                options.DataAnnotationLocalizerProvider = (_, factory) => factory.Create(typeof(SharedResource)));
 
-            // Render Cyrillic as-is instead of &#x...; entities (smaller pages, readable HTML).
-            builder.Services.AddWebEncoders(o => o.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic));
+            builder.Services.AddLocalization();
+            builder.Services.AddSingleton<Microsoft.Extensions.Localization.IStringLocalizerFactory, JsonStringLocalizerFactory>();
+
+            // Render Cyrillic and accented Latin letters as-is instead of &#x...; entities (smaller pages, readable HTML).
+            builder.Services.AddWebEncoders(o => o.TextEncoderSettings = new TextEncoderSettings(
+                UnicodeRanges.BasicLatin, UnicodeRanges.Latin1Supplement, UnicodeRanges.LatinExtendedA,
+                UnicodeRanges.GeneralPunctuation, UnicodeRanges.Cyrillic));
 
             // The connection string is read lazily, so configuration added after Main starts (tests) still applies.
             // The database container may still be starting when the app boots, so transient failures are retried.
@@ -130,12 +139,12 @@ namespace DentalClinic
             if (app.Configuration.GetValue("Hosting:HttpsRedirection", false))
                 app.UseHttpsRedirection();
 
-            var ru = new CultureInfo("ru-RU");
+            // The language comes from the cookie set by the switcher, then from Accept-Language, then Russian.
             app.UseRequestLocalization(new RequestLocalizationOptions
             {
-                DefaultRequestCulture = new RequestCulture(ru),
-                SupportedCultures = new List<CultureInfo> { ru },
-                SupportedUICultures = new List<CultureInfo> { ru }
+                DefaultRequestCulture = new RequestCulture(Languages.All[0].Culture),
+                SupportedCultures = Languages.Cultures.ToList(),
+                SupportedUICultures = Languages.Cultures.ToList()
             });
 
             app.UseStaticFiles(new StaticFileOptions

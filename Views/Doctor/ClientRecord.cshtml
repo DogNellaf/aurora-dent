@@ -1,22 +1,22 @@
 @model List<Appointment>
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Карта пациента";
+    ViewData["Title"] = T["Карта пациента"];
     ViewData["Cabinet"] = "doctor";
     ViewData["Tab"] = "";
     var client = (Profile)ViewBag.Client;
 }
 <div class="cab-head">
     <div>
-        <div class="crumbs"><a asp-action="Index">Кабинет</a> / <span>Карта пациента</span></div>
-        <h1>@client.DisplayName</h1>
+        <div class="crumbs"><a asp-action="Index">@T["Кабинет"]</a> / <span>@T["Карта пациента"]</span></div>
+        <h1>@T[client.DisplayName]</h1>
         <p>@client.PhoneNumber · @client.Email</p>
     </div>
-    <span class="badge">@Model.Count визитов</span>
+    <span class="badge">@T["визитов: {0}", Model.Count]</span>
 </div>
 @if (Model.Count == 0)
 {
-    <div class="card empty"><h3>У пациента пока нет приёмов</h3></div>
+    <div class="card empty"><h3>@T["У пациента пока нет приёмов"]</h3></div>
 }
 else
 {
@@ -26,12 +26,12 @@ else
             <div class="card appt @(a.IsPastAt(Clock.Now) ? "past" : "")">
                 <partial name="_DateBox" model="a.StartAt" />
                 <div>
-                    <h4>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</h4>
+                    <h4>@T.ServiceList(a.Services)</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-user"/></svg> @(a.Staff?.DisplayName)</span>
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Date(a.StartAt), @Fmt.Time(a.StartAt), @Fmt.Minutes(a.Duration)</span>
                     </div>
-                    @if (!string.IsNullOrEmpty(a.Recommendation)) { <p class="soft" style="margin:10px 0 0;font-size:.92rem"><b>Рекомендации:</b> @a.Recommendation</p> }
+                    @if (!string.IsNullOrEmpty(a.Recommendation)) { <p class="soft" style="margin:10px 0 0;font-size:.92rem"><b>@T["Рекомендации:"]</b> @a.Recommendation</p> }
                 </div>
                 <div></div>
             </div>

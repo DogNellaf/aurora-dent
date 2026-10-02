@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using DentalClinic.Infrastructure;
+using DentalClinic.Localization;
 using DentalClinic.Models;
 using DentalClinic.Models.ViewModels;
 
@@ -9,6 +11,11 @@ namespace DentalClinic.Controllers
     public abstract class BaseController : Controller
     {
         protected readonly DatabaseContext _context;
+        private IStringLocalizer<SharedResource>? _localizer;
+
+        /// <summary>Translates a message to the language of the current request.</summary>
+        protected IStringLocalizer<SharedResource> T =>
+            _localizer ??= HttpContext.RequestServices.GetRequiredService<IStringLocalizer<SharedResource>>();
 
         protected BaseController(DatabaseContext context)
         {
@@ -35,11 +42,11 @@ namespace DentalClinic.Controllers
         }
 
         /// <summary>Wraps appointments with the patient's name. The queries must include <c>Client</c>.</summary>
-        protected static List<AppointmentRow> ToRows(IEnumerable<Appointment> appointments) =>
+        protected List<AppointmentRow> ToRows(IEnumerable<Appointment> appointments) =>
             appointments.Select(a => new AppointmentRow
             {
                 Appointment = a,
-                ClientName = a.ClientId is null ? string.Empty : a.Client?.DisplayName ?? $"Пациент #{a.ClientId}"
+                ClientName = a.ClientId is null ? string.Empty : a.Client?.DisplayName ?? T["Пациент #{0}", a.ClientId].Value
             }).ToList();
 
         protected async Task<List<ReviewCard>> ToCardsAsync(IEnumerable<Review> reviews)
@@ -50,7 +57,7 @@ namespace DentalClinic.Controllers
 
             return list.Select(r => new ReviewCard(
                 r.Id,
-                profiles.TryGetValue(r.ProfileId, out var p) ? p.PublicName : "Пациент клиники",
+                profiles.TryGetValue(r.ProfileId, out var p) ? p.PublicName : T["Пациент клиники"].Value,
                 r.Text, r.Rating, r.CreatedAt, r.IsVisible, r.ProfileId)).ToList();
         }
     }

@@ -6,12 +6,12 @@
 <section class="hero">
     <div class="wrap hero-grid">
         <div>
-            <span class="eyebrow">Современная стоматология в центре Москвы</span>
-            <h1>Лечим зубы <em>без страха</em> и без очередей</h1>
-            <p class="lead">Безболезненное лечение под микроскопом, честные цены и врачи, которые объясняют каждый шаг. Запишитесь онлайн за минуту — первая консультация бесплатно.</p>
+            <span class="eyebrow">@T["Современная стоматология в центре Москвы"]</span>
+            <h1>@T["Лечим зубы"] <em>@T["без страха"]</em> @T["и без очередей"]</h1>
+            <p class="lead">@T["Безболезненное лечение под микроскопом, честные цены и врачи, которые объясняют каждый шаг. Запишитесь онлайн за минуту — первая консультация бесплатно."]</p>
             <div class="hero-cta">
-                <a class="btn btn-accent btn-lg" asp-controller="Home" asp-action="Schedule">Записаться на приём <svg class="ic"><use href="#i-arrow"/></svg></a>
-                <a class="btn btn-ghost btn-lg" asp-controller="Home" asp-action="Services">Услуги и цены</a>
+                <a class="btn btn-accent btn-lg" asp-controller="Home" asp-action="Schedule">@T["Записаться на приём"] <svg class="ic"><use href="#i-arrow"/></svg></a>
+                <a class="btn btn-ghost btn-lg" asp-controller="Home" asp-action="Services">@T["Услуги и цены"]</a>
             </div>
             <div class="hero-proof">
                 <div class="avatars">
@@ -22,33 +22,33 @@
                 </div>
                 <div>
                     <span class="stars"><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg><svg class="ic fill"><use href="#i-star"/></svg></span>
-                    <div><b>@Model.AverageRating.ToString("0.0")</b> — средняя оценка пациентов</div>
+                    <div><b>@Model.AverageRating.ToString("0.0")</b> @T["— средняя оценка пациентов"]</div>
                 </div>
             </div>
         </div>
         <div class="hero-media">
-            <div class="hero-photo"><img src="~/img/office.jpg" alt="Светлый стоматологический кабинет клиники" fetchpriority="high"></div>
-            <div class="float f1"><span class="dot"><svg class="ic"><use href="#i-shield"/></svg></span><div><strong>10 лет</strong>гарантия на импланты</div></div>
-            <div class="float f2"><span class="dot"><svg class="ic"><use href="#i-heart"/></svg></span><div><strong>Без боли</strong>современная анестезия</div></div>
+            <div class="hero-photo"><img src="~/img/office.jpg" alt="@T["Светлый стоматологический кабинет клиники"]" fetchpriority="high"></div>
+            <div class="float f1"><span class="dot"><svg class="ic"><use href="#i-shield"/></svg></span><div><strong>@T["10 лет"]</strong>@T["гарантия на импланты"]</div></div>
+            <div class="float f2"><span class="dot"><svg class="ic"><use href="#i-heart"/></svg></span><div><strong>@T["Без боли"]</strong>@T["современная анестезия"]</div></div>
         </div>
     </div>
 </section>
 
 <div class="wrap">
     <div class="stats reveal">
-        <div class="stat"><b data-count="@Math.Max(Model.PatientsCount, 1)" data-suffix="">@Model.PatientsCount</b><span>пациентов уже доверились нам</span></div>
-        <div class="stat"><b data-count="@Model.Doctors.Count">@Model.Doctors.Count</b><span>врача-специалиста</span></div>
-        <div class="stat"><b data-count="@Model.AverageRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">@Model.AverageRating.ToString("0.0")</b><span>средняя оценка</span></div>
-        <div class="stat"><b>8–23</b><span>работаем ежедневно, без выходных</span></div>
+        <div class="stat"><b data-count="@Math.Max(Model.PatientsCount, 1)" data-suffix="">@Model.PatientsCount</b><span>@T["пациентов уже доверились нам"]</span></div>
+        <div class="stat"><b data-count="@Model.Doctors.Count">@Model.Doctors.Count</b><span>@T["врача-специалиста"]</span></div>
+        <div class="stat"><b data-count="@Model.AverageRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">@Model.AverageRating.ToString("0.0")</b><span>@T["средняя оценка"]</span></div>
+        <div class="stat"><b>8–23</b><span>@T["работаем ежедневно, без выходных"]</span></div>
     </div>
 </div>
 
 <section class="section">
     <div class="wrap">
         <div class="section-head">
-            <span class="eyebrow">Услуги</span>
-            <h2>Всё для здоровой улыбки — в одной клинике</h2>
-            <p class="lead">От профилактики до сложной имплантации. Стоимость фиксируем в смете до начала лечения.</p>
+            <span class="eyebrow">@T["Услуги"]</span>
+            <h2>@T["Всё для здоровой улыбки — в одной клинике"]</h2>
+            <p class="lead">@T["От профилактики до сложной имплантации. Стоимость фиксируем в смете до начала лечения."]</p>
         </div>
         <div class="grid grid-3">
             @foreach (var s in Model.Services)
@@ -56,23 +56,23 @@
                 <partial name="_ServiceCard" model="s" />
             }
         </div>
-        <p class="center" style="margin-top:36px"><a class="btn btn-ghost" asp-controller="Home" asp-action="Services">Все услуги <svg class="ic"><use href="#i-arrow"/></svg></a></p>
+        <p class="center" style="margin-top:36px"><a class="btn btn-ghost" asp-controller="Home" asp-action="Services">@T["Все услуги"] <svg class="ic"><use href="#i-arrow"/></svg></a></p>
     </div>
 </section>
 
 <section class="section" style="background:#fff">
     <div class="wrap split">
-        <div class="split-photo reveal"><img src="~/img/xray.jpg" alt="Врач изучает снимки КТ" loading="lazy"></div>
+        <div class="split-photo reveal"><img src="~/img/xray.jpg" alt="@T["Врач изучает снимки КТ"]" loading="lazy"></div>
         <div class="reveal">
-            <span class="eyebrow">Почему мы</span>
-            <h2>Точная диагностика — основа лечения без сюрпризов</h2>
+            <span class="eyebrow">@T["Почему мы"]</span>
+            <h2>@T["Точная диагностика — основа лечения без сюрпризов"]</h2>
             <ul class="checks">
-                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>Лечение под микроскопом</strong><span>Увеличение в 20 раз позволяет сохранить зуб там, где раньше предлагали удаление.</span></div></li>
-                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>3D-томография и цифровые снимки</strong><span>Планируем имплантацию и ортодонтию до начала лечения, а не по ходу.</span></div></li>
-                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>Прозрачные цены</strong><span>Смета утверждается заранее. Рассрочка 0% на срок до 12 месяцев.</span></div></li>
-                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>Личный кабинет пациента</strong><span>История визитов и рекомендации врача всегда под рукой.</span></div></li>
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>@T["Лечение под микроскопом"]</strong><span>@T["Увеличение в 20 раз позволяет сохранить зуб там, где раньше предлагали удаление."]</span></div></li>
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>@T["3D-томография и цифровые снимки"]</strong><span>@T["Планируем имплантацию и ортодонтию до начала лечения, а не по ходу."]</span></div></li>
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>@T["Прозрачные цены"]</strong><span>@T["Смета утверждается заранее. Рассрочка 0% на срок до 12 месяцев."]</span></div></li>
+                <li><span class="tick"><svg class="ic"><use href="#i-check"/></svg></span><div><strong>@T["Личный кабинет пациента"]</strong><span>@T["История визитов и рекомендации врача всегда под рукой."]</span></div></li>
             </ul>
-            <a class="btn btn-primary" asp-controller="Home" asp-action="About">О клинике <svg class="ic"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-primary" asp-controller="Home" asp-action="About">@T["О клинике"] <svg class="ic"><use href="#i-arrow"/></svg></a>
         </div>
     </div>
 </section>
@@ -80,9 +80,9 @@
 <section class="section">
     <div class="wrap">
         <div class="section-head center">
-            <span class="eyebrow">Команда</span>
-            <h2>Врачи, которым доверяют</h2>
-            <p class="lead">Регулярно проходят обучение в России и Европе и лечат так, как лечили бы своих близких.</p>
+            <span class="eyebrow">@T["Команда"]</span>
+            <h2>@T["Врачи, которым доверяют"]</h2>
+            <p class="lead">@T["Регулярно проходят обучение в России и Европе и лечат так, как лечили бы своих близких."]</p>
         </div>
         <div class="grid grid-3">
             @foreach (var d in Model.Doctors)
@@ -96,13 +96,13 @@
 <section class="section tight">
     <div class="wrap">
         <div class="section-head center">
-            <span class="eyebrow">Как это работает</span>
-            <h2>Запись на приём — три шага</h2>
+            <span class="eyebrow">@T["Как это работает"]</span>
+            <h2>@T["Запись на приём — три шага"]</h2>
         </div>
         <div class="steps">
-            <div class="card step reveal"><h3>Выберите врача и время</h3><p>Смотрите свободные окна всех врачей онлайн — без звонков и ожидания на линии.</p></div>
-            <div class="card step reveal"><h3>Подтвердите запись</h3><p>Зарегистрируйтесь за 30 секунд — запись сразу появится в личном кабинете.</p></div>
-            <div class="card step reveal"><h3>Приходите на приём</h3><p>Встретим вовремя, без очередей. Рекомендации врача сохранятся в вашей карте.</p></div>
+            <div class="card step reveal"><h3>@T["Выберите врача и время"]</h3><p>@T["Смотрите свободные окна всех врачей онлайн — без звонков и ожидания на линии."]</p></div>
+            <div class="card step reveal"><h3>@T["Подтвердите запись"]</h3><p>@T["Зарегистрируйтесь за 30 секунд — запись сразу появится в личном кабинете."]</p></div>
+            <div class="card step reveal"><h3>@T["Приходите на приём"]</h3><p>@T["Встретим вовремя, без очередей. Рекомендации врача сохранятся в вашей карте."]</p></div>
         </div>
     </div>
 </section>
@@ -112,8 +112,8 @@
     <section class="section">
         <div class="wrap">
             <div class="section-head">
-                <span class="eyebrow">Отзывы</span>
-                <h2>Что говорят наши пациенты</h2>
+                <span class="eyebrow">@T["Отзывы"]</span>
+                <h2>@T["Что говорят наши пациенты"]</h2>
             </div>
             <div class="reviews">
                 @foreach (var r in Model.Reviews.Take(3))
@@ -138,9 +138,9 @@
     <div class="wrap">
         <div class="cta reveal">
             <div class="cta-body">
-                <h2>Первая консультация — бесплатно</h2>
-                <p>Осмотр, снимок и понятный план лечения со сметой. Без давления и обязательств.</p>
-                <a class="btn btn-accent btn-lg" asp-controller="Home" asp-action="Schedule">Выбрать время <svg class="ic"><use href="#i-arrow"/></svg></a>
+                <h2>@T["Первая консультация — бесплатно"]</h2>
+                <p>@T["Осмотр, снимок и понятный план лечения со сметой. Без давления и обязательств."]</p>
+                <a class="btn btn-accent btn-lg" asp-controller="Home" asp-action="Schedule">@T["Выбрать время"] <svg class="ic"><use href="#i-arrow"/></svg></a>
             </div>
             <div class="cta-img"><img src="~/img/smile.jpg" alt="" loading="lazy"></div>
         </div>

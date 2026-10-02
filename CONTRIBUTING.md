@@ -33,4 +33,4 @@ CI runs the same checks and a smoke test of the whole Docker stack.
 - New behaviour comes with a test in `DentalClinic.Tests` going through real HTTP
   (see `TestApp.PostFormAsync` for forms with antiforgery tokens).
 - Views use the design tokens from `wwwroot/css/site.css`. Inline scripts are not allowed by the Content Security Policy.
-- Text shown to users is in Russian.
+- Russian is the source language. Text shown to users is written in Russian and passed through the localizer, `@T["..."]` in views and `T["..."]` in controllers, and every text needs an entry in `Localization/Resources/en.json`, `fr.json` and `de.json`. A test lists missing entries. Text typed in by users or managers is shown as entered.

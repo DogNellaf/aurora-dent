@@ -1,12 +1,12 @@
 @model List<Staff>
 @{
-    ViewData["Title"] = "Наши врачи";
+    ViewData["Title"] = T["Наши врачи"];
 }
 <div class="wrap">
     <div class="page-head">
-        <div class="crumbs"><a asp-controller="Home" asp-action="Index">Главная</a> / <span>Врачи</span></div>
-        <h1>Наши врачи</h1>
-        <p class="lead">Опытные специалисты, которые постоянно учатся и объясняют каждый этап лечения.</p>
+        <div class="crumbs"><a asp-controller="Home" asp-action="Index">@T["Главная"]</a> / <span>@T["Врачи"]</span></div>
+        <h1>@T["Наши врачи"]</h1>
+        <p class="lead">@T["Опытные специалисты, которые постоянно учатся и объясняют каждый этап лечения."]</p>
     </div>
     <div class="grid grid-3" style="padding-bottom:60px">
         @foreach (var d in Model)

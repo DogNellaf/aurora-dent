@@ -69,10 +69,10 @@ namespace DentalClinic.Controllers
                 case CancelStatus.NotFound:
                     return NotFound();
                 case CancelStatus.TooLate:
-                    TempData["Error"] = "Отменить запись можно не позднее чем за 2 часа до приёма. Позвоните нам, и мы что-нибудь придумаем.";
+                    TempData["Error"] = T["Отменить запись можно не позднее чем за 2 часа до приёма. Позвоните нам, и мы что-нибудь придумаем."].Value;
                     break;
                 default:
-                    TempData["Success"] = "Запись отменена. Время снова доступно для записи.";
+                    TempData["Success"] = T["Запись отменена. Время снова доступно для записи."].Value;
                     break;
             }
 
@@ -100,7 +100,7 @@ namespace DentalClinic.Controllers
             if (await _reviews.SubmitAsync(GetProfile(), review.Text, review.Rating) == ReviewSubmitStatus.NoFinishedVisit)
                 return Forbid();
 
-            TempData["Success"] = "Спасибо! Отзыв отправлен на модерацию.";
+            TempData["Success"] = T["Спасибо! Отзыв отправлен на модерацию."].Value;
             return RedirectToAction("Index");
         }
 

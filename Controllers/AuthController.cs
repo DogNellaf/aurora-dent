@@ -105,8 +105,8 @@ namespace DentalClinic.Controllers
                 // to find out which addresses are registered and banned.
                 var knowsPassword = await _userManager.CheckPasswordAsync(profile, data.Password);
                 ModelState.AddModelError("", knowsPassword
-                    ? "Аккаунт заблокирован. Свяжитесь с клиникой по телефону."
-                    : "Неверный email или пароль");
+                    ? T["Аккаунт заблокирован. Свяжитесь с клиникой по телефону."].Value
+                    : T["Неверный email или пароль"].Value);
                 return LoginView(data);
             }
 
@@ -122,11 +122,11 @@ namespace DentalClinic.Controllers
             if (result.IsLockedOut)
             {
                 _logger.LogWarning("Account {Email} is locked out after repeated failed sign-ins", data.Email);
-                ModelState.AddModelError("", "Слишком много неудачных попыток. Вход закрыт на 15 минут, попробуйте позже или сбросьте пароль.");
+                ModelState.AddModelError("", T["Слишком много неудачных попыток. Вход закрыт на 15 минут, попробуйте позже или сбросьте пароль."].Value);
             }
             else
             {
-                ModelState.AddModelError("", "Неверный email или пароль");
+                ModelState.AddModelError("", T["Неверный email или пароль"].Value);
             }
 
             return LoginView(data);
@@ -198,7 +198,7 @@ namespace DentalClinic.Controllers
             var profile = await _userManager.FindByEmailAsync(model.Email);
             if (profile == null || profile.IsBanned)
             {
-                ModelState.AddModelError("", "Ссылка недействительна. Запросите сброс пароля ещё раз.");
+                ModelState.AddModelError("", T["Ссылка недействительна. Запросите сброс пароля ещё раз."].Value);
                 return View("Reset", model);
             }
 
@@ -207,7 +207,7 @@ namespace DentalClinic.Controllers
             {
                 foreach (var error in result.Errors)
                     ModelState.AddModelError("", error.Code == "InvalidToken"
-                        ? "Ссылка недействительна или устарела. Запросите сброс пароля ещё раз."
+                        ? T["Ссылка недействительна или устарела. Запросите сброс пароля ещё раз."].Value
                         : IdentityErrors.Translate(error));
                 return View("Reset", model);
             }
@@ -216,7 +216,7 @@ namespace DentalClinic.Controllers
             await _userManager.SetLockoutEndDateAsync(profile, null);
             await _userManager.ResetAccessFailedCountAsync(profile);
 
-            TempData["Success"] = "Пароль изменён. Теперь можно войти.";
+            TempData["Success"] = T["Пароль изменён. Теперь можно войти."].Value;
             return RedirectToAction("LoginPage");
         }
     }

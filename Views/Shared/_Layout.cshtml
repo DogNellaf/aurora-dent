@@ -2,16 +2,17 @@
     var controller = (ViewContext.RouteData.Values["controller"] as string ?? "").ToLowerInvariant();
     var action = (ViewContext.RouteData.Values["action"] as string ?? "").ToLowerInvariant();
     string Active(bool on) => on ? "active" : "";
-    var title = ViewData["Title"] as string;
+    var title = ViewData["Title"]?.ToString();
+    var language = Languages.Current;
     var authed = User.Identity?.IsAuthenticated == true;
 }
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="@language.Code">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@(string.IsNullOrEmpty(title) ? "Аврора Дент — стоматология без страха" : $"{title} — Аврора Дент")</title>
-    <meta name="description" content="@(ViewData["Description"] ?? "Аврора Дент — современная стоматология в центре Москвы: лечение без боли, имплантация, отбеливание, детская стоматология. Онлайн-запись за минуту.")">
+    <title>@(string.IsNullOrEmpty(title) ? T["Аврора Дент — стоматология без страха"].Value : $"{title} — {T["Аврора Дент"]}")</title>
+    <meta name="description" content="@(ViewData["Description"] ?? T["Аврора Дент — современная стоматология в центре Москвы: лечение без боли, имплантация, отбеливание, детская стоматология. Онлайн-запись за минуту."])">
     <meta name="theme-color" content="#0f7a77">
     <link rel="icon" href="~/favicon.svg" type="image/svg+xml">
     <link rel="preload" href="~/fonts/manrope-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -24,10 +25,17 @@
     <div class="topbar">
         <div class="wrap">
             <div class="group">
-                <span><svg class="ic"><use href="#i-pin"/></svg> Москва, ул. Примерная, 1</span>
-                <span><svg class="ic"><use href="#i-clock"/></svg> Ежедневно 8:00–23:00</span>
+                <span><svg class="ic"><use href="#i-pin"/></svg> @T["Москва, ул. Примерная, 1"]</span>
+                <span><svg class="ic"><use href="#i-clock"/></svg> @T["Ежедневно 8:00–23:00"]</span>
             </div>
             <div class="group">
+                <form class="lang" asp-controller="Home" asp-action="SetLanguage" method="post" aria-label="@T["Язык"]">
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    @foreach (var l in Languages.All)
+                    {
+                        <button type="submit" name="language" value="@l.Code" lang="@l.Code" title="@l.Name" class="@(l.Code == language.Code ? "active" : "")" aria-current="@(l.Code == language.Code ? "true" : null)">@l.Code.ToUpperInvariant()</button>
+                    }
+                </form>
                 <a href="tel:+74950000000"><svg class="ic"><use href="#i-phone"/></svg> +7 (495) 000-00-00</a>
             </div>
         </div>
@@ -37,30 +45,30 @@
         <div class="wrap">
             <a class="brand" asp-controller="Home" asp-action="Index">
                 <span class="brand-mark"><svg class="ic"><use href="#i-tooth"/></svg></span>
-                <span>Аврора Дент<small>стоматология</small></span>
+                <span>@T["Аврора Дент"]<small>@T["стоматология"]</small></span>
             </a>
-            <nav class="nav" id="nav" aria-label="Основное меню">
-                <a class="@Active(controller == "home" && action == "index")" asp-controller="Home" asp-action="Index">Главная</a>
-                <a class="@Active(controller == "home" && action is "services" or "servicedetail")" asp-controller="Home" asp-action="Services">Услуги</a>
-                <a class="@Active(controller == "home" && action == "doctors")" asp-controller="Home" asp-action="Doctors">Врачи</a>
-                <a class="@Active(controller == "home" && action == "about")" asp-controller="Home" asp-action="About">О клинике</a>
-                <a class="@Active(controller == "home" && action == "faq")" asp-controller="Home" asp-action="FAQ">Вопросы</a>
-                <a class="@Active(controller == "home" && action == "contacts")" asp-controller="Home" asp-action="Contacts">Контакты</a>
+            <nav class="nav" id="nav" aria-label="@T["Основное меню"]">
+                <a class="@Active(controller == "home" && action == "index")" asp-controller="Home" asp-action="Index">@T["Главная"]</a>
+                <a class="@Active(controller == "home" && action is "services" or "servicedetail")" asp-controller="Home" asp-action="Services">@T["Услуги"]</a>
+                <a class="@Active(controller == "home" && action == "doctors")" asp-controller="Home" asp-action="Doctors">@T["Врачи"]</a>
+                <a class="@Active(controller == "home" && action == "about")" asp-controller="Home" asp-action="About">@T["О клинике"]</a>
+                <a class="@Active(controller == "home" && action == "faq")" asp-controller="Home" asp-action="FAQ">@T["Вопросы"]</a>
+                <a class="@Active(controller == "home" && action == "contacts")" asp-controller="Home" asp-action="Contacts">@T["Контакты"]</a>
             </nav>
             <div class="header-actions">
                 @if (authed)
                 {
-                    <a class="btn btn-ghost btn-sm" asp-controller="Auth" asp-action="Index"><svg class="ic"><use href="#i-user"/></svg> Кабинет</a>
+                    <a class="btn btn-ghost btn-sm" asp-controller="Auth" asp-action="Index"><svg class="ic"><use href="#i-user"/></svg> @T["Кабинет"]</a>
                     <form asp-controller="Auth" asp-action="Logout" method="post">
-                        <button class="btn btn-ghost btn-sm" type="submit" title="Выйти" aria-label="Выйти"><svg class="ic"><use href="#i-logout"/></svg></button>
+                        <button class="btn btn-ghost btn-sm" type="submit" title="@T["Выйти"]" aria-label="@T["Выйти"]"><svg class="ic"><use href="#i-logout"/></svg></button>
                     </form>
                 }
                 else
                 {
-                    <a class="btn btn-ghost btn-sm" asp-controller="Auth" asp-action="LoginPage">Войти</a>
+                    <a class="btn btn-ghost btn-sm" asp-controller="Auth" asp-action="LoginPage">@T["Войти"]</a>
                 }
-                <a class="btn btn-accent btn-sm hide-sm" asp-controller="Home" asp-action="Schedule">Записаться</a>
-                <button class="burger" id="burger" type="button" aria-label="Меню" aria-expanded="false"><svg class="ic"><use href="#i-menu"/></svg></button>
+                <a class="btn btn-accent btn-sm hide-sm" asp-controller="Home" asp-action="Schedule">@T["Записаться"]</a>
+                <button class="burger" id="burger" type="button" aria-label="@T["Меню"]" aria-expanded="false"><svg class="ic"><use href="#i-menu"/></svg></button>
             </div>
         </div>
     </header>
@@ -83,34 +91,34 @@
                 <div>
                     <a class="brand" asp-controller="Home" asp-action="Index">
                         <span class="brand-mark"><svg class="ic"><use href="#i-tooth"/></svg></span>
-                        <span>Аврора Дент<small>стоматология</small></span>
+                        <span>@T["Аврора Дент"]<small>@T["стоматология"]</small></span>
                     </a>
-                    <p>Современная стоматология без боли и очередей. Лечим так, чтобы вы возвращались ради улыбки, а не из-за проблем.</p>
+                    <p>@T["Современная стоматология без боли и очередей. Лечим так, чтобы вы возвращались ради улыбки, а не из-за проблем."]</p>
                 </div>
                 <div>
-                    <h5>Клиника</h5>
-                    <a asp-controller="Home" asp-action="About">О клинике</a>
-                    <a asp-controller="Home" asp-action="Doctors">Наши врачи</a>
-                    <a asp-controller="Home" asp-action="FAQ">Частые вопросы</a>
-                    <a asp-controller="Home" asp-action="Contacts">Контакты</a>
+                    <h5>@T["Клиника"]</h5>
+                    <a asp-controller="Home" asp-action="About">@T["О клинике"]</a>
+                    <a asp-controller="Home" asp-action="Doctors">@T["Наши врачи"]</a>
+                    <a asp-controller="Home" asp-action="FAQ">@T["Частые вопросы"]</a>
+                    <a asp-controller="Home" asp-action="Contacts">@T["Контакты"]</a>
                 </div>
                 <div>
-                    <h5>Пациентам</h5>
-                    <a asp-controller="Home" asp-action="Services">Услуги и цены</a>
-                    <a asp-controller="Home" asp-action="Schedule">Онлайн-запись</a>
-                    <a asp-controller="Auth" asp-action="Index">Личный кабинет</a>
-                    <a asp-controller="Auth" asp-action="Registration">Регистрация</a>
+                    <h5>@T["Пациентам"]</h5>
+                    <a asp-controller="Home" asp-action="Services">@T["Услуги и цены"]</a>
+                    <a asp-controller="Home" asp-action="Schedule">@T["Онлайн-запись"]</a>
+                    <a asp-controller="Auth" asp-action="Index">@T["Личный кабинет"]</a>
+                    <a asp-controller="Auth" asp-action="Registration">@T["Регистрация"]</a>
                 </div>
                 <div>
-                    <h5>Контакты</h5>
+                    <h5>@T["Контакты"]</h5>
                     <a href="tel:+74950000000">+7 (495) 000-00-00</a>
                     <a href="mailto:info@clinic.example">info@clinic.example</a>
-                    <span>Москва, ул. Примерная, 1<br>Ежедневно 8:00–23:00</span>
+                    <span>@T["Москва, ул. Примерная, 1"]<br>@T["Ежедневно 8:00–23:00"]</span>
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>© @Clock.Now.Year Аврора Дент. Демо-проект: клиника, врачи и отзывы вымышлены.</span>
-                <span>Фотографии — <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a></span>
+                <span>© @Clock.Now.Year @T["Аврора Дент. Демо-проект: клиника, врачи и отзывы вымышлены."]</span>
+                <span>@T["Фотографии —"] <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a></span>
             </div>
         </div>
     </footer>

@@ -1,9 +1,9 @@
 @model GenerateScheduleViewModel
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Мои окна";
+    ViewData["Title"] = T["Мои окна"];
     ViewData["Cabinet"] = "doctor";
     ViewData["Tab"] = "schedule";
 }
-<div class="cab-head"><div><h1>Мои окна</h1><p>Создайте свободное время для записи пациентов на несколько дней сразу</p></div></div>
+<div class="cab-head"><div><h1>@T["Мои окна"]</h1><p>@T["Создайте свободное время для записи пациентов на несколько дней сразу"]</p></div></div>
 <partial name="_GenerateScheduleForm" model="Model" />

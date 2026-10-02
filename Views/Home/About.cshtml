@@ -1,23 +1,23 @@
 @model List<Staff>
 @{
-    ViewData["Title"] = "О клинике";
+    ViewData["Title"] = T["О клинике"];
 }
 <div class="wrap">
     <div class="page-head">
-        <div class="crumbs"><a asp-controller="Home" asp-action="Index">Главная</a> / <span>О клинике</span></div>
-        <h1>Стоматология, в которую приятно возвращаться</h1>
-        <p class="lead">Мы строим клинику вокруг пациента: без боли, без спешки и без неожиданных счетов.</p>
+        <div class="crumbs"><a asp-controller="Home" asp-action="Index">@T["Главная"]</a> / <span>@T["О клинике"]</span></div>
+        <h1>@T["Стоматология, в которую приятно возвращаться"]</h1>
+        <p class="lead">@T["Мы строим клинику вокруг пациента: без боли, без спешки и без неожиданных счетов."]</p>
     </div>
 </div>
 
 <section class="section tight">
     <div class="wrap split">
-        <div class="split-photo reveal"><img src="~/img/office.jpg" alt="Кабинет клиники" loading="lazy"></div>
+        <div class="split-photo reveal"><img src="~/img/office.jpg" alt="@T["Кабинет клиники"]" loading="lazy"></div>
         <div class="reveal">
-            <span class="eyebrow">Наша миссия</span>
-            <h2>Сделать современную стоматологию доступной для всех</h2>
-            <p class="soft">Мы верим, что здоровая улыбка — залог уверенности и хорошего настроения. Поэтому используем малоинвазивные методики, диагностику под микроскопом и безопасные анестетики, чтобы лечение проходило комфортно, а зубы сохранялись как можно дольше.</p>
-            <p class="soft">Широкая сеть клиник позволяет закупать оборудование и материалы европейского качества по выгодным ценам — и делиться этой выгодой с пациентами.</p>
+            <span class="eyebrow">@T["Наша миссия"]</span>
+            <h2>@T["Сделать современную стоматологию доступной для всех"]</h2>
+            <p class="soft">@T["Мы верим, что здоровая улыбка — залог уверенности и хорошего настроения. Поэтому используем малоинвазивные методики, диагностику под микроскопом и безопасные анестетики, чтобы лечение проходило комфортно, а зубы сохранялись как можно дольше."]</p>
+            <p class="soft">@T["Широкая сеть клиник позволяет закупать оборудование и материалы европейского качества по выгодным ценам — и делиться этой выгодой с пациентами."]</p>
         </div>
     </div>
 </section>
@@ -25,17 +25,17 @@
 <section class="section tight">
     <div class="wrap">
         <div class="grid grid-4">
-            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-shield"/></svg></span><h4>Безопасность</h4><p class="soft" style="margin:0;font-size:.93rem">Одноразовые инструменты и трёхступенчатая стерилизация.</p></div>
-            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-scan"/></svg></span><h4>Технологии</h4><p class="soft" style="margin:0;font-size:.93rem">3D-томограф, микроскопы и цифровое сканирование без слепков.</p></div>
-            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-heart"/></svg></span><h4>Забота</h4><p class="soft" style="margin:0;font-size:.93rem">Индивидуальный план лечения и напоминания о визитах.</p></div>
-            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-award"/></svg></span><h4>Гарантия</h4><p class="soft" style="margin:0;font-size:.93rem">Письменная гарантия на лечение и бесплатные контрольные осмотры.</p></div>
+            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-shield"/></svg></span><h4>@T["Безопасность"]</h4><p class="soft" style="margin:0;font-size:.93rem">@T["Одноразовые инструменты и трёхступенчатая стерилизация."]</p></div>
+            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-scan"/></svg></span><h4>@T["Технологии"]</h4><p class="soft" style="margin:0;font-size:.93rem">@T["3D-томограф, микроскопы и цифровое сканирование без слепков."]</p></div>
+            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-heart"/></svg></span><h4>@T["Забота"]</h4><p class="soft" style="margin:0;font-size:.93rem">@T["Индивидуальный план лечения и напоминания о визитах."]</p></div>
+            <div class="card card-pad reveal"><span class="svc-icon" style="margin-bottom:14px"><svg class="ic"><use href="#i-award"/></svg></span><h4>@T["Гарантия"]</h4><p class="soft" style="margin:0;font-size:.93rem">@T["Письменная гарантия на лечение и бесплатные контрольные осмотры."]</p></div>
         </div>
     </div>
 </section>
 
 <section class="section">
     <div class="wrap">
-        <div class="section-head center"><span class="eyebrow">Специалисты</span><h2>Познакомьтесь с командой</h2></div>
+        <div class="section-head center"><span class="eyebrow">@T["Специалисты"]</span><h2>@T["Познакомьтесь с командой"]</h2></div>
         <div class="grid grid-3">
             @foreach (var d in Model) { <partial name="_DoctorCard" model="d" /> }
         </div>

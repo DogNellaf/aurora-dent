@@ -1,47 +1,47 @@
 @model Appointment
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Информация о записи";
+    ViewData["Title"] = T["Информация о записи"];
     ViewData["Cabinet"] = "client";
     ViewData["Tab"] = "records";
 }
 <div class="cab-head">
     <div>
-        <div class="crumbs"><a asp-action="Index">Мои записи</a> / <span>Приём</span></div>
-        <h1>Приём @Fmt.DayMonth(Model.StartAt), @Fmt.Time(Model.StartAt)</h1>
+        <div class="crumbs"><a asp-action="Index">@T["Мои записи"]</a> / <span>@T["Приём"]</span></div>
+        <h1>@T["Приём {0}, {1}", Fmt.DayMonth(Model.StartAt), Fmt.Time(Model.StartAt)]</h1>
     </div>
-    <span class="badge @(Model.IsPastAt(Clock.Now) ? "gray" : "ok")">@(Model.IsPastAt(Clock.Now) ? "Завершён" : "Предстоит")</span>
+    <span class="badge @(Model.IsPastAt(Clock.Now) ? "gray" : "ok")">@(Model.IsPastAt(Clock.Now) ? T["Завершён"] : T["Предстоит"])</span>
 </div>
 <div class="grid grid-2" style="align-items:start">
     <div class="card card-pad">
         <ul class="facts-list">
-            <li><span>Дата</span><b>@Fmt.Weekday(Model.StartAt), @Fmt.Date(Model.StartAt)</b></li>
-            <li><span>Время</span><b>@Fmt.Time(Model.StartAt) – @Fmt.Time(Model.EndAt)</b></li>
-            <li><span>Длительность</span><b>@Fmt.Minutes(Model.Duration)</b></li>
-            <li><span>Врач</span><b>@(Model.Staff?.DisplayName)<br><small class="muted">@(Model.Staff?.Specialty)</small></b></li>
-            <li><span>Услуги</span><b>@(Model.Services.Count > 0 ? string.Join(", ", Model.Services.Select(s => s.Title)) : "—")</b></li>
+            <li><span>@T["Дата"]</span><b>@Fmt.Weekday(Model.StartAt), @Fmt.Date(Model.StartAt)</b></li>
+            <li><span>@T["Время"]</span><b>@Fmt.Time(Model.StartAt) – @Fmt.Time(Model.EndAt)</b></li>
+            <li><span>@T["Длительность"]</span><b>@Fmt.Minutes(Model.Duration)</b></li>
+            <li><span>@T["Врач"]</span><b>@(Model.Staff?.DisplayName)<br><small class="muted">@T[Model.Staff?.Specialty ?? ""]</small></b></li>
+            <li><span>@T["Услуги"]</span><b>@T.ServiceList(Model.Services, "—")</b></li>
             @if (!string.IsNullOrEmpty(Model.DurationChangeReason))
             {
-                <li><span>Изменение длительности</span><b>@Model.DurationChangeReason</b></li>
+                <li><span>@T["Изменение длительности"]</span><b>@Model.DurationChangeReason</b></li>
             }
         </ul>
     </div>
     <div class="card card-pad">
-        <h3 style="display:flex;gap:10px;align-items:center"><svg class="ic" style="color:var(--teal)"><use href="#i-clipboard"/></svg> Рекомендации врача</h3>
+        <h3 style="display:flex;gap:10px;align-items:center"><svg class="ic" style="color:var(--teal)"><use href="#i-clipboard"/></svg> @T["Рекомендации врача"]</h3>
         @if (string.IsNullOrWhiteSpace(Model.Recommendation))
         {
-            <p class="muted">@(Model.IsPastAt(Clock.Now) ? "Врач не оставил рекомендаций." : "Рекомендации появятся после приёма.")</p>
+            <p class="muted">@(Model.IsPastAt(Clock.Now) ? T["Врач не оставил рекомендаций."] : T["Рекомендации появятся после приёма."])</p>
         }
         else
         {
-            <div class="note">@Model.Recommendation</div>
+            <div class="note">@T[Model.Recommendation]</div>
         }
     </div>
 </div>
 <p style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
-    <a class="btn btn-ghost" asp-action="Index">← Ко всем записям</a>
+    <a class="btn btn-ghost" asp-action="Index">@T["← Ко всем записям"]</a>
     @if (!Model.IsPastAt(Clock.Now))
     {
-        <a class="btn btn-ghost" asp-action="Calendar" asp-route-appointmentId="@Model.Id"><svg class="ic"><use href="#i-calendar"/></svg> Добавить в календарь</a>
+        <a class="btn btn-ghost" asp-action="Calendar" asp-route-appointmentId="@Model.Id"><svg class="ic"><use href="#i-calendar"/></svg> @T["Добавить в календарь"]</a>
     }
 </p>

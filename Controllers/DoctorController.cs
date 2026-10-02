@@ -101,7 +101,7 @@ namespace DentalClinic.Controllers
             appointment.Recommendation = (recommendation ?? string.Empty).Trim();
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Рекомендации сохранены и доступны пациенту в личном кабинете.";
+            TempData["Success"] = T["Рекомендации сохранены и доступны пациенту в личном кабинете."].Value;
             return returnTo == "detail"
                 ? RedirectToAction("Appointment", new { appointmentId })
                 : RedirectToAction("Index");
@@ -115,13 +115,13 @@ namespace DentalClinic.Controllers
 
             if (additionalMinutes <= 0 || additionalMinutes > 120)
             {
-                TempData["Error"] = "Укажите количество минут для продления от 1 до 120.";
+                TempData["Error"] = T["Укажите количество минут для продления от 1 до 120."].Value;
                 return RedirectToAction("Index");
             }
 
             if (appointment.IsPastAt(_clock.Now))
             {
-                TempData["Error"] = "Завершённый приём продлить нельзя.";
+                TempData["Error"] = T["Завершённый приём продлить нельзя."].Value;
                 return RedirectToAction("Index");
             }
 
@@ -129,7 +129,7 @@ namespace DentalClinic.Controllers
             appointment.DurationChangeReason = (reason ?? string.Empty).Trim();
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Приём продлён на {additionalMinutes} мин.";
+            TempData["Success"] = T["Приём продлён на {0} мин.", additionalMinutes].Value;
             return RedirectToAction("Index");
         }
 
@@ -144,14 +144,14 @@ namespace DentalClinic.Controllers
             var now = _clock.Now;
             if (!appointment.IsActiveAt(now))
             {
-                TempData["Error"] = "Завершить досрочно можно только идущий приём.";
+                TempData["Error"] = T["Завершить досрочно можно только идущий приём."].Value;
                 return RedirectToAction("Index");
             }
 
             appointment.Duration = (short)Math.Max(1, (int)(now - appointment.StartAt).TotalMinutes);
             appointment.DurationChangeReason = (reason ?? string.Empty).Trim();
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Приём завершён.";
+            TempData["Success"] = T["Приём завершён."].Value;
             return RedirectToAction("Index");
         }
 
@@ -212,11 +212,11 @@ namespace DentalClinic.Controllers
             var result = await _schedule.GenerateAsync(form);
             if (result.Status == GenerateStatus.Conflict)
             {
-                TempData["Error"] = "Расписание изменили одновременно. Повторите создание, существующие окна будут пропущены.";
+                TempData["Error"] = T["Расписание изменили одновременно. Повторите создание, существующие окна будут пропущены."].Value;
                 return RedirectToAction("Schedule");
             }
 
-            TempData["Success"] = $"Создано окон {result.Created}, уже существовало {result.SkippedExisting}.";
+            TempData["Success"] = T["Создано окон {0}, уже существовало {1}.", result.Created, result.SkippedExisting].Value;
             return RedirectToAction("Schedule");
         }
     }

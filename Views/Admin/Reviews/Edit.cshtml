@@ -1,18 +1,18 @@
 @model Review
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Редактирование отзыва";
+    ViewData["Title"] = T["Редактирование отзыва"];
     ViewData["Cabinet"] = "admin";
     ViewData["Tab"] = "reviews";
 }
-<div class="cab-head"><div><div class="crumbs"><a asp-action="Reviews">Отзывы</a> / <span>Редактирование</span></div><h1>Редактирование отзыва</h1></div></div>
+<div class="cab-head"><div><div class="crumbs"><a asp-action="Reviews">@T["Отзывы"]</a> / <span>@T["Редактирование"]</span></div><h1>@T["Редактирование отзыва"]</h1></div></div>
 <div class="card card-pad" style="max-width:720px">
     <form asp-action="ReviewUpdate" asp-route-reviewId="@Model.Id" method="post" novalidate>
         <div asp-validation-summary="ModelOnly"></div>
-        <div class="field"><label asp-for="Text">Текст отзыва</label><textarea asp-for="Text" rows="6"></textarea><span asp-validation-for="Text"></span></div>
+        <div class="field"><label asp-for="Text">@T["Текст отзыва"]</label><textarea asp-for="Text" rows="6"></textarea><span asp-validation-for="Text"></span></div>
         <div class="form-actions">
-            <button class="btn btn-primary" type="submit">Сохранить</button>
-            <a class="btn btn-ghost" asp-action="Reviews">Отмена</a>
+            <button class="btn btn-primary" type="submit">@T["Сохранить"]</button>
+            <a class="btn btn-ghost" asp-action="Reviews">@T["Отмена"]</a>
         </div>
     </form>
 </div>

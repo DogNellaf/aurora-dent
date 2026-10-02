@@ -1,49 +1,49 @@
 @model ScheduleViewModel
 @{
-    ViewData["Title"] = "Онлайн-запись";
+    ViewData["Title"] = T["Онлайн-запись"];
     var hasDoctor = Model.SelectedDoctor != null;
 }
 <div class="wrap">
     <div class="page-head">
-        <div class="crumbs"><a asp-controller="Home" asp-action="Index">Главная</a> / <span>Запись на приём</span></div>
-        <h1>Онлайн-запись</h1>
-        <p class="lead">Выберите услугу, врача и удобное время. Занимает меньше минуты.</p>
+        <div class="crumbs"><a asp-controller="Home" asp-action="Index">@T["Главная"]</a> / <span>@T["Запись на приём"]</span></div>
+        <h1>@T["Онлайн-запись"]</h1>
+        <p class="lead">@T["Выберите услугу, врача и удобное время. Занимает меньше минуты."]</p>
     </div>
 
     <div class="steps-nav">
-        <span class="step-pill @(Model.SelectedService != null ? "done" : "now")"><i>1</i> Услуга</span>
-        <span class="step-pill @(hasDoctor ? "done" : "now")"><i>2</i> Врач</span>
-        <span class="step-pill @(hasDoctor ? "now" : "")"><i>3</i> Время</span>
+        <span class="step-pill @(Model.SelectedService != null ? "done" : "now")"><i>1</i> @T["Услуга"]</span>
+        <span class="step-pill @(hasDoctor ? "done" : "now")"><i>2</i> @T["Врач"]</span>
+        <span class="step-pill @(hasDoctor ? "now" : "")"><i>3</i> @T["Время"]</span>
     </div>
 
     @if (!Model.IsAuthenticated)
     {
         <div class="note warm" style="margin-bottom:28px">
-            <b>Свободное время видно всем.</b> Чтобы записаться, <a asp-controller="Auth" asp-action="LoginPage" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">войдите</a> или
-            <a asp-controller="Auth" asp-action="Registration">зарегистрируйтесь</a> — это займёт 30 секунд.
+            <b>@T["Свободное время видно всем."]</b> @T["Чтобы записаться,"] <a asp-controller="Auth" asp-action="LoginPage" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">@T["войдите"]</a> @T["или"]
+            <a asp-controller="Auth" asp-action="Registration">@T["зарегистрируйтесь"]</a> @T["— это займёт 30 секунд."]
         </div>
     }
     else if (!Model.CanBook)
     {
-        <div class="note warm" style="margin-bottom:28px">Вы вошли как сотрудник клиники. Записаться на приём можно только с аккаунта пациента.</div>
+        <div class="note warm" style="margin-bottom:28px">@T["Вы вошли как сотрудник клиники. Записаться на приём можно только с аккаунта пациента."]</div>
     }
 
-    <h3 class="group-title">1. Что будем лечить? <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:600">(необязательно)</span></h3>
+    <h3 class="group-title">@T["1. Что будем лечить?"] <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:600">@T["(необязательно)"]</span></h3>
     <div class="pick" style="margin-bottom:36px">
-        <a class="@(Model.ServiceId == null ? "active" : "")" asp-action="Schedule"><span class="svc-icon"><svg class="ic"><use href="#i-grid"/></svg></span> Любая услуга</a>
+        <a class="@(Model.ServiceId == null ? "active" : "")" asp-action="Schedule"><span class="svc-icon"><svg class="ic"><use href="#i-grid"/></svg></span> @T["Любая услуга"]</a>
         @foreach (var s in Model.Services)
         {
             <a class="@(Model.ServiceId == s.Id ? "active" : "")" asp-action="Schedule" asp-route-serviceId="@s.Id">
                 <span class="svc-icon"><partial name="_ServiceIcon" model="s.Icon" /></span>
-                <span>@s.Title<small>@(s.Price > 0 ? "от " : "")@Fmt.Money(s.Price)</small></span>
+                <span>@T[s.Title]<small>@(s.Price > 0 ? T["от "] : "")@Fmt.Money(s.Price)</small></span>
             </a>
         }
     </div>
 
-    <h3 class="group-title">2. Выберите врача</h3>
+    <h3 class="group-title">@T["2. Выберите врача"]</h3>
     @if (Model.Doctors.Count == 0)
     {
-        <div class="card empty"><svg class="ic"><use href="#i-user"/></svg><h3>Врачей не найдено</h3><p>Для этой услуги пока нет специалистов. Выберите другую услугу.</p></div>
+        <div class="card empty"><svg class="ic"><use href="#i-user"/></svg><h3>@T["Врачей не найдено"]</h3><p>@T["Для этой услуги пока нет специалистов. Выберите другую услугу."]</p></div>
     }
     <div class="list" style="margin-bottom:36px">
         @foreach (var d in Model.Doctors)
@@ -52,21 +52,21 @@
             <div class="card sched-doc" @(selected ? "style=border-color:var(--teal);box-shadow:var(--shadow)" : "")>
                 @if (!string.IsNullOrEmpty(d.Doctor.PhotoUrl)) { <img src="@d.Doctor.PhotoUrl" alt="@d.Doctor.DisplayName" loading="lazy"> } else { <div class="doc-fallback">@Fmt.Initials(d.Doctor.DisplayName)</div> }
                 <div>
-                    <h3>@d.Doctor.DisplayName</h3>
-                    <div class="soft">@d.Doctor.Specialty · стаж @Fmt.Years(d.Doctor.ExperienceYears)</div>
+                    <h3>@T[d.Doctor.DisplayName]</h3>
+                    <div class="soft">@T[d.Doctor.Specialty] · @T["стаж {0}", Fmt.Years(d.Doctor.ExperienceYears)]</div>
                     <div style="margin-top:8px">
                         @if (d.NextSlot != null)
                         {
-                            <span class="badge ok"><svg class="ic"><use href="#i-clock"/></svg> Ближайшее: @Fmt.DayMonth(d.NextSlot.StartAt), @Fmt.Time(d.NextSlot.StartAt)</span>
-                            <span class="badge gray">@d.FreeCount свободных окон</span>
+                            <span class="badge ok"><svg class="ic"><use href="#i-clock"/></svg> @T["Ближайшее: {0}, {1}", Fmt.DayMonth(d.NextSlot.StartAt), Fmt.Time(d.NextSlot.StartAt)]</span>
+                            <span class="badge gray">@T["свободных окон: {0}", d.FreeCount]</span>
                         }
                         else
                         {
-                            <span class="badge gray">Нет свободного времени</span>
+                            <span class="badge gray">@T["Нет свободного времени"]</span>
                         }
                     </div>
                 </div>
-                <a class="btn @(selected ? "btn-primary" : "btn-ghost")" asp-action="Schedule" asp-route-serviceId="@Model.ServiceId" asp-route-staffId="@d.Doctor.Id" asp-fragment="time">Выбрать время</a>
+                <a class="btn @(selected ? "btn-primary" : "btn-ghost")" asp-action="Schedule" asp-route-serviceId="@Model.ServiceId" asp-route-staffId="@d.Doctor.Id" asp-fragment="time">@T["Выбрать время"]</a>
             </div>
         }
     </div>
@@ -74,15 +74,15 @@
     @if (hasDoctor)
     {
         <div id="time" style="padding-bottom:70px">
-            <h3 class="group-title">3. Выберите время — @Model.SelectedDoctor!.DisplayName</h3>
+            <h3 class="group-title">@T["3. Выберите время"] — @Model.SelectedDoctor!.DisplayName</h3>
             @if (Model.Days.Count == 0)
             {
-                <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>Свободного времени нет</h3><p>Попробуйте другого врача или зайдите позже.</p></div>
+                <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>@T["Свободного времени нет"]</h3><p>@T["Попробуйте другого врача или зайдите позже."]</p></div>
             }
             @foreach (var day in Model.Days)
             {
                 <div class="day reveal in">
-                    <h4>@Fmt.WeekdayCap(day.Key), @Fmt.DayMonth(day.Key) <small>@day.Count() окон</small></h4>
+                    <h4>@Fmt.WeekdayCap(day.Key), @Fmt.DayMonth(day.Key) <small>@T["окон: {0}", day.Count()]</small></h4>
                     <div class="slots">
                         @foreach (var slot in day)
                         {
@@ -91,7 +91,7 @@
                                 <form asp-controller="Home" asp-action="Book" method="post">
                                     <input type="hidden" name="appointmentId" value="@slot.Id">
                                     <input type="hidden" name="serviceId" value="@Model.ServiceId">
-                                    <button class="slot" type="submit" title="Записаться на @Fmt.Time(slot.StartAt)">@Fmt.Time(slot.StartAt)</button>
+                                    <button class="slot" type="submit" title="@T["Записаться на {0}", Fmt.Time(slot.StartAt)]">@Fmt.Time(slot.StartAt)</button>
                                 </form>
                             }
                             else

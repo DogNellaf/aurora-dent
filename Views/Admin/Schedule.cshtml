@@ -1,9 +1,9 @@
 @model GenerateScheduleViewModel
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Создание расписания";
+    ViewData["Title"] = T["Создание расписания"];
     ViewData["Cabinet"] = "admin";
     ViewData["Tab"] = "appointments";
 }
-<div class="cab-head"><div><div class="crumbs"><a asp-action="Index">Приёмы</a> / <span>Создание расписания</span></div><h1>Создание расписания</h1><p>Свободное время сразу на несколько дней для одного или всех врачей</p></div></div>
+<div class="cab-head"><div><div class="crumbs"><a asp-action="Index">@T["Приёмы"]</a> / <span>@T["Создание расписания"]</span></div><h1>@T["Создание расписания"]</h1><p>@T["Свободное время сразу на несколько дней для одного или всех врачей"]</p></div></div>
 <partial name="_GenerateScheduleForm" model="Model" />

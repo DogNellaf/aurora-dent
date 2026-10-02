@@ -2,14 +2,14 @@
 @{
     Layout = "_CabinetLayout";
     var filter = ViewBag.Filter as string ?? "upcoming";
-    ViewData["Title"] = filter == "past" ? "История приёмов" : "Предстоящие приёмы";
+    ViewData["Title"] = filter == "past" ? T["История приёмов"] : T["Предстоящие приёмы"];
     ViewData["Cabinet"] = "doctor";
     ViewData["Tab"] = filter;
 }
-<div class="cab-head"><div><h1>@ViewData["Title"]</h1><p>@Model.Total записей</p></div></div>
+<div class="cab-head"><div><h1>@ViewData["Title"]</h1><p>@T["записей: {0}", Model.Total]</p></div></div>
 @if (Model.Items.Count == 0)
 {
-    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>Приёмов не найдено</h3></div>
+    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>@T["Приёмов не найдено"]</h3></div>
 }
 else
 {
@@ -23,11 +23,11 @@ else
                     <h4>@r.ClientName</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Weekday(a.StartAt), @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
-                        <span>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</span>
-                        @if (!string.IsNullOrEmpty(a.Recommendation)) { <span class="badge ok">Рекомендации оставлены</span> }
+                        <span>@T.ServiceList(a.Services)</span>
+                        @if (!string.IsNullOrEmpty(a.Recommendation)) { <span class="badge ok">@T["Рекомендации оставлены"]</span> }
                     </div>
                 </div>
-                <div class="appt-actions"><a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">Открыть</a></div>
+                <div class="appt-actions"><a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">@T["Открыть"]</a></div>
             </div>
         }
     </div>

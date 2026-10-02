@@ -38,7 +38,7 @@ namespace DentalClinic.Controllers
         {
             if (!await _reviews.SetVisibleAsync(reviewId, true)) return NotFound();
 
-            TempData["Success"] = "Отзыв опубликован на сайте.";
+            TempData["Success"] = T["Отзыв опубликован на сайте."].Value;
             return RedirectToAction("HiddenReviews");
         }
 
@@ -47,7 +47,7 @@ namespace DentalClinic.Controllers
         {
             if (!await _reviews.SetVisibleAsync(reviewId, false)) return NotFound();
 
-            TempData["Success"] = "Отзыв скрыт с сайта.";
+            TempData["Success"] = T["Отзыв скрыт с сайта."].Value;
             return RedirectToAction("Index");
         }
     }

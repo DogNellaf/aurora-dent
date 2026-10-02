@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using DentalClinic.Infrastructure;
+using DentalClinic.Localization;
 using DentalClinic.Models;
 using DentalClinic.Models.ViewModels;
 using DentalClinic.Services;
@@ -17,6 +19,23 @@ namespace DentalClinic.Controllers
         {
             _schedule = schedule;
             _booking = booking;
+        }
+
+        /// <summary>Remembers the language in a cookie and returns to the page the visitor came from.</summary>
+        [HttpPost("language")]
+        public IActionResult SetLanguage(string language, string? returnUrl)
+        {
+            var chosen = Languages.Find(language);
+            Response.Cookies.Append(Languages.CookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(chosen.Culture)),
+                new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddYears(1),
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Lax,
+                    Secure = Request.IsHttps
+                });
+            return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/");
         }
 
         [HttpGet("")]
@@ -81,7 +100,7 @@ namespace DentalClinic.Controllers
 
             if (!profile.IsClient)
             {
-                TempData["Error"] = "Записаться на приём можно только с аккаунта пациента.";
+                TempData["Error"] = T["Записаться на приём можно только с аккаунта пациента."].Value;
                 return RedirectToAction("Schedule", new { serviceId });
             }
 
@@ -89,15 +108,15 @@ namespace DentalClinic.Controllers
             switch (result.Status)
             {
                 case BookingStatus.Booked:
-                    TempData["Success"] = "Вы записаны на приём. Подтверждение отправлено на почту.";
+                    TempData["Success"] = T["Вы записаны на приём. Подтверждение отправлено на почту."].Value;
                     return RedirectToAction("Index", "Client");
                 case BookingStatus.NotFound:
                     return NotFound();
                 case BookingStatus.InThePast:
-                    TempData["Error"] = "Это время уже прошло. Выберите другое.";
+                    TempData["Error"] = T["Это время уже прошло. Выберите другое."].Value;
                     break;
                 default:
-                    TempData["Error"] = "Это время только что заняли. Пожалуйста, выберите другое.";
+                    TempData["Error"] = T["Это время только что заняли. Пожалуйста, выберите другое."].Value;
                     break;
             }
 

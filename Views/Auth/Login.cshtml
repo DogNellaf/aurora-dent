@@ -1,16 +1,16 @@
 @model DentalClinic.Models.DTO.LoginViewModel
 @{
-    ViewData["Title"] = "Вход";
+    ViewData["Title"] = T["Вход"];
 }
 <div class="auth">
     <div class="auth-aside" style="background-image:url('/img/office.jpg')">
-        <h2>С возвращением!</h2>
-        <p>В личном кабинете — ваши записи, история лечения и рекомендации врача.</p>
+        <h2>@T["С возвращением!"]</h2>
+        <p>@T["В личном кабинете — ваши записи, история лечения и рекомендации врача."]</p>
     </div>
     <div class="auth-main">
         <div class="auth-box">
-            <h1>Вход</h1>
-            <p class="soft">Нет аккаунта? <a asp-action="Registration">Зарегистрируйтесь</a></p>
+            <h1>@T["Вход"]</h1>
+            <p class="soft">@T["Нет аккаунта?"] <a asp-action="Registration">@T["Зарегистрируйтесь"]</a></p>
             <form asp-controller="Auth" asp-action="Login" method="post" novalidate>
                 <div asp-validation-summary="ModelOnly"></div>
                 <input type="hidden" asp-for="ReturnUrl" />
@@ -20,28 +20,28 @@
                     <span asp-validation-for="Email"></span>
                 </div>
                 <div class="field">
-                    <label asp-for="Password">Пароль</label>
+                    <label asp-for="Password">@T["Пароль"]</label>
                     <input asp-for="Password" autocomplete="current-password" />
                     <span asp-validation-for="Password"></span>
                 </div>
                 <div class="field" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
-                    <label class="check"><input asp-for="RememberMe" /> Запомнить меня</label>
-                    <a asp-action="Forgot">Забыли пароль?</a>
+                    <label class="check"><input asp-for="RememberMe" /> @T["Запомнить меня"]</label>
+                    <a asp-action="Forgot">@T["Забыли пароль?"]</a>
                 </div>
-                <button class="btn btn-primary btn-lg btn-block" type="submit">Войти</button>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">@T["Войти"]</button>
             </form>
 
             @if (ViewData["ShowDemoAccounts"] is true)
             {
                 <div class="demo-box">
-                    <b>Демо-доступ — нажмите, чтобы войти</b>
+                    <b>@T["Демо-доступ — нажмите, чтобы войти"]</b>
                     <div class="demo-list">
-                        <button type="button" data-demo-email="client@clinic.demo">Пациент <em>client@clinic.demo</em></button>
-                        <button type="button" data-demo-email="doctor@clinic.demo">Врач <em>doctor@clinic.demo</em></button>
-                        <button type="button" data-demo-email="manager@clinic.demo">Менеджер <em>manager@clinic.demo</em></button>
-                        <button type="button" data-demo-email="admin@clinic.demo">Администратор <em>admin@clinic.demo</em></button>
+                        <button type="button" data-demo-email="client@clinic.demo">@T["Пациент"] <em>client@clinic.demo</em></button>
+                        <button type="button" data-demo-email="doctor@clinic.demo">@T["Врач"] <em>doctor@clinic.demo</em></button>
+                        <button type="button" data-demo-email="manager@clinic.demo">@T["Менеджер"] <em>manager@clinic.demo</em></button>
+                        <button type="button" data-demo-email="admin@clinic.demo">@T["Администратор"] <em>admin@clinic.demo</em></button>
                     </div>
-                    <div class="muted" style="margin-top:8px">Пароль для всех: Demo123!</div>
+                    <div class="muted" style="margin-top:8px">@T["Пароль для всех: Demo123!"]</div>
                 </div>
             }
         </div>

@@ -20,15 +20,17 @@ namespace DentalClinic.Models
         /// <summary>Banned accounts keep their data but cannot sign in. Stored separately from Identity's EmailConfirmed.</summary>
         public bool IsBanned { get; set; }
 
-        public string DisplayName => string.IsNullOrWhiteSpace(FullName) ? (UserName ?? string.Empty) : FullName;
+        /// <summary>Names of the demo people have a translation, names typed by users are shown as entered.</summary>
+        public string DisplayName => DentalClinic.Localization.Translations.Get(string.IsNullOrWhiteSpace(FullName) ? (UserName ?? string.Empty) : FullName);
 
         /// <summary>"Анна К." — used for public reviews so patients are not fully identified.</summary>
         public string PublicName
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(FullName)) return "Пациент клиники";
-                var parts = FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (string.IsNullOrWhiteSpace(FullName)) return DentalClinic.Localization.Translations.Get("Пациент клиники");
+                // Names of the demo patients have a translation, names typed by users are shown as entered.
+                var parts = DentalClinic.Localization.Translations.Get(FullName).Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 return parts.Length > 1 ? $"{parts[0]} {parts[1][0]}." : parts[0];
             }
         }

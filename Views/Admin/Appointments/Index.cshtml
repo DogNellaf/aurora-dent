@@ -1,37 +1,37 @@
 @model Paged<AppointmentRow>
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Приёмы";
+    ViewData["Title"] = T["Приёмы"];
     ViewData["Cabinet"] = "admin";
     ViewData["Tab"] = "appointments";
     var filter = ViewBag.Filter as string ?? "upcoming";
 }
 <div class="cab-head">
-    <div><h1>Приёмы</h1><p>Расписание всех врачей</p></div>
+    <div><h1>@T["Приёмы"]</h1><p>@T["Расписание всех врачей"]</p></div>
     <div class="appt-actions">
-        <a class="btn btn-ghost" asp-action="Schedule"><svg class="ic"><use href="#i-calendar"/></svg> Создать расписание</a>
-        <a class="btn btn-primary" asp-action="AppointmentCreate"><svg class="ic"><use href="#i-plus"/></svg> Новое окно</a>
+        <a class="btn btn-ghost" asp-action="Schedule"><svg class="ic"><use href="#i-calendar"/></svg> @T["Создать расписание"]</a>
+        <a class="btn btn-primary" asp-action="AppointmentCreate"><svg class="ic"><use href="#i-plus"/></svg> @T["Новое окно"]</a>
     </div>
 </div>
 <div class="tabs">
-    <a class="@(filter == "upcoming" ? "active" : "")" asp-action="Index">Записи впереди</a>
-    <a class="@(filter == "free" ? "active" : "")" asp-action="Index" asp-route-filter="free">Свободные окна</a>
-    <a class="@(filter == "past" ? "active" : "")" asp-action="Index" asp-route-filter="past">Прошедшие</a>
+    <a class="@(filter == "upcoming" ? "active" : "")" asp-action="Index">@T["Записи впереди"]</a>
+    <a class="@(filter == "free" ? "active" : "")" asp-action="Index" asp-route-filter="free">@T["Свободные окна"]</a>
+    <a class="@(filter == "past" ? "active" : "")" asp-action="Index" asp-route-filter="past">@T["Прошедшие"]</a>
 </div>
 <form class="toolbar" method="get" asp-action="Index">
     <input type="hidden" name="filter" value="@filter" />
-    <input class="input" type="search" name="q" value="@(ViewBag.Query as string)" placeholder="Поиск по врачу или пациенту" aria-label="Поиск" />
-    <button class="btn btn-ghost" type="submit">Найти</button>
+    <input class="input" type="search" name="q" value="@(ViewBag.Query as string)" placeholder="@T["Поиск по врачу или пациенту"]" aria-label="@T["Поиск"]" />
+    <button class="btn btn-ghost" type="submit">@T["Найти"]</button>
 </form>
 @if (Model.Items.Count == 0)
 {
-    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>Ничего не найдено</h3></div>
+    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>@T["Ничего не найдено"]</h3></div>
 }
 else
 {
     <div class="card table-wrap">
         <table class="table">
-            <thead><tr><th>Дата и время</th><th>Врач</th><th>Пациент</th><th></th></tr></thead>
+            <thead><tr><th>@T["Дата и время"]</th><th>@T["Врач"]</th><th>@T["Пациент"]</th><th></th></tr></thead>
             <tbody>
             @foreach (var r in Model.Items)
             {
@@ -39,12 +39,12 @@ else
                 <tr>
                     <td><b>@Fmt.DateTimeShort(a.StartAt)</b><br><small class="muted">#@a.Id · @Fmt.Minutes(a.Duration)</small></td>
                     <td>@a.Staff?.DisplayName</td>
-                    <td>@if (a.IsBooked) { @r.ClientName } else { <span class="badge ok">Свободно</span> }</td>
+                    <td>@if (a.IsBooked) { @r.ClientName } else { <span class="badge ok">@T["Свободно"]</span> }</td>
                     <td>
                         <div class="actions">
-                            <a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id"><svg class="ic"><use href="#i-edit"/></svg> Изменить</a>
-                            <form asp-action="AppointmentDelete" asp-route-appointmentId="@a.Id" method="post" data-confirm="Удалить приём #@a.Id?">
-                                <button class="btn btn-danger btn-sm" type="submit" aria-label="Удалить"><svg class="ic"><use href="#i-trash"/></svg></button>
+                            <a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id"><svg class="ic"><use href="#i-edit"/></svg> @T["Изменить"]</a>
+                            <form asp-action="AppointmentDelete" asp-route-appointmentId="@a.Id" method="post" data-confirm="@T["Удалить приём #{0}?", a.Id]">
+                                <button class="btn btn-danger btn-sm" type="submit" aria-label="@T["Удалить"]"><svg class="ic"><use href="#i-trash"/></svg></button>
                             </form>
                         </div>
                     </td>

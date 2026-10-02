@@ -1,5 +1,5 @@
 @model int
-<span class="stars" aria-label="Оценка @Model из 5">
+<span class="stars" aria-label="@T["Оценка {0} из 5", Model]">
     @for (var i = 1; i <= 5; i++)
     {
         <svg class="ic fill @(i > Model ? "off" : "")"><use href="#i-star"/></svg>

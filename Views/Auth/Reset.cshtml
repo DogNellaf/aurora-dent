@@ -1,22 +1,22 @@
 @model DentalClinic.Models.DTO.ResetPasswordModel
 @{
-    ViewData["Title"] = "Новый пароль";
+    ViewData["Title"] = T["Новый пароль"];
 }
 <div class="auth">
     <div class="auth-aside" style="background-image:url('/img/smile.jpg')">
-        <h2>Новый пароль</h2>
-        <p>Придумайте пароль не короче шести символов, он понадобится при следующем входе.</p>
+        <h2>@T["Новый пароль"]</h2>
+        <p>@T["Придумайте пароль не короче шести символов, он понадобится при следующем входе."]</p>
     </div>
     <div class="auth-main">
         <div class="auth-box">
-            <h1>Новый пароль</h1>
+            <h1>@T["Новый пароль"]</h1>
             <form asp-action="Reset" method="post" novalidate>
                 <div asp-validation-summary="ModelOnly"></div>
                 <input type="hidden" asp-for="Email" />
                 <input type="hidden" asp-for="Token" />
-                <div class="field"><label asp-for="Password">Пароль</label><input asp-for="Password" autocomplete="new-password" /><span asp-validation-for="Password"></span></div>
-                <div class="field"><label asp-for="ConfirmPassword">Повтор пароля</label><input asp-for="ConfirmPassword" autocomplete="new-password" /><span asp-validation-for="ConfirmPassword"></span></div>
-                <button class="btn btn-primary btn-lg btn-block" type="submit">Сохранить пароль</button>
+                <div class="field"><label asp-for="Password">@T["Пароль"]</label><input asp-for="Password" autocomplete="new-password" /><span asp-validation-for="Password"></span></div>
+                <div class="field"><label asp-for="ConfirmPassword">@T["Повтор пароля"]</label><input asp-for="ConfirmPassword" autocomplete="new-password" /><span asp-validation-for="ConfirmPassword"></span></div>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">@T["Сохранить пароль"]</button>
             </form>
         </div>
     </div>

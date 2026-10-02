@@ -14,35 +14,35 @@
                 <small>@(profile == null ? "" : Fmt.RoleName(profile))</small>
             </div>
         </div>
-        <nav class="side-nav" aria-label="Кабинет">
+        <nav class="side-nav" aria-label="@T["Кабинет"]">
             @switch (kind)
             {
                 case "client":
-                    <a class="@A("records")" asp-controller="Client" asp-action="Index"><svg class="ic"><use href="#i-calendar"/></svg> Мои записи</a>
-                    <a class="@A("review")" asp-controller="Client" asp-action="Review"><svg class="ic"><use href="#i-message"/></svg> Мой отзыв</a>
-                    <a asp-controller="Home" asp-action="Schedule"><svg class="ic"><use href="#i-plus"/></svg> Новая запись</a>
+                    <a class="@A("records")" asp-controller="Client" asp-action="Index"><svg class="ic"><use href="#i-calendar"/></svg> @T["Мои записи"]</a>
+                    <a class="@A("review")" asp-controller="Client" asp-action="Review"><svg class="ic"><use href="#i-message"/></svg> @T["Мой отзыв"]</a>
+                    <a asp-controller="Home" asp-action="Schedule"><svg class="ic"><use href="#i-plus"/></svg> @T["Новая запись"]</a>
                     break;
                 case "doctor":
-                    <a class="@A("today")" asp-controller="Doctor" asp-action="Index"><svg class="ic"><use href="#i-grid"/></svg> Сегодня</a>
-                    <a class="@A("upcoming")" asp-controller="Doctor" asp-action="Appointments"><svg class="ic"><use href="#i-calendar"/></svg> Предстоящие</a>
-                    <a class="@A("past")" asp-controller="Doctor" asp-action="Appointments" asp-route-filter="past"><svg class="ic"><use href="#i-clipboard"/></svg> История приёмов</a>
-                    <a class="@A("schedule")" asp-controller="Doctor" asp-action="Schedule"><svg class="ic"><use href="#i-clock"/></svg> Мои окна</a>
+                    <a class="@A("today")" asp-controller="Doctor" asp-action="Index"><svg class="ic"><use href="#i-grid"/></svg> @T["Сегодня"]</a>
+                    <a class="@A("upcoming")" asp-controller="Doctor" asp-action="Appointments"><svg class="ic"><use href="#i-calendar"/></svg> @T["Предстоящие"]</a>
+                    <a class="@A("past")" asp-controller="Doctor" asp-action="Appointments" asp-route-filter="past"><svg class="ic"><use href="#i-clipboard"/></svg> @T["История приёмов"]</a>
+                    <a class="@A("schedule")" asp-controller="Doctor" asp-action="Schedule"><svg class="ic"><use href="#i-clock"/></svg> @T["Мои окна"]</a>
                     break;
                 case "manager":
                     var pending = ViewBag.PendingCount as int? ?? 0;
-                    <a class="@A("pending")" asp-controller="Manager" asp-action="HiddenReviews"><svg class="ic"><use href="#i-clock"/></svg> На модерации @if (pending > 0) {<span class="count">@pending</span>}</a>
-                    <a class="@A("published")" asp-controller="Manager" asp-action="Index"><svg class="ic"><use href="#i-check"/></svg> Опубликованные</a>
+                    <a class="@A("pending")" asp-controller="Manager" asp-action="HiddenReviews"><svg class="ic"><use href="#i-clock"/></svg> @T["На модерации"] @if (pending > 0) {<span class="count">@pending</span>}</a>
+                    <a class="@A("published")" asp-controller="Manager" asp-action="Index"><svg class="ic"><use href="#i-check"/></svg> @T["Опубликованные"]</a>
                     break;
                 case "admin":
-                    <a class="@A("overview")" asp-controller="Admin" asp-action="Overview"><svg class="ic"><use href="#i-grid"/></svg> Обзор</a>
-                    <a class="@A("appointments")" asp-controller="Admin" asp-action="Index"><svg class="ic"><use href="#i-calendar"/></svg> Приёмы</a>
-                    <a class="@A("profiles")" asp-controller="Admin" asp-action="Profiles"><svg class="ic"><use href="#i-users"/></svg> Профили</a>
-                    <a class="@A("reviews")" asp-controller="Admin" asp-action="Reviews"><svg class="ic"><use href="#i-message"/></svg> Отзывы</a>
+                    <a class="@A("overview")" asp-controller="Admin" asp-action="Overview"><svg class="ic"><use href="#i-grid"/></svg> @T["Обзор"]</a>
+                    <a class="@A("appointments")" asp-controller="Admin" asp-action="Index"><svg class="ic"><use href="#i-calendar"/></svg> @T["Приёмы"]</a>
+                    <a class="@A("profiles")" asp-controller="Admin" asp-action="Profiles"><svg class="ic"><use href="#i-users"/></svg> @T["Профили"]</a>
+                    <a class="@A("reviews")" asp-controller="Admin" asp-action="Reviews"><svg class="ic"><use href="#i-message"/></svg> @T["Отзывы"]</a>
                     break;
             }
-            <a class="@A("profile")" asp-controller="Account" asp-action="Index"><svg class="ic"><use href="#i-user"/></svg> Профиль</a>
+            <a class="@A("profile")" asp-controller="Account" asp-action="Index"><svg class="ic"><use href="#i-user"/></svg> @T["Профиль"]</a>
             <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:8px 0 0">
-                <button class="btn btn-ghost btn-sm btn-block" type="submit"><svg class="ic"><use href="#i-logout"/></svg> Выйти</button>
+                <button class="btn btn-ghost btn-sm btn-block" type="submit"><svg class="ic"><use href="#i-logout"/></svg> @T["Выйти"]</button>
             </form>
         </nav>
     </aside>

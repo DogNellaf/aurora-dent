@@ -1,3 +1,4 @@
+using DentalClinic.Localization;
 using System.ComponentModel.DataAnnotations;
 
 namespace DentalClinic.Models.DTO
@@ -38,13 +39,13 @@ namespace DentalClinic.Models.DTO
             if (From is { } from && To is { } to)
             {
                 if (to < from)
-                    yield return new ValidationResult("Последний день раньше первого", new[] { nameof(To) });
+                    yield return new ValidationResult(Translations.Get("Последний день раньше первого"), new[] { nameof(To) });
                 else if ((to - from).TotalDays + 1 > MaxDays)
-                    yield return new ValidationResult($"Не более {MaxDays} дней за один раз", new[] { nameof(To) });
+                    yield return new ValidationResult(string.Format(Translations.Get("Не более {0} дней за один раз"), MaxDays), new[] { nameof(To) });
             }
 
             if (StartTime is { } start && EndTime is { } end && end <= start)
-                yield return new ValidationResult("Конец работы должен быть позже начала", new[] { nameof(EndTime) });
+                yield return new ValidationResult(Translations.Get("Конец работы должен быть позже начала"), new[] { nameof(EndTime) });
         }
     }
 }

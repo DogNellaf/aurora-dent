@@ -11,13 +11,13 @@
         }
         @if (Model.ExperienceYears > 0)
         {
-            <span class="badge"><svg class="ic"><use href="#i-award"/></svg> Стаж @Fmt.Years(Model.ExperienceYears)</span>
+            <span class="badge"><svg class="ic"><use href="#i-award"/></svg> @T["Стаж {0}", Fmt.Years(Model.ExperienceYears)]</span>
         }
     </div>
     <div class="doc-body">
-        <h3>@Model.DisplayName</h3>
-        <span class="role">@Model.Specialty</span>
-        <p>@Model.Bio</p>
-        <a class="btn btn-primary btn-sm" asp-controller="Home" asp-action="Schedule" asp-route-staffId="@Model.Id">Записаться <svg class="ic"><use href="#i-arrow"/></svg></a>
+        <h3>@T[Model.DisplayName]</h3>
+        <span class="role">@T[Model.Specialty]</span>
+        <p>@T[Model.Bio]</p>
+        <a class="btn btn-primary btn-sm" asp-controller="Home" asp-action="Schedule" asp-route-staffId="@Model.Id">@T["Записаться"] <svg class="ic"><use href="#i-arrow"/></svg></a>
     </div>
 </article>

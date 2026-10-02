@@ -1,79 +1,79 @@
 @model DoctorDashboard
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Кабинет врача";
+    ViewData["Title"] = T["Кабинет врача"];
     ViewData["Cabinet"] = "doctor";
     ViewData["Tab"] = "today";
     var cur = Model.Current?.Appointment;
     var pct = cur == null ? 0 : Math.Clamp((int)((Clock.Now - cur.StartAt).TotalMinutes * 100 / Math.Max(1, (int)cur.Duration)), 0, 100);
 }
 <div class="cab-head">
-    <div><h1>@Model.Staff.DisplayName</h1><p>@Model.Staff.Specialty · сегодня @Fmt.DayMonth(Clock.Now)</p></div>
+    <div><h1>@T[Model.Staff.DisplayName]</h1><p>@T[Model.Staff.Specialty] · @T["сегодня {0}", Fmt.DayMonth(Clock.Now)]</p></div>
 </div>
 
 <div class="stat-cards">
-    <div class="card stat-card"><span class="ico"><svg class="ic"><use href="#i-calendar"/></svg></span><div><b>@Model.Today.Count</b><span>приёмов сегодня</span></div></div>
-    <div class="card stat-card"><span class="ico c"><svg class="ic"><use href="#i-clock"/></svg></span><div><b>@Model.UpcomingCount</b><span>предстоящих всего</span></div></div>
-    <div class="card stat-card"><span class="ico g"><svg class="ic"><use href="#i-users"/></svg></span><div><b>@Model.PatientsCount</b><span>пациентов</span></div></div>
+    <div class="card stat-card"><span class="ico"><svg class="ic"><use href="#i-calendar"/></svg></span><div><b>@Model.Today.Count</b><span>@T["приёмов сегодня"]</span></div></div>
+    <div class="card stat-card"><span class="ico c"><svg class="ic"><use href="#i-clock"/></svg></span><div><b>@Model.UpcomingCount</b><span>@T["предстоящих всего"]</span></div></div>
+    <div class="card stat-card"><span class="ico g"><svg class="ic"><use href="#i-users"/></svg></span><div><b>@Model.PatientsCount</b><span>@T["пациентов"]</span></div></div>
 </div>
 
 @if (Model.Current != null && cur != null)
 {
     <div class="live">
-        <span class="pulse">Идёт приём</span>
+        <span class="pulse">@T["Идёт приём"]</span>
         <h2>@Model.Current.ClientName</h2>
         <div class="facts">
-            <div><b>@Fmt.Time(cur.StartAt) – @Fmt.Time(cur.EndAt)</b>время приёма</div>
-            <div><b>@Fmt.Minutes(cur.Duration)</b>длительность</div>
-            <div><b>@(cur.Services.Count > 0 ? string.Join(", ", cur.Services.Select(s => s.Title)) : "Приём врача")</b>услуга</div>
+            <div><b>@Fmt.Time(cur.StartAt) – @Fmt.Time(cur.EndAt)</b>@T["время приёма"]</div>
+            <div><b>@Fmt.Minutes(cur.Duration)</b>@T["длительность"]</div>
+            <div><b>@T.ServiceList(cur.Services)</b>@T["услуга"]</div>
         </div>
         <div class="progress"><i style="width:@(pct)%"></i></div>
-        <div style="margin-top:20px"><a class="btn btn-light btn-sm" asp-action="ClientRecord" asp-route-clientId="@cur.ClientId"><svg class="ic"><use href="#i-clipboard"/></svg> Карта пациента</a></div>
+        <div style="margin-top:20px"><a class="btn btn-light btn-sm" asp-action="ClientRecord" asp-route-clientId="@cur.ClientId"><svg class="ic"><use href="#i-clipboard"/></svg> @T["Карта пациента"]</a></div>
     </div>
 
     <div class="grid grid-2" style="margin-bottom:22px">
         <div class="card panel">
-            <h3><svg class="ic"><use href="#i-plus"/></svg> Продлить приём</h3>
+            <h3><svg class="ic"><use href="#i-plus"/></svg> @T["Продлить приём"]</h3>
             <form asp-action="ExtendAppointment" asp-route-appointmentId="@cur.Id" method="post">
-                <div class="field"><label>Дополнительно, минут</label><input type="number" name="additionalMinutes" min="1" max="120" value="15" /></div>
-                <div class="field"><label>Причина</label><input type="text" name="reason" placeholder="Например, потребовалась дополнительная анестезия" /></div>
-                <button class="btn btn-primary btn-sm" type="submit">Продлить</button>
+                <div class="field"><label>@T["Дополнительно, минут"]</label><input type="number" name="additionalMinutes" min="1" max="120" value="15" /></div>
+                <div class="field"><label>@T["Причина"]</label><input type="text" name="reason" placeholder="@T["Например, потребовалась дополнительная анестезия"]" /></div>
+                <button class="btn btn-primary btn-sm" type="submit">@T["Продлить"]</button>
             </form>
         </div>
         <div class="card panel">
-            <h3><svg class="ic"><use href="#i-check"/></svg> Завершить досрочно</h3>
+            <h3><svg class="ic"><use href="#i-check"/></svg> @T["Завершить досрочно"]</h3>
             <form asp-action="EndAppointmentEarly" asp-route-appointmentId="@cur.Id" method="post">
-                <div class="field"><label>Причина</label><input type="text" name="reason" placeholder="Например, лечение выполнено быстрее" /></div>
-                <button class="btn btn-danger btn-sm" type="submit">Завершить приём</button>
+                <div class="field"><label>@T["Причина"]</label><input type="text" name="reason" placeholder="@T["Например, лечение выполнено быстрее"]" /></div>
+                <button class="btn btn-danger btn-sm" type="submit">@T["Завершить приём"]</button>
             </form>
         </div>
     </div>
 
     <div class="card panel" style="margin-bottom:22px">
-        <h3><svg class="ic"><use href="#i-clipboard"/></svg> Рекомендации пациенту</h3>
+        <h3><svg class="ic"><use href="#i-clipboard"/></svg> @T["Рекомендации пациенту"]</h3>
         <form asp-action="AddRecommendation" asp-route-appointmentId="@cur.Id" method="post">
-            <div class="field"><textarea name="recommendation" rows="4" placeholder="Что делать после лечения, когда прийти на контроль...">@cur.Recommendation</textarea></div>
-            <button class="btn btn-primary btn-sm" type="submit">Сохранить рекомендации</button>
+            <div class="field"><textarea name="recommendation" rows="4" placeholder="@T["Что делать после лечения, когда прийти на контроль..."]">@cur.Recommendation</textarea></div>
+            <button class="btn btn-primary btn-sm" type="submit">@T["Сохранить рекомендации"]</button>
         </form>
     </div>
 }
 else
 {
     <div class="card panel" style="margin-bottom:22px">
-        <h3><svg class="ic"><use href="#i-chair"/></svg> Сейчас нет активного приёма</h3>
+        <h3><svg class="ic"><use href="#i-chair"/></svg> @T["Сейчас нет активного приёма"]</h3>
         @if (Model.Next != null)
         {
-            <p class="soft" style="margin:0">Следующий: <b>@Model.Next.ClientName</b> — @Fmt.DayMonth(Model.Next.Appointment.StartAt), @Fmt.Time(Model.Next.Appointment.StartAt).
-                <a asp-action="Appointment" asp-route-appointmentId="@Model.Next.Appointment.Id">Открыть</a></p>
+            <p class="soft" style="margin:0">@T["Следующий:"] <b>@Model.Next.ClientName</b> — @Fmt.DayMonth(Model.Next.Appointment.StartAt), @Fmt.Time(Model.Next.Appointment.StartAt).
+                <a asp-action="Appointment" asp-route-appointmentId="@Model.Next.Appointment.Id">@T["Открыть"]</a></p>
         }
-        else { <p class="muted" style="margin:0">Предстоящих записей нет.</p> }
+        else { <p class="muted" style="margin:0">@T["Предстоящих записей нет."]</p> }
     </div>
 }
 
-<div class="group-title">Расписание на сегодня</div>
+<div class="group-title">@T["Расписание на сегодня"]</div>
 @if (Model.Today.Count == 0)
 {
-    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>На сегодня записей нет</h3></div>
+    <div class="card empty"><svg class="ic"><use href="#i-calendar"/></svg><h3>@T["На сегодня записей нет"]</h3></div>
 }
 else
 {
@@ -87,11 +87,11 @@ else
                     <h4>@r.ClientName</h4>
                     <div class="meta">
                         <span><svg class="ic"><use href="#i-clock"/></svg> @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</span>
-                        <span>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "Приём врача")</span>
-                        @if (a.IsActiveAt(Clock.Now)) { <span class="badge ok">Сейчас</span> } else if (a.IsPastAt(Clock.Now)) { <span class="badge gray">Завершён</span> }
+                        <span>@T.ServiceList(a.Services)</span>
+                        @if (a.IsActiveAt(Clock.Now)) { <span class="badge ok">@T["Сейчас"]</span> } else if (a.IsPastAt(Clock.Now)) { <span class="badge gray">@T["Завершён"]</span> }
                     </div>
                 </div>
-                <div class="appt-actions"><a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">Открыть</a></div>
+                <div class="appt-actions"><a class="btn btn-ghost btn-sm" asp-action="Appointment" asp-route-appointmentId="@a.Id">@T["Открыть"]</a></div>
             </div>
         }
     </div>

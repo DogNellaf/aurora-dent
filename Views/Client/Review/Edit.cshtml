@@ -1,20 +1,20 @@
 @model Review
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Мой отзыв";
+    ViewData["Title"] = T["Мой отзыв"];
     ViewData["Cabinet"] = "client";
     ViewData["Tab"] = "review";
     var exists = Model.Id != 0;
 }
 <div class="cab-head">
-    <div><h1>Мой отзыв</h1><p>Ваше мнение помогает другим пациентам и делает нас лучше</p></div>
-    @if (exists) { <span class="badge @(Model.IsVisible ? "ok" : "warn")">@(Model.IsVisible ? "Опубликован" : "На модерации")</span> }
+    <div><h1>@T["Мой отзыв"]</h1><p>@T["Ваше мнение помогает другим пациентам и делает нас лучше"]</p></div>
+    @if (exists) { <span class="badge @(Model.IsVisible ? "ok" : "warn")">@(Model.IsVisible ? T["Опубликован"] : T["На модерации"])</span> }
 </div>
 <div class="card card-pad" style="max-width:720px">
     <form asp-action="ReviewCreate" method="post" novalidate>
         <div asp-validation-summary="ModelOnly"></div>
         <div class="field">
-            <label>Оценка</label>
+            <label>@T["Оценка"]</label>
             <div class="rating-input">
                 @for (var i = 5; i >= 1; i--)
                 {
@@ -24,19 +24,19 @@
             </div>
         </div>
         <div class="field">
-            <label asp-for="Text">Расскажите о вашем визите</label>
-            <textarea asp-for="Text" rows="6" placeholder="Что понравилось? Что можно улучшить?"></textarea>
+            <label asp-for="Text">@T["Расскажите о вашем визите"]</label>
+            <textarea asp-for="Text" rows="6" placeholder="@T["Что понравилось? Что можно улучшить?"]"></textarea>
             <span asp-validation-for="Text"></span>
         </div>
         <div class="form-actions">
-            <button class="btn btn-primary" type="submit">@(exists ? "Обновить отзыв" : "Отправить отзыв")</button>
+            <button class="btn btn-primary" type="submit">@(exists ? T["Обновить отзыв"] : T["Отправить отзыв"])</button>
         </div>
-        <p class="hint muted" style="margin-top:14px;font-size:.85rem">Отзыв публикуется после проверки менеджером. На сайте указывается только ваше имя и первая буква фамилии.</p>
+        <p class="hint muted" style="margin-top:14px;font-size:.85rem">@T["Отзыв публикуется после проверки менеджером. На сайте указывается только ваше имя и первая буква фамилии."]</p>
     </form>
     @if (exists && Model.IsVisible)
     {
         <form asp-action="Hide" method="post" style="margin-top:12px">
-            <button class="btn btn-ghost btn-sm" type="submit">Скрыть мой отзыв с сайта</button>
+            <button class="btn btn-ghost btn-sm" type="submit">@T["Скрыть мой отзыв с сайта"]</button>
         </form>
     }
 </div>

@@ -8,9 +8,9 @@
         return Context.Request.Path + QueryString.Create(query).ToString();
     }
 
-    <nav class="pager" aria-label="Страницы">
-        @if (Model.Page > 1) { <a class="btn btn-ghost btn-sm" href="@Link(Model.Page - 1)"><svg class="ic" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg> Назад</a> }
-        <span class="muted">Страница @Model.Page из @Model.TotalPages · всего @Model.Total</span>
-        @if (Model.Page < Model.TotalPages) { <a class="btn btn-ghost btn-sm" href="@Link(Model.Page + 1)">Дальше <svg class="ic"><use href="#i-arrow"/></svg></a> }
+    <nav class="pager" aria-label="@T["Страницы"]">
+        @if (Model.Page > 1) { <a class="btn btn-ghost btn-sm" href="@Link(Model.Page - 1)"><svg class="ic" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg> @T["Назад"]</a> }
+        <span class="muted">@T["Страница {0} из {1} · всего {2}", Model.Page, Model.TotalPages, Model.Total]</span>
+        @if (Model.Page < Model.TotalPages) { <a class="btn btn-ghost btn-sm" href="@Link(Model.Page + 1)">@T["Дальше"] <svg class="ic"><use href="#i-arrow"/></svg></a> }
     </nav>
 }

@@ -1,21 +1,21 @@
 @model DentalClinic.Models.DTO.RegisterViewModel
 @{
-    ViewData["Title"] = "Регистрация";
+    ViewData["Title"] = T["Регистрация"];
 }
 <div class="auth">
     <div class="auth-aside" style="background-image:url('/img/smile.jpg')">
-        <h2>Ваша улыбка — наша забота</h2>
-        <p>Зарегистрируйтесь, чтобы записываться онлайн и хранить историю лечения в одном месте.</p>
+        <h2>@T["Ваша улыбка — наша забота"]</h2>
+        <p>@T["Зарегистрируйтесь, чтобы записываться онлайн и хранить историю лечения в одном месте."]</p>
     </div>
     <div class="auth-main">
         <div class="auth-box">
-            <h1>Регистрация</h1>
-            <p class="soft">Уже есть аккаунт? <a asp-action="LoginPage">Войти</a></p>
+            <h1>@T["Регистрация"]</h1>
+            <p class="soft">@T["Уже есть аккаунт?"] <a asp-action="LoginPage">@T["Войти"]</a></p>
             <form asp-controller="Auth" asp-action="Register" method="post" novalidate>
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="field">
-                    <label asp-for="FullName">Имя и фамилия</label>
-                    <input asp-for="FullName" autocomplete="name" placeholder="Анна Кузнецова" />
+                    <label asp-for="FullName">@T["Имя и фамилия"]</label>
+                    <input asp-for="FullName" autocomplete="name" placeholder="@T["Анна Кузнецова"]" />
                     <span asp-validation-for="FullName"></span>
                 </div>
                 <div class="row">
@@ -25,24 +25,24 @@
                         <span asp-validation-for="Email"></span>
                     </div>
                     <div class="field">
-                        <label asp-for="Phone">Телефон</label>
+                        <label asp-for="Phone">@T["Телефон"]</label>
                         <input asp-for="Phone" type="tel" autocomplete="tel" placeholder="+7 (900) 000-00-00" />
                         <span asp-validation-for="Phone"></span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="field">
-                        <label asp-for="Password">Пароль</label>
+                        <label asp-for="Password">@T["Пароль"]</label>
                         <input asp-for="Password" autocomplete="new-password" />
                         <span asp-validation-for="Password"></span>
                     </div>
                     <div class="field">
-                        <label asp-for="ConfirmPassword">Повтор пароля</label>
+                        <label asp-for="ConfirmPassword">@T["Повтор пароля"]</label>
                         <input asp-for="ConfirmPassword" autocomplete="new-password" />
                         <span asp-validation-for="ConfirmPassword"></span>
                     </div>
                 </div>
-                <button class="btn btn-primary btn-lg btn-block" type="submit">Создать аккаунт</button>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">@T["Создать аккаунт"]</button>
             </form>
         </div>
     </div>

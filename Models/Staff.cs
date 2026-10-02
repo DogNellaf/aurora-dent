@@ -16,6 +16,6 @@ namespace DentalClinic.Models
         public int ExperienceYears { get; set; }
         public List<Service> Services { get; set; } = new();
 
-        public string DisplayName => string.IsNullOrWhiteSpace(FullName) ? ExternalLogin : FullName;
+        public string DisplayName => DentalClinic.Localization.Translations.Get(string.IsNullOrWhiteSpace(FullName) ? ExternalLogin : FullName);
     }
 }

@@ -1,4 +1,5 @@
 using System.Text;
+using DentalClinic.Localization;
 using DentalClinic.Models;
 using Microsoft.Extensions.Options;
 
@@ -30,9 +31,9 @@ namespace DentalClinic.Services
             var end = start.AddMinutes(appointment.Duration);
 
             var services = appointment.Services.Count > 0
-                ? string.Join(", ", appointment.Services.Select(s => s.Title))
-                : "Приём врача";
-            var doctor = appointment.Staff?.DisplayName ?? "врач";
+                ? string.Join(", ", appointment.Services.Select(s => Translations.Get(s.Title)))
+                : Translations.Get("Приём врача");
+            var doctor = Translations.Get(appointment.Staff?.DisplayName ?? "врач");
 
             var lines = new[]
             {
@@ -46,13 +47,13 @@ namespace DentalClinic.Services
                 $"DTSTAMP:{Format(_time.GetUtcNow().UtcDateTime)}",
                 $"DTSTART:{Format(start)}",
                 $"DTEND:{Format(end)}",
-                $"SUMMARY:{Escape($"{_clinic.Name}: {services}")}",
-                $"DESCRIPTION:{Escape($"Врач: {doctor}. Телефон клиники: {_clinic.Phone}")}",
-                $"LOCATION:{Escape(_clinic.Address)}",
+                $"SUMMARY:{Escape($"{Translations.Get(_clinic.Name)}: {services}")}",
+                $"DESCRIPTION:{Escape(string.Format(Translations.Get("Врач: {0}. Телефон клиники: {1}"), doctor, _clinic.Phone))}",
+                $"LOCATION:{Escape(Translations.Get(_clinic.Address))}",
                 "BEGIN:VALARM",
                 "TRIGGER:-PT2H",
                 "ACTION:DISPLAY",
-                "DESCRIPTION:Приём в клинике через 2 часа",
+                $"DESCRIPTION:{Escape(Translations.Get("Приём в клинике через 2 часа"))}",
                 "END:VALARM",
                 "END:VEVENT",
                 "END:VCALENDAR"

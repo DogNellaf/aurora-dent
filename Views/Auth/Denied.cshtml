@@ -1,9 +1,9 @@
 @{
-    ViewData["Title"] = "Доступ ограничен";
+    ViewData["Title"] = T["Доступ ограничен"];
 }
 <div class="wrap error-page">
     <p class="code">403</p>
-    <h2>Доступ ограничен</h2>
-    <p class="lead">Этот раздел доступен только сотрудникам с другой ролью.</p>
-    <p style="margin-top:28px"><a class="btn btn-primary" asp-controller="Auth" asp-action="Index">В мой кабинет</a></p>
+    <h2>@T["Доступ ограничен"]</h2>
+    <p class="lead">@T["Этот раздел доступен только сотрудникам с другой ролью."]</p>
+    <p style="margin-top:28px"><a class="btn btn-primary" asp-controller="Auth" asp-action="Index">@T["В мой кабинет"]</a></p>
 </div>

@@ -1,34 +1,34 @@
 @model AppointmentRow
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Приём";
+    ViewData["Title"] = T["Приём"];
     ViewData["Cabinet"] = "doctor";
     ViewData["Tab"] = Model.Appointment.IsPastAt(Clock.Now) ? "past" : "upcoming";
     var a = Model.Appointment;
 }
 <div class="cab-head">
     <div>
-        <div class="crumbs"><a asp-action="Appointments">Приёмы</a> / <span>Приём</span></div>
+        <div class="crumbs"><a asp-action="Appointments">@T["Приёмы"]</a> / <span>@T["Приём"]</span></div>
         <h1>@Model.ClientName</h1>
         <p>@Fmt.Weekday(a.StartAt), @Fmt.Date(a.StartAt), @Fmt.Time(a.StartAt)–@Fmt.Time(a.EndAt)</p>
     </div>
-    <a class="btn btn-ghost" asp-action="ClientRecord" asp-route-clientId="@a.ClientId"><svg class="ic"><use href="#i-clipboard"/></svg> Карта пациента</a>
+    <a class="btn btn-ghost" asp-action="ClientRecord" asp-route-clientId="@a.ClientId"><svg class="ic"><use href="#i-clipboard"/></svg> @T["Карта пациента"]</a>
 </div>
 <div class="grid grid-2" style="align-items:start">
     <div class="card card-pad">
         <ul class="facts-list">
-            <li><span>Услуги</span><b>@(a.Services.Count > 0 ? string.Join(", ", a.Services.Select(s => s.Title)) : "—")</b></li>
-            <li><span>Длительность</span><b>@Fmt.Minutes(a.Duration)</b></li>
-            <li><span>Статус</span><b>@(a.IsActiveAt(Clock.Now) ? "Идёт сейчас" : a.IsPastAt(Clock.Now) ? "Завершён" : "Предстоит")</b></li>
-            @if (!string.IsNullOrEmpty(a.DurationChangeReason)) { <li><span>Изменение длительности</span><b>@a.DurationChangeReason</b></li> }
+            <li><span>@T["Услуги"]</span><b>@T.ServiceList(a.Services, "—")</b></li>
+            <li><span>@T["Длительность"]</span><b>@Fmt.Minutes(a.Duration)</b></li>
+            <li><span>@T["Статус"]</span><b>@(a.IsActiveAt(Clock.Now) ? T["Идёт сейчас"] : a.IsPastAt(Clock.Now) ? T["Завершён"] : T["Предстоит"])</b></li>
+            @if (!string.IsNullOrEmpty(a.DurationChangeReason)) { <li><span>@T["Изменение длительности"]</span><b>@a.DurationChangeReason</b></li> }
         </ul>
     </div>
     <div class="card card-pad">
-        <h3>Рекомендации пациенту</h3>
+        <h3>@T["Рекомендации пациенту"]</h3>
         <form asp-action="AddRecommendation" asp-route-appointmentId="@a.Id" method="post">
             <input type="hidden" name="returnTo" value="detail" />
-            <div class="field"><textarea name="recommendation" rows="6" placeholder="Рекомендации появятся в личном кабинете пациента">@a.Recommendation</textarea></div>
-            <button class="btn btn-primary btn-sm" type="submit">Сохранить</button>
+            <div class="field"><textarea name="recommendation" rows="6" placeholder="@T["Рекомендации появятся в личном кабинете пациента"]">@a.Recommendation</textarea></div>
+            <button class="btn btn-primary btn-sm" type="submit">@T["Сохранить"]</button>
         </form>
     </div>
 </div>

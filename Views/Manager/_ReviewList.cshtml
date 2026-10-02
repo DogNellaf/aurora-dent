@@ -2,7 +2,7 @@
 @{ var pending = (bool)ViewData["Pending"]!; }
 @if (Model.Count == 0)
 {
-    <div class="card empty"><svg class="ic"><use href="#i-message"/></svg><h3>@(pending ? "Новых отзывов нет" : "Опубликованных отзывов нет")</h3><p>@(pending ? "Все отзывы проверены — отличная работа." : "Опубликуйте отзывы из очереди модерации.")</p></div>
+    <div class="card empty"><svg class="ic"><use href="#i-message"/></svg><h3>@(pending ? T["Новых отзывов нет"] : T["Опубликованных отзывов нет"])</h3><p>@(pending ? T["Все отзывы проверены — отличная работа."] : T["Опубликуйте отзывы из очереди модерации."])</p></div>
 }
 else
 {
@@ -11,17 +11,17 @@ else
         {
             <div class="card rev-item">
                 <div>
-                    <div class="rev-head"><span class="avatar">@Fmt.Initials(r.Author)</span><b>@r.Author</b><partial name="_Stars" model="r.Rating" /><span class="muted">@Fmt.Date(r.CreatedAt)</span></div>
-                    <p>@r.Text</p>
+                    <div class="rev-head"><span class="avatar">@Fmt.Initials(r.Author)</span><b>@T[r.Author]</b><partial name="_Stars" model="r.Rating" /><span class="muted">@Fmt.Date(r.CreatedAt)</span></div>
+                    <p>@T[r.Text]</p>
                 </div>
                 <div class="appt-actions">
                     @if (pending)
                     {
-                        <form asp-action="Show" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-primary btn-sm" type="submit"><svg class="ic"><use href="#i-check"/></svg> Опубликовать</button></form>
+                        <form asp-action="Show" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-primary btn-sm" type="submit"><svg class="ic"><use href="#i-check"/></svg> @T["Опубликовать"]</button></form>
                     }
                     else
                     {
-                        <form asp-action="Hide" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-ghost btn-sm" type="submit">Скрыть</button></form>
+                        <form asp-action="Hide" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-ghost btn-sm" type="submit">@T["Скрыть"]</button></form>
                     }
                 </div>
             </div>

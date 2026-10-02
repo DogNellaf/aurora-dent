@@ -1,50 +1,50 @@
 @model Paged<Profile>
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Профили";
+    ViewData["Title"] = T["Профили"];
     ViewData["Cabinet"] = "admin";
     ViewData["Tab"] = "profiles";
 }
 <div class="cab-head">
-    <div><h1>Профили</h1><p>Пациенты и сотрудники клиники</p></div>
-    <a class="btn btn-primary" asp-action="ProfileCreate"><svg class="ic"><use href="#i-plus"/></svg> Добавить профиль</a>
+    <div><h1>@T["Профили"]</h1><p>@T["Пациенты и сотрудники клиники"]</p></div>
+    <a class="btn btn-primary" asp-action="ProfileCreate"><svg class="ic"><use href="#i-plus"/></svg> @T["Добавить профиль"]</a>
 </div>
 <form class="toolbar" method="get" asp-action="Profiles">
-    <input class="input" type="search" name="q" value="@(ViewBag.Query as string)" placeholder="Имя, email или телефон" aria-label="Поиск" />
-    <select class="input" name="role" aria-label="Роль">
-        <option value="">Все роли</option>
-        <option value="1" selected="@((ViewBag.Role as long?) == 1)">Пациенты</option>
-        <option value="4" selected="@((ViewBag.Role as long?) == 4)">Врачи</option>
-        <option value="3" selected="@((ViewBag.Role as long?) == 3)">Менеджеры</option>
-        <option value="2" selected="@((ViewBag.Role as long?) == 2)">Администраторы</option>
+    <input class="input" type="search" name="q" value="@(ViewBag.Query as string)" placeholder="@T["Имя, email или телефон"]" aria-label="@T["Поиск"]" />
+    <select class="input" name="role" aria-label="@T["Роль"]">
+        <option value="">@T["Все роли"]</option>
+        <option value="1" selected="@((ViewBag.Role as long?) == 1)">@T["Пациенты"]</option>
+        <option value="4" selected="@((ViewBag.Role as long?) == 4)">@T["Врачи"]</option>
+        <option value="3" selected="@((ViewBag.Role as long?) == 3)">@T["Менеджеры"]</option>
+        <option value="2" selected="@((ViewBag.Role as long?) == 2)">@T["Администраторы"]</option>
     </select>
-    <button class="btn btn-ghost" type="submit">Найти</button>
+    <button class="btn btn-ghost" type="submit">@T["Найти"]</button>
 </form>
 <div class="card table-wrap">
     <table class="table">
-        <thead><tr><th>Пользователь</th><th>Роль</th><th>Телефон</th><th>Статус</th><th></th></tr></thead>
+        <thead><tr><th>@T["Пользователь"]</th><th>@T["Роль"]</th><th>@T["Телефон"]</th><th>@T["Статус"]</th><th></th></tr></thead>
         <tbody>
         @foreach (var p in Model.Items)
         {
             <tr>
-                <td><div class="person"><span class="avatar">@Fmt.Initials(p.DisplayName)</span><div><b>@p.DisplayName</b><small>@p.Email</small></div></div></td>
+                <td><div class="person"><span class="avatar">@Fmt.Initials(p.DisplayName)</span><div><b>@T[p.DisplayName]</b><small>@p.Email</small></div></div></td>
                 <td><span class="badge @(p.IsAdmin ? "warn" : p.IsDoctor || p.IsManager ? "" : "gray")">@Fmt.RoleName(p)</span></td>
                 <td>@p.PhoneNumber</td>
-                <td>@if (p.IsBanned) { <span class="badge danger">Заблокирован</span> } else { <span class="badge ok">Активен</span> }</td>
+                <td>@if (p.IsBanned) { <span class="badge danger">@T["Заблокирован"]</span> } else { <span class="badge ok">@T["Активен"]</span> }</td>
                 <td>
                     <div class="actions">
-                        <a class="btn btn-ghost btn-sm" asp-action="Profile" asp-route-profileId="@p.Id"><svg class="ic"><use href="#i-edit"/></svg> Изменить</a>
+                        <a class="btn btn-ghost btn-sm" asp-action="Profile" asp-route-profileId="@p.Id"><svg class="ic"><use href="#i-edit"/></svg> @T["Изменить"]</a>
                         @if (!p.IsAdmin)
                         {
                             if (p.IsBanned)
                             {
-                                <form asp-action="Unban" asp-route-profileId="@p.Id" method="post"><button class="btn btn-ghost btn-sm" type="submit">Разблокировать</button></form>
+                                <form asp-action="Unban" asp-route-profileId="@p.Id" method="post"><button class="btn btn-ghost btn-sm" type="submit">@T["Разблокировать"]</button></form>
                             }
                             else
                             {
-                                <form asp-action="Ban" asp-route-profileId="@p.Id" method="post" data-confirm="Заблокировать аккаунт @p.DisplayName?"><button class="btn btn-ghost btn-sm" type="submit"><svg class="ic"><use href="#i-ban"/></svg></button></form>
+                                <form asp-action="Ban" asp-route-profileId="@p.Id" method="post" data-confirm="@T["Заблокировать аккаунт {0}?", p.DisplayName]"><button class="btn btn-ghost btn-sm" type="submit"><svg class="ic"><use href="#i-ban"/></svg></button></form>
                             }
-                            <form asp-action="ProfileDelete" asp-route-profileId="@p.Id" method="post" data-confirm="Удалить профиль @p.DisplayName? Это действие необратимо."><button class="btn btn-danger btn-sm" type="submit" aria-label="Удалить"><svg class="ic"><use href="#i-trash"/></svg></button></form>
+                            <form asp-action="ProfileDelete" asp-route-profileId="@p.Id" method="post" data-confirm="@T["Удалить профиль {0}? Это действие необратимо.", p.DisplayName]"><button class="btn btn-danger btn-sm" type="submit" aria-label="@T["Удалить"]"><svg class="ic"><use href="#i-trash"/></svg></button></form>
                         }
                     </div>
                 </td>

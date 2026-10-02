@@ -1,28 +1,28 @@
 @model ErrorViewModel
 @{
     var status = ViewData["Status"] as int? ?? 500;
-    ViewData["Title"] = status == 404 ? "Страница не найдена" : "Ошибка";
+    ViewData["Title"] = status == 404 ? T["Страница не найдена"] : T["Ошибка"];
 }
 <div class="wrap error-page">
     <p class="code">@status</p>
     @if (status == 404)
     {
-        <h2>Такой страницы нет</h2>
-        <p class="lead">Возможно, ссылка устарела или была набрана с ошибкой.</p>
+        <h2>@T["Такой страницы нет"]</h2>
+        <p class="lead">@T["Возможно, ссылка устарела или была набрана с ошибкой."]</p>
     }
     else if (status == 403)
     {
-        <h2>Доступ ограничен</h2>
-        <p class="lead">У вашей учётной записи нет прав для просмотра этой страницы.</p>
+        <h2>@T["Доступ ограничен"]</h2>
+        <p class="lead">@T["У вашей учётной записи нет прав для просмотра этой страницы."]</p>
     }
     else
     {
-        <h2>Что-то пошло не так</h2>
-        <p class="lead">Мы уже знаем о проблеме. Попробуйте обновить страницу или вернуться позже.</p>
+        <h2>@T["Что-то пошло не так"]</h2>
+        <p class="lead">@T["Мы уже знаем о проблеме. Попробуйте обновить страницу или вернуться позже."]</p>
     }
-    <p style="margin-top:28px"><a class="btn btn-primary" asp-controller="Home" asp-action="Index">На главную</a></p>
+    <p style="margin-top:28px"><a class="btn btn-primary" asp-controller="Home" asp-action="Index">@T["На главную"]</a></p>
     @if (Model.ShowRequestId)
     {
-        <p class="muted" style="font-size:.8rem">ID запроса: <code>@Model.RequestId</code></p>
+        <p class="muted" style="font-size:.8rem">@T["ID запроса:"] <code>@Model.RequestId</code></p>
     }
 </div>

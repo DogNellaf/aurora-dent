@@ -1,10 +1,10 @@
 @model List<ReviewCard>
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Опубликованные отзывы";
+    ViewData["Title"] = T["Опубликованные отзывы"];
     ViewData["Cabinet"] = "manager";
     ViewData["Tab"] = "published";
     ViewData["Pending"] = false;
 }
-<div class="cab-head"><div><h1>Опубликованные отзывы</h1><p>Эти отзывы видны посетителям сайта</p></div></div>
+<div class="cab-head"><div><h1>@T["Опубликованные отзывы"]</h1><p>@T["Эти отзывы видны посетителям сайта"]</p></div></div>
 <partial name="_ReviewList" model="Model" view-data="ViewData" />

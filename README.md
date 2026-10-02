@@ -1,19 +1,19 @@
 # Aurora Dent
 
-> 🇬🇧 English | [🇷🇺 Русский](README.ru.md)
+> 🇬🇧 English | [🇷🇺 Русский](README.ru.md) | [🇫🇷 Français](README.fr.md) | [🇩🇪 Deutsch](README.de.md)
 
 [![CI](https://github.com/DogNellaf/aurora-dent/actions/workflows/ci.yml/badge.svg)](https://github.com/DogNellaf/aurora-dent/actions/workflows/ci.yml)
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![EF Core](https://img.shields.io/badge/EF%20Core-8-6C3FC5)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC2927)
-![Tests](https://img.shields.io/badge/tests-172%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-242%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-97%25%20lines-brightgreen)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange)
 
 Web application for a dental clinic. A public site offers online booking, and
 separate cabinets serve patients, doctors, managers and administrators. Data is
 stored in SQL Server, and an empty database is filled with a demo clinic on the
-first start. The interface is in Russian. The clinic, doctors and reviews are
+first start. The interface is available in Russian, English, French and German. The clinic, doctors and reviews are
 fictional, photos are from [Unsplash](https://unsplash.com).
 
 ![Home page](docs/screenshots/home.png)
@@ -126,9 +126,14 @@ booking is reserved for patients.
   `nosniff`, referrer and permissions policies). Versioned static files are
   cached for a long time. Database connections are retried while the server
   starts.
+- **Four languages.** The interface, validation messages, emails and calendar
+  files come in Russian, English, French and German, chosen with a switcher or
+  the browser setting. Translation tables are embedded JSON files, and tests
+  fail on a missing translation, a changed placeholder or Russian text on a page
+  in another language.
 - **No client-side framework.** Hand-written CSS design system with tokens in
   one stylesheet, about 100 lines of vanilla JS, an inline SVG icon sprite and
-  self-hosted fonts. Cyrillic is rendered as is instead of `&#x...;` entities.
+  self-hosted fonts. Cyrillic and accented Latin letters are rendered as they are instead of `&#x...;` entities.
 - **Accessible and responsive.** Semantic markup, visible focus states,
   `prefers-reduced-motion` support, a mobile menu, layouts checked at 390 px.
 
@@ -147,7 +152,7 @@ booking is reserved for patients.
 - Patients open and cancel only own visits, and anything else returns 404.
   Doctors work only with visits assigned to the doctor.
 - The post-login `returnUrl` is accepted only when local.
-- Input is validated on the server with Russian messages. Profile edits bind
+- Input is validated on the server with messages in the language of the visitor. Profile edits bind
   explicit view models instead of entities.
 - A Content Security Policy forbids inline scripts and third-party code. A test
   scans the pages and fails on any inline script or `onclick`.
@@ -200,11 +205,27 @@ erDiagram
 | `Services/ClinicClock.cs` | Current time in the clinic time zone |
 | `Infrastructure/RoleRequiredAttribute.cs` | Authentication, role check and ban enforcement |
 | `Infrastructure/SecurityHeaders.cs` | CSP and other security headers |
-| `Infrastructure/Fmt.cs` | Russian formatting for money, dates and declensions |
+| `Infrastructure/Fmt.cs` | Money, dates, durations and plural forms in the language of the visitor |
+| `Localization/` | Language list, embedded translation tables and the localizer used by views, validation and emails |
 | `Data/DemoDataSeeder.cs` | Demo clinic with services, doctors, schedule, patients and reviews |
 | `Data/Migrations/` | EF Core migrations |
 | `Models/ViewModels/` | Shapes passed to views, which keeps views free of extra queries |
 | `Views/Shared/_CabinetLayout.cshtml` | Shared layout of the four cabinets |
+
+## Languages
+
+The interface, validation messages and emails are available in Russian,
+English, French and German. Russian is the source language and the default.
+The language comes from the cookie set by the switcher in the top bar, then
+from the `Accept-Language` header of the browser. Texts are looked up by their
+Russian wording in `Localization/Resources/{en,fr,de}.json`, so a text without a
+translation, for example a service typed in by a manager, is shown as entered.
+Dates, numbers, plural forms and durations follow the language as well.
+
+Adding a language takes three steps. The language is added to
+`Localization/Languages.cs`, a table `Localization/Resources/<code>.json` gets
+the same keys as `en.json`, and `Infrastructure/Fmt.cs` receives the formatting
+rules if the language needs them.
 
 ## Screenshots
 
@@ -270,14 +291,14 @@ docker compose up -d db
 dotnet test
 ```
 
-There are 172 tests with 97% line coverage. Most are integration tests starting
+There are 242 tests with 97% line coverage. Most are integration tests starting
 the whole application on a fresh database and use real HTTP requests,
 cookies and antiforgery tokens. They cover public pages, access control for
 every role, registration, login and bans, booking including the race for one
 slot, cancelling, the visit controls of the doctor, the clean-up rules of the
 administrator, review moderation, lockout, password reset, emails, bulk slot
 generation, search and paging, database constraints, security headers and the
-health check. The rest are service level tests and unit tests of the clinic
+health check. Localization tests check every page of every cabinet in all languages. The rest are service level tests and unit tests of the clinic
 clock, the calendar export and the formatting helpers. Every test class creates a
 separate database and drops the database afterwards. Another server can be
 selected with the `TEST_SQLSERVER_CONNECTION` variable, a connection string without a database
@@ -315,6 +336,7 @@ NuGet packages, GitHub Actions and base images. Local checks are listed in
 ├── Data/                  # Demo-data seeder and EF Core migrations
 ├── Services/              # Booking, schedule, profiles, reviews, notifications, clock
 ├── Infrastructure/        # [RoleRequired] filter, security headers, paging, formatting helpers
+├── Localization/          # Languages and translation tables (en, fr, de)
 ├── Models/                # EF entities, DTOs and view models
 ├── Views/                 # Razor views, layouts and partials
 ├── wwwroot/               # CSS, JS, fonts and images

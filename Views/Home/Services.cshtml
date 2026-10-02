@@ -1,19 +1,19 @@
 @model IEnumerable<Service>
 @{
-    ViewData["Title"] = "Услуги и цены";
+    ViewData["Title"] = T["Услуги и цены"];
     var categories = Model.Select(s => s.Category).Distinct().ToList();
 }
 <div class="wrap">
     <div class="page-head">
-        <div class="crumbs"><a asp-controller="Home" asp-action="Index">Главная</a> / <span>Услуги</span></div>
-        <h1>Услуги и цены</h1>
-        <p class="lead">Стоимость указана за одну процедуру. Точную смету врач составит после осмотра.</p>
+        <div class="crumbs"><a asp-controller="Home" asp-action="Index">@T["Главная"]</a> / <span>@T["Услуги"]</span></div>
+        <h1>@T["Услуги и цены"]</h1>
+        <p class="lead">@T["Стоимость указана за одну процедуру. Точную смету врач составит после осмотра."]</p>
     </div>
     <div class="chips">
-        <button type="button" class="chip active" data-filter="all">Все</button>
+        <button type="button" class="chip active" data-filter="all">@T["Все"]</button>
         @foreach (var c in categories)
         {
-            <button type="button" class="chip" data-filter="@c">@c</button>
+            <button type="button" class="chip" data-filter="@c">@T[c]</button>
         }
     </div>
     <div class="grid grid-3" style="padding-bottom:40px">

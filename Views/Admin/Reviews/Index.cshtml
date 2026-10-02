@@ -1,20 +1,20 @@
 @model Paged<ReviewCard>
 @{
     Layout = "_CabinetLayout";
-    ViewData["Title"] = "Отзывы";
+    ViewData["Title"] = T["Отзывы"];
     ViewData["Cabinet"] = "admin";
     ViewData["Tab"] = "reviews";
 }
-<div class="cab-head"><div><h1>Отзывы</h1><p>Все отзывы пациентов, включая скрытые</p></div></div>
+<div class="cab-head"><div><h1>@T["Отзывы"]</h1><p>@T["Все отзывы пациентов, включая скрытые"]</p></div></div>
 @{ var filter = ViewBag.Filter as string ?? "all"; }
 <div class="tabs">
-    <a class="@(filter == "all" ? "active" : "")" asp-action="Reviews">Все</a>
-    <a class="@(filter == "pending" ? "active" : "")" asp-action="Reviews" asp-route-filter="pending">На модерации</a>
-    <a class="@(filter == "published" ? "active" : "")" asp-action="Reviews" asp-route-filter="published">Опубликованные</a>
+    <a class="@(filter == "all" ? "active" : "")" asp-action="Reviews">@T["Все"]</a>
+    <a class="@(filter == "pending" ? "active" : "")" asp-action="Reviews" asp-route-filter="pending">@T["На модерации"]</a>
+    <a class="@(filter == "published" ? "active" : "")" asp-action="Reviews" asp-route-filter="published">@T["Опубликованные"]</a>
 </div>
 @if (Model.Items.Count == 0)
 {
-    <div class="card empty"><svg class="ic"><use href="#i-message"/></svg><h3>Отзывов пока нет</h3></div>
+    <div class="card empty"><svg class="ic"><use href="#i-message"/></svg><h3>@T["Отзывов пока нет"]</h3></div>
 }
 else
 {
@@ -24,23 +24,23 @@ else
             <div class="card rev-item">
                 <div>
                     <div class="rev-head">
-                        <span class="avatar">@Fmt.Initials(r.Author)</span><b>@r.Author</b><partial name="_Stars" model="r.Rating" />
-                        <span class="badge @(r.IsVisible ? "ok" : "warn")">@(r.IsVisible ? "Опубликован" : "На модерации")</span>
+                        <span class="avatar">@Fmt.Initials(r.Author)</span><b>@T[r.Author]</b><partial name="_Stars" model="r.Rating" />
+                        <span class="badge @(r.IsVisible ? "ok" : "warn")">@(r.IsVisible ? T["Опубликован"] : T["На модерации"])</span>
                         <span class="muted">@Fmt.Date(r.CreatedAt)</span>
                     </div>
-                    <p>@r.Text</p>
+                    <p>@T[r.Text]</p>
                 </div>
                 <div class="appt-actions">
                     @if (r.IsVisible)
                     {
-                        <form asp-action="HideReview" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-ghost btn-sm" type="submit">Скрыть</button></form>
+                        <form asp-action="HideReview" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-ghost btn-sm" type="submit">@T["Скрыть"]</button></form>
                     }
                     else
                     {
-                        <form asp-action="ShowReview" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-primary btn-sm" type="submit">Опубликовать</button></form>
+                        <form asp-action="ShowReview" asp-route-reviewId="@r.Id" method="post"><button class="btn btn-primary btn-sm" type="submit">@T["Опубликовать"]</button></form>
                     }
-                    <a class="btn btn-ghost btn-sm" asp-action="Review" asp-route-reviewId="@r.Id" aria-label="Изменить"><svg class="ic"><use href="#i-edit"/></svg></a>
-                    <form asp-action="ReviewDelete" asp-route-reviewId="@r.Id" method="post" data-confirm="Удалить отзыв?"><button class="btn btn-danger btn-sm" type="submit" aria-label="Удалить"><svg class="ic"><use href="#i-trash"/></svg></button></form>
+                    <a class="btn btn-ghost btn-sm" asp-action="Review" asp-route-reviewId="@r.Id" aria-label="@T["Изменить"]"><svg class="ic"><use href="#i-edit"/></svg></a>
+                    <form asp-action="ReviewDelete" asp-route-reviewId="@r.Id" method="post" data-confirm="@T["Удалить отзыв?"]"><button class="btn btn-danger btn-sm" type="submit" aria-label="@T["Удалить"]"><svg class="ic"><use href="#i-trash"/></svg></button></form>
                 </div>
             </div>
         }

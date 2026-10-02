@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Localization/Resources/*.json" LogicalName="Localization.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The test project lives in its own folder and must not be compiled into the web app. -->
     <Compile Remove="DentalClinic.Tests/**" />
     <Content Remove="DentalClinic.Tests/**" />
